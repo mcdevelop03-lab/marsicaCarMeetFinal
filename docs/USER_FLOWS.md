@@ -1,6 +1,7 @@
 # USER FLOWS — Marsica Car Meet
 
-> Documento vivo. Ultima modifica: 2026-07-06.
+> Documento vivo. Ultima modifica: 2026-07-07.
+> Scelte di scope in [`DECISIONS.md`](./DECISIONS.md).
 
 Descrizione dei flussi principali. I diagrammi usano una notazione testuale semplice.
 
@@ -8,20 +9,22 @@ Descrizione dei flussi principali. I diagrammi usano una notazione testuale semp
 
 ```
 Visitatore → /registrati
-  → compila email + password
+  → email + password  (oppure "Continua con Google")
+  → verifica anti-bot Cloudflare Turnstile
   → (invio) → creazione account (Supabase Auth)
   → creato profilo `member` collegato
-  → email di conferma (Fase 1/2)
-  → login automatico → /dashboard
+  → email di conferma OBBLIGATORIA → l'account si attiva solo dopo la conferma
+  → al primo login → /dashboard
 ```
 
-Errori gestiti: email già usata, password debole, email non confermata.
+Errori gestiti: email già usata, password debole, email non confermata, captcha fallito.
 
 ## 2. Login
 
 ```
 Visitatore → /login
-  → email + password
+  → email + password  (oppure "Continua con Google")  + Turnstile
+  → SE 2FA attiva → richiesta codice app authenticator (TOTP)
   → sessione creata → redirect a pagina richiesta o /dashboard
   → (link) "Password dimenticata?" → reset via email
 ```
@@ -30,9 +33,9 @@ Visitatore → /login
 
 ```
 Membro → /garage → "Aggiungi auto"
-  → compila marca, modello, anno, classe, specifiche
-  → carica foto (Storage)
-  → salva → auto visibile nel proprio garage e nel profilo pubblico
+  → compila marca, modello, anno (obbligatori) + categoria/descrizione/specifiche (opzionali)
+  → carica foto (Storage, obbligatoria)
+  → salva → auto visibile nel proprio garage e agli altri membri loggati (sola lettura)
 ```
 
 ## 4. Scoperta e partecipazione a un evento (flusso centrale)
@@ -54,11 +57,12 @@ Utente → /eventi (elenco, filtrabile per stato)
 
 ```
 Admin → /admin/eventi → "Nuovo evento"
-  → compila titolo, descrizione, luogo, coordinate, data/ora, capienza, tipo
+  → compila titolo, descrizione, luogo (+ link mappa), data/ora, capienza, tipo
   → carica cover
   → salva come bozza o pubblica
   → evento appare nell'elenco pubblico
   → Admin monitora partecipanti e auto iscritte
+  → A RADUNO CONCLUSO: Admin carica l'album foto/video → pubblico nella pagina evento
 ```
 
 ## 6. Pubblicazione news (Admin) — *Fase 2*
@@ -70,31 +74,30 @@ Admin → /admin/news → "Nuovo articolo"
   → articolo visibile in /news
 ```
 
-## 7. Caricamento in gallery con moderazione — *Fase 2*
+## 7. Album foto/video di un evento (Admin) — *Fase 1*
 
 ```
-Membro → /gallery → "Carica"
-  → seleziona foto/video (o link video)
-  → invio → stato "in attesa di moderazione"
-Admin → /admin/gallery
-  → approva o rifiuta
-  → se approvato → visibile pubblicamente
+Admin → /admin/eventi/[slug] → "Carica media" (dopo la conclusione)
+  → seleziona foto/video (o link video esterno)
+  → salva → media pubblicati direttamente nella pagina evento (nessuna moderazione)
+Utente/Visitatore → /eventi/[slug] → vede l'album dell'evento
 ```
 
-## 8. Consultazione mappa raduni — *Fase 2*
+## 8. Consultazione luogo evento — *MVP (mappa dedicata in Fase 2)*
 
 ```
-Utente → /mappa
-  → vede hotspot con stato e partecipanti
-  → clic su hotspot → dettaglio evento collegato
+MVP:
+Utente → /eventi/[slug] → sezione "Luogo" → link/embed a mappa esterna (Google/OSM)
+
+Fase 2:
+Utente → /mappa → mappa interattiva con tutti i raduni → clic → dettaglio evento
 ```
 
-## 9. Cambio lingua
+## 9. Cambio lingua — *EN attivo dalla Fase 3*
 
 ```
-Utente → selettore lingua (header/footer)
-  → passa tra IT ed EN
-  → URL aggiornato (/it/... ↔ /en/...) mantenendo la pagina
+Al lancio: interfaccia in Italiano (/it). Il selettore lingua è predisposto ma con
+la sola voce IT; l'Inglese (/en) si attiva in Fase 3 senza modifiche strutturali.
 ```
 
 ## 10. Gestione consenso cookie (GDPR)

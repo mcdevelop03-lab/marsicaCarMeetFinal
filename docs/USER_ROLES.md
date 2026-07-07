@@ -1,6 +1,7 @@
 # USER ROLES & PERMISSIONS — Marsica Car Meet
 
-> Documento vivo. Ultima modifica: 2026-07-06.
+> Documento vivo. Ultima modifica: 2026-07-07.
+> Scelte di scope in [DECISIONS.md](./DECISIONS.md).
 
 ## 1. Ruoli
 
@@ -25,18 +26,17 @@
 
 | Azione | Visitatore | Membro | Organizzatore* | Admin |
 |---|:---:|:---:|:---:|:---:|
-| Visualizzare eventi / news / gallery pubblici | ✅ | ✅ | ✅ | ✅ |
+| Visualizzare **home, eventi, foto eventi** (pubblici) | ✅ | ✅ | ✅ | ✅ |
+| Visualizzare **profili e garage dei membri** | ❌ | ✅ | ✅ | ✅ |
 | Registrarsi / effettuare login | ✅ | — | — | — |
 | Creare e gestire il proprio profilo | ❌ | ✅ | ✅ | ✅ |
 | Gestire il proprio garage (CRUD auto) | ❌ | ✅ | ✅ | ✅ |
-| Fare RSVP a un evento | ❌ | ✅ | ✅ | ✅ |
-| Associare le proprie auto a un evento | ❌ | ✅ | ✅ | ✅ |
+| Fare RSVP a un evento (+ associare le proprie auto) | ❌ | ✅ | ✅ | ✅ |
 | Creare / modificare / eliminare eventi | ❌ | ❌ | ✅ (propri)* | ✅ (tutti) |
 | Vedere elenco partecipanti a un evento | ❌ | ❌ | ✅ (propri)* | ✅ |
-| Pubblicare / gestire news | ❌ | ❌ | ❌ | ✅ |
-| Caricare in gallery | ❌ | ✅ (con moderazione) | ✅ | ✅ |
-| Moderare contenuti | ❌ | ❌ | ❌ | ✅ |
-| Gestire utenti (ruoli, sospensioni) | ❌ | ❌ | ❌ | ✅ |
+| Caricare **foto/video di un evento** (album per-evento) | ❌ | ❌ | ✅ (propri)* | ✅ |
+| Pubblicare / gestire news *(Fase 2)* | ❌ | ❌ | ❌ | ✅ |
+| Gestire utenti (ruoli, sospensioni) *(Fase 2)* | ❌ | ❌ | ❌ | ✅ |
 | Accedere al pannello Admin | ❌ | ❌ | ❌ | ✅ |
 
 \* Colonna Organizzatore = comportamento previsto quando il ruolo verrà attivato.

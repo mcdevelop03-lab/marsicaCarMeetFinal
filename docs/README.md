@@ -13,19 +13,22 @@ li aggiorna.
 | [FEATURES.md](./FEATURES.md) | Funzionalità dettagliate per fase. |
 | [USER_FLOWS.md](./USER_FLOWS.md) | Flussi utente principali. |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Architettura tecnica, stack, modello dati, ADR. |
+| [CODE_ANALYSIS.md](./CODE_ANALYSIS.md) | Analisi del codice esistente (mockup VELOCITY): forze, problemi, riuso. |
+| [DECISIONS.md](./DECISIONS.md) | Registro delle decisioni di prodotto/scope (con ID citabili). |
 | [ROADMAP.md](./ROADMAP.md) | Fasi di sviluppo incrementali. |
 | [TODO.md](./TODO.md) | Attività operative e decisioni aperte. |
 
 ## Sintesi rapida
 
 - **Cos'è:** piattaforma web per la community di appassionati d'auto della Marsica.
-- **Stack:** Next.js 15 + Supabase + TailwindCSS, i18n IT/EN.
+- **Stack:** Next.js 15 + Supabase + TailwindCSS; italiano al lancio, struttura pronta per EN.
 - **Deploy:** Cloudflare Pages + Supabase (free tier).
-- **Stato:** Discovery e documentazione completate; prossimo passo = analisi del codice
-  esistente, poi refactoring **solo dopo approvazione**.
+- **Stato:** Discovery, documentazione e **analisi del codice** completate
+  ([CODE_ANALYSIS.md](./CODE_ANALYSIS.md)); prossimo passo = refactoring **solo dopo approvazione**.
 
 ## Convenzioni
 
 - Ogni documento riporta la data dell'ultima modifica.
-- Le decisioni architetturali sono registrate in [ARCHITECTURE.md](./ARCHITECTURE.md) §11.
+- Le decisioni **di prodotto/scope** sono in [DECISIONS.md](./DECISIONS.md) (ID `D-1xx`); quelle
+  **architetturali** in [ARCHITECTURE.md](./ARCHITECTURE.md) §11.
 - Le priorità: **P0** (MVP) · **P1** (importante) · **P2** (futuro).
