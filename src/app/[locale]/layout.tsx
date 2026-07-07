@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { notFound } from "next/navigation";
 import { Anybody, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
-import "./globals.css";
+import { routing } from "@/i18n/routing";
+import "../globals.css";
 
 const anybody = Anybody({
   subsets: ["latin"],
@@ -23,17 +26,28 @@ export const metadata: Metadata = {
   description: "La community dei motori della Marsica",
 };
 
-export default function RootLayout({
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+export default async function LocaleLayout({
   children,
-}: Readonly<{
+  params,
+}: {
   children: React.ReactNode;
-}>) {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+
   return (
     <html
-      lang="it"
+      lang={locale}
       className={`${anybody.variable} ${hanken.variable} ${jetbrains.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+      </body>
     </html>
   );
 }
