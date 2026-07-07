@@ -1,4 +1,0 @@
-File di prova per verificare l'utenza git del push.
-
-Autore atteso: Matteo Caricola <mcdevelop03@gmail.com>
-Data: 2026-07-06
