@@ -7,7 +7,7 @@ export async function enrollTotp() {
   if (error || !data) return { error: "Impossibile avviare l'attivazione 2FA." };
   return {
     factorId: data.id,
-    qr: `data:image/svg+xml;utf-8,${data.totp.qr_code}`,
+    qr: data.totp.qr_code,
     secret: data.totp.secret,
   };
 }
