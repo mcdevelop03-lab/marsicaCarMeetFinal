@@ -1,32 +1,35 @@
 # TODO — Marsica Car Meet
 
-> Documento vivo. Ultima modifica: 2026-07-06.
+> Documento vivo. Ultima modifica: 2026-07-08.
 > Attività operative. Le fasi rimandano a [`ROADMAP.md`](./ROADMAP.md).
 
 ## ✅ Fatto
 
 - [x] Fase 1 Discovery: raccolta requisiti e decisioni.
 - [x] Fase 2 Documentazione: creazione cartella `/docs` con documenti ufficiali.
+- [x] Fase 3 Analisi del codice → [`CODE_ANALYSIS.md`](./CODE_ANALYSIS.md).
+- [x] **Fase 0 — Fondamenta** completata (2026-07-08) sul branch `feat/fase0-fondamenta`.
+      Piano: [`superpowers/plans/2026-07-07-fase0-fondamenta.md`](./superpowers/plans/2026-07-07-fase0-fondamenta.md).
 
 ## 🔜 Prossimo passo immediato
 
-- [x] **Fase 3 — Analisi del codice esistente** → [`CODE_ANALYSIS.md`](./CODE_ANALYSIS.md):
-      punti di forza, problemi, duplicazioni, struttura, componenti, performance,
-      manutenibilità, possibilità di crescita. *(Nessuna modifica al codice.)*
-- [ ] **Presentare l'analisi e attendere approvazione** prima della Fase 4 (Refactoring).
+- [ ] Integrare il branch `feat/fase0-fondamenta` (merge in `main`) e iniziare la **Fase 1 — MVP**.
 
-## 🏗️ Fase 0 — Fondamenta (dopo approvazione)
+## ✅ Fase 0 — Fondamenta — COMPLETATA (2026-07-08)
 
-- [ ] Inizializzare progetto Next.js 15 (App Router + TS).
-- [ ] Configurare TailwindCSS 4 e importare lo stile del mockup **spostando i colori su token**.
-- [ ] Configurare `next-intl` (**IT** al lancio, struttura pronta per EN) e struttura `[locale]`.
-- [ ] Creare struttura cartelle (route groups, `components/ui`, `components/features`, lib, i18n, types).
-- [ ] Creare `components/ui` (Button, Card, Badge, Input, SectionHeading…) — vedi CODE_ANALYSIS §4.
-- [ ] Creare progetto Supabase e configurare env.
-- [ ] Migrare header/footer/nav dal mockup al routing Next.
-- [ ] Rebranding VELOCITY → Marsica Car Meet (logo utente, testi reali, palette scuro+rosso).
-- [ ] Rimuovere dipendenze morte: `@google/genai`, `motion`, `express`, `dotenv` + residui AI Studio.
-- [ ] Rimuovere dal mockup: carrello, telemetria simulata, feed community, chat radio.
+> Realizzata su **Next.js 16** (il piano prevedeva 15). Build, lint, tsc verdi; verificata a runtime.
+
+- [x] Inizializzato progetto Next.js 16 (App Router + TS + Turbopack).
+- [x] TailwindCSS 4 con stile del mockup **su token** (`@theme`).
+- [x] `next-intl` (**IT**, struttura pronta per EN) e struttura `[locale]`.
+- [x] Struttura cartelle (`components/ui`, `components/layout`, lib, i18n, messages).
+- [x] `components/ui` (Button, Card, Badge, Input, SectionHeading).
+- [x] Client Supabase (browser/server) + env di esempio *(progetto Supabase reale da creare in Fase 1)*.
+- [x] Header/footer/nav dal mockup al routing Next.
+- [x] Rebranding VELOCITY → Marsica Car Meet (logo, testi, palette scuro+rosso).
+- [x] Nessuna dipendenza morta (scaffold pulito).
+- [x] Elementi mockup (carrello, telemetria, feed, chat) non riportati (partiti da zero).
+- [x] Migrazione Next 16: `middleware.ts` → `proxy.ts`.
 
 ## 🚀 Fase 1 — MVP
 
@@ -60,6 +63,12 @@
 - [ ] Cookie banner + gestione consensi.
 - [ ] Pagine privacy/cookie (struttura).
 - [ ] Middleware guardie aree membro/admin.
+
+## 🎨 Rifiniture UI aperte (da affrontare più avanti)
+
+- [ ] **Logo nell'header troppo piccolo/poco leggibile** (feedback utente 2026-07-08).
+      Attualmente 40×40px in [`Header.tsx`](../src/components/layout/Header.tsx). Da rivedere
+      dimensione/resa (il file `logo-white.png` è ~893KB, valutare anche una versione ottimizzata).
 
 ## 🗂️ Backlog (fasi successive)
 

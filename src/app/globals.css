@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-anybody), sans-serif;
+  --font-sans: var(--font-hanken), sans-serif;
+  --font-mono: var(--font-jetbrains), monospace;
+
+  --color-background: #0a0a0b;
+  --color-surface-dim: #050505;
+  --color-surface-card: #111114;
+  --color-surface-panel: #050505;
+  --color-accent-red: #ff3e00;
+  --color-accent-red-hover: #e03500;
+  --color-accent-orange: #fd8b00;
+  --color-accent-orange-hover: #e07a00;
+  --color-accent-pink: #ffb3ac;
+  --color-on-surface-muted: rgba(255, 255, 255, 0.4);
+}
+
+body {
+  background-color: var(--color-background);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.glass-panel {
+  background: rgba(21, 21, 24, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.racing-grid {
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+.neon-glow-red {
+  box-shadow: 0 0 15px rgba(255, 59, 59, 0.35);
+  border-color: rgba(255, 59, 59, 0.6);
+}
+.neon-text-red {
+  text-shadow: 0 0 8px rgba(255, 59, 59, 0.6);
+}
+
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(255, 59, 59, 0.6));
+  }
+  20%, 24%, 55% {
+    opacity: 0.5;
+    filter: none;
+  }
+}
+.redline-flicker {
+  animation: flicker 4s infinite alternate;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0b;
+}
+::-webkit-scrollbar-thumb {
+  background: #1d1d22;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ff3b3b;
+}

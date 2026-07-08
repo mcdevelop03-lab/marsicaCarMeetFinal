@@ -1,6 +1,0 @@
-{
-  "name": "VELOCITY",
-  "description": "High-octane automotive platform featuring user garage, performance shop, active meets map, and racing event details.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

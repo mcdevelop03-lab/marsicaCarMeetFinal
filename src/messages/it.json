@@ -1,0 +1,24 @@
+{
+  "brand": {
+    "name": "Marsica Car Meet",
+    "payoff": "La community dei motori della Marsica"
+  },
+  "nav": {
+    "home": "Home",
+    "eventi": "Eventi",
+    "garage": "Garage",
+    "gadget": "Gadget"
+  },
+  "home": {
+    "heroTitle": "LA MARSICA CORRE INSIEME",
+    "heroSubtitle": "Scopri i raduni, mostra la tua auto e vivi la passione dei motori in Marsica.",
+    "ctaTitle": "PRONTO A UNIRTI AL RADUNO?",
+    "ctaButton": "Registrati"
+  },
+  "footer": {
+    "copyright": "© 2026 Marsica Car Meet"
+  },
+  "placeholder": {
+    "comingSoon": "In arrivo"
+  }
+}

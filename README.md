@@ -1,20 +1,14 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Marsica Car Meet
 
-# Run and deploy your AI Studio app
+Piattaforma web della community dei motori della Marsica.
+Stack: Next.js 16 (App Router) · React 19 · TypeScript · TailwindCSS 4 · next-intl (IT) · Supabase.
 
-This contains everything you need to run your app locally.
+## Sviluppo
 
-View your app in AI Studio: https://ai.studio/apps/7bf53e33-addc-4b71-b79c-63b3b9ed3bdb
+```bash
+npm install
+cp .env.local.example .env.local   # inserisci le chiavi Supabase
+npm run dev                        # http://localhost:3000/it
+```
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Documentazione completa in [`docs/`](./docs/README.md).
