@@ -43,6 +43,7 @@
     "google": "Continua con Google",
     "checkEmail": "Ti abbiamo inviato un'email di conferma. Controlla la posta.",
     "resetSent": "Se l'email esiste, riceverai un link per reimpostare la password.",
+    "passwordUpdated": "Password aggiornata.",
     "genericError": "Qualcosa è andato storto. Riprova.",
     "invalidCredentials": "Credenziali non valide.",
     "turnstileFailed": "Verifica anti-bot non superata.",
