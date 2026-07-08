@@ -7,6 +7,7 @@ li aggiorna.
 
 | Documento | Contenuto |
 |---|---|
+| [STATO-LAVORI.md](./STATO-LAVORI.md) | **Punto di ripartenza**: dove siamo e da cosa ricominciare. |
 | [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md) | Visione, obiettivi, scope, scelte principali. |
 | [REQUIREMENTS.md](./REQUIREMENTS.md) | Requisiti funzionali e non funzionali (con priorità). |
 | [USER_ROLES.md](./USER_ROLES.md) | Ruoli utente e matrice dei permessi. |
