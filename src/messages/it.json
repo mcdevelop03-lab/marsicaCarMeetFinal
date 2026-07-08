@@ -20,5 +20,13 @@
   },
   "placeholder": {
     "comingSoon": "In arrivo"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "greeting": "Ciao {name}"
+  },
+  "admin": {
+    "title": "Pannello Admin",
+    "placeholder": "In arrivo"
   }
 }
