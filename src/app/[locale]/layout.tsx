@@ -3,6 +3,8 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { Anybody, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import { routing } from "@/i18n/routing";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 import "../globals.css";
 
 const anybody = Anybody({
@@ -46,7 +48,11 @@ export default async function LocaleLayout({
       className={`${anybody.variable} ${hanken.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <Header />
+          <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-12 py-10">{children}</div>
+          <Footer />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
