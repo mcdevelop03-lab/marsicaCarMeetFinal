@@ -1,12 +1,26 @@
-import { useTranslations } from "next-intl";
-import SectionHeading from "@/components/ui/SectionHeading";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+import AuthForm from "@/components/features/auth/AuthForm";
+import TurnstileWidget from "@/components/features/auth/TurnstileWidget";
+import Input from "@/components/ui/Input";
+import { signup } from "../auth/actions";
 
-export default function RegistratiPage() {
-  const t = useTranslations("placeholder");
+export default async function RegistratiPage() {
+  const t = await getTranslations("auth");
   return (
-    <div className="space-y-6">
-      <SectionHeading>Registrati</SectionHeading>
-      <p className="font-mono text-xs text-white/40 uppercase tracking-widest">{t("comingSoon")}</p>
+    <div className="space-y-4">
+      <AuthForm action={signup} title={t("signupTitle")} submitLabel={t("submitSignup")}>
+        <Input name="name" placeholder={t("name")} required />
+        <Input name="email" type="email" placeholder={t("email")} required />
+        <Input name="password" type="password" placeholder={t("password")} required />
+        <TurnstileWidget />
+      </AuthForm>
+      <p className="text-xs font-mono text-white/40">
+        {t("hasAccount")}{" "}
+        <Link href="/login" className="text-accent-red">
+          {t("loginTitle")}
+        </Link>
+      </p>
     </div>
   );
 }
