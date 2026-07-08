@@ -3,7 +3,8 @@ import { Link } from "@/i18n/navigation";
 import AuthForm from "@/components/features/auth/AuthForm";
 import TurnstileWidget from "@/components/features/auth/TurnstileWidget";
 import Input from "@/components/ui/Input";
-import { signup } from "../auth/actions";
+import Button from "@/components/ui/Button";
+import { signup, signInWithGoogle } from "../auth/actions";
 
 export default async function RegistratiPage() {
   const t = await getTranslations("auth");
@@ -15,6 +16,9 @@ export default async function RegistratiPage() {
         <Input name="password" type="password" placeholder={t("password")} required />
         <TurnstileWidget />
       </AuthForm>
+      <form action={signInWithGoogle}>
+        <Button variant="outline" type="submit">{t("google")}</Button>
+      </form>
       <p className="text-xs font-mono text-white/40">
         {t("hasAccount")}{" "}
         <Link href="/login" className="text-accent-red">

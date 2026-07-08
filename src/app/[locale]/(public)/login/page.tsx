@@ -4,7 +4,7 @@ import AuthForm from "@/components/features/auth/AuthForm";
 import TurnstileWidget from "@/components/features/auth/TurnstileWidget";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { login } from "../auth/actions";
+import { login, signInWithGoogle } from "../auth/actions";
 import { verifyMfa } from "../auth/actions-mfa";
 
 export default async function LoginPage({
@@ -32,6 +32,9 @@ export default async function LoginPage({
         <Input name="password" type="password" placeholder={t("password")} required />
         <TurnstileWidget />
       </AuthForm>
+      <form action={signInWithGoogle}>
+        <Button variant="outline" type="submit">{t("google")}</Button>
+      </form>
       <div className="text-xs font-mono text-white/40 space-y-1">
         <p>
           <Link href="/reset-password" className="text-accent-red">{t("forgotPassword")}</Link>

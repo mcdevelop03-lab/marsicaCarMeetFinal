@@ -6,6 +6,7 @@ import { verifyTurnstile } from "@/lib/turnstile";
 import { signupSchema, loginSchema } from "@/lib/validation/auth";
 import type { AuthState } from "@/components/features/auth/AuthForm";
 import { redirect } from "@/i18n/navigation";
+import { redirect as nextRedirect } from "next/navigation";
 
 export async function signup(_state: AuthState, formData: FormData): Promise<AuthState> {
   const t = await getTranslations("auth");
@@ -70,4 +71,14 @@ export async function logout(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect({ href: "/", locale: "it" });
+}
+
+export async function signInWithGoogle(): Promise<void> {
+  const origin = (await headers()).get("origin") ?? "";
+  const supabase = await createClient();
+  const { data } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${origin}/it/auth/callback` },
+  });
+  if (data?.url) nextRedirect(data.url); // redirect esterno: usa next/navigation redirect
 }
