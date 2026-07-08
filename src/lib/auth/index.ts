@@ -24,10 +24,21 @@ export async function getProfile(): Promise<Profile | null> {
 export async function requireUser(): Promise<User> {
   const user = await getUser();
   if (!user) redirect({ href: "/login", locale: "it" });
+
+  const supabase = await createClient();
+  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (data?.nextLevel === "aal2" && data.currentLevel !== "aal2") {
+    // User has a verified 2FA factor but has not completed the second
+    // factor challenge in this session: bounce to the MFA prompt instead
+    // of letting them through to protected pages.
+    redirect({ href: "/login?mfa=1", locale: "it" });
+  }
+
   return user!;
 }
 
 export async function requireAdmin(): Promise<Profile> {
+  await requireUser();
   const profile = await getProfile();
   if (!profile) redirect({ href: "/login", locale: "it" });
   if (profile!.role !== "admin") redirect({ href: "/dashboard", locale: "it" });

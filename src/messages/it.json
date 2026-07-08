@@ -50,6 +50,7 @@
     "turnstileFailed": "Verifica anti-bot non superata.",
     "twoFactorPrompt": "Inserisci il codice dell'app di autenticazione",
     "twoFactorCode": "Codice 2FA",
+    "invalidCode": "Codice non valido.",
     "noAccount": "Non hai un account?",
     "hasAccount": "Hai già un account?",
     "forgotPassword": "Password dimenticata?"
