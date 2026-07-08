@@ -102,7 +102,7 @@ export async function updatePassword(_state: AuthState, formData: FormData): Pro
   const t = await getTranslations("auth");
 
   const password = String(formData.get("password") ?? "");
-  if (password.length < 8) return { error: "La password deve avere almeno 8 caratteri" };
+  if (password.length < 8) return { error: t("passwordTooShort") };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password });
