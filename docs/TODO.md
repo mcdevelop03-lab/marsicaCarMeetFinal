@@ -64,6 +64,12 @@
 - [ ] Pagine privacy/cookie (struttura).
 - [ ] Middleware guardie aree membro/admin.
 
+## 🎨 Rifiniture UI aperte (da affrontare più avanti)
+
+- [ ] **Logo nell'header troppo piccolo/poco leggibile** (feedback utente 2026-07-08).
+      Attualmente 40×40px in [`Header.tsx`](../src/components/layout/Header.tsx). Da rivedere
+      dimensione/resa (il file `logo-white.png` è ~893KB, valutare anche una versione ottimizzata).
+
 ## 🗂️ Backlog (fasi successive)
 
 Vedi [`ROADMAP.md`](./ROADMAP.md) Fasi 2–4: news, gallery aggregata, mappa interattiva,
