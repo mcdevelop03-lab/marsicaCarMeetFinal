@@ -1,24 +1,26 @@
 # ROADMAP — Marsica Car Meet
 
-> Documento vivo. Ultima modifica: 2026-07-07.
+> Documento vivo. Ultima modifica: 2026-07-08.
 > Sequenza pensata per uno sviluppatore singolo: ogni fase produce qualcosa di usabile.
 > Scelte di scope in [`DECISIONS.md`](./DECISIONS.md).
 
-## Fase 0 — Fondamenta (nessuna funzionalità utente)
+## Fase 0 — Fondamenta (nessuna funzionalità utente) — ✅ COMPLETATA (2026-07-08)
 
 Obiettivo: base tecnica solida, responsive e ribrandizzata.
+Implementata sul branch `feat/fase0-fondamenta` (Next.js **16**, non 15).
 
-- [ ] Scaffold Next.js 15 (App Router, TypeScript).
-- [ ] Integrazione TailwindCSS 4 e migrazione degli stili del mockup.
-- [ ] Setup i18n (`next-intl`) con locale IT e struttura pronta per EN (Fase 3).
-- [ ] Struttura cartelle professionale (route groups, `components/ui`, `components/features`, lib).
-- [ ] Estrazione componenti UI condivisi + **colori su token** (vedi [CODE_ANALYSIS.md](./CODE_ANALYSIS.md)).
-- [ ] Collegamento a Supabase (client/server) e variabili d'ambiente.
-- [ ] Migrazione layout mockup: header, footer, navigazione (da `useState` a routing).
-- [ ] Rebranding VELOCITY → Marsica Car Meet (logo utente, nome, testi reali, palette scuro+rosso).
-- [ ] Rimozione dipendenze morte: `@google/genai`, `motion`, `express`, `dotenv` + residui AI Studio.
-- [ ] Rimozione elementi da mockup: carrello, telemetria simulata, feed, chat.
-- **Esito:** sito navigabile con pagine placeholder, responsive, bilingue di base.
+- [x] Scaffold Next.js 16 (App Router, TypeScript, Turbopack).
+- [x] Integrazione TailwindCSS 4 e migrazione degli stili del mockup (token `@theme`).
+- [x] Setup i18n (`next-intl`) con locale IT e struttura pronta per EN (Fase 3).
+- [x] Struttura cartelle professionale (`[locale]`, `components/ui`, `components/layout`, `lib`, `i18n`, `messages`).
+- [x] Estrazione componenti UI condivisi + **colori su token** (vedi [CODE_ANALYSIS.md](./CODE_ANALYSIS.md)).
+- [x] Collegamento a Supabase (client/server) e variabili d'ambiente (`.env.local.example`).
+- [x] Migrazione layout mockup: header, footer, navigazione (da `useState` a routing).
+- [x] Rebranding VELOCITY → Marsica Car Meet (logo utente, nome, testi reali, palette scuro+rosso).
+- [x] Rimozione dipendenze morte: `@google/genai`, `motion`, `express`, `dotenv` + residui AI Studio (scaffold pulito).
+- [x] Rimozione elementi da mockup: carrello, telemetria simulata, feed, chat (partiti da zero).
+- [x] **Note Next 16:** migrato `middleware.ts` → `proxy.ts` (convenzione deprecata in Next 16).
+- **Esito:** ✅ sito navigabile con pagine placeholder, responsive, bilingue di base. Verificato a runtime (`/`→`/it`, home, placeholder, 404, logo).
 
 ## Fase 1 — MVP (community + eventi)
 
