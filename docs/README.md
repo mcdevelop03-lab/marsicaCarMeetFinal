@@ -17,6 +17,7 @@ li aggiorna.
 | [DECISIONS.md](./DECISIONS.md) | Registro delle decisioni di prodotto/scope (con ID citabili). |
 | [ROADMAP.md](./ROADMAP.md) | Fasi di sviluppo incrementali. |
 | [TODO.md](./TODO.md) | Attività operative e decisioni aperte. |
+| [SETUP.md](./SETUP.md) | Guida passo-passo per configurare il progetto da zero su un nuovo dispositivo. |
 
 ## Sintesi rapida
 
