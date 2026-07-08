@@ -485,18 +485,19 @@ create policy "event_media_admin_write" on storage.objects
 
 - [ ] **Step 2: Scrivere `supabase/seed.sql` (promozione primo admin)**
 
-> **INPUT UTENTE RICHIESTO:** chiedere all'utente quale email sarà il primo admin (default suggerito: `aidev3@goproject.it`). Il seed promuove a `admin` il profilo con quell'email, DOPO che l'utente si è registrato.
+> **INPUT UTENTE RICHIESTO (OBBLIGATORIO):** chiedere all'utente quale email sarà il primo admin. **NON usare mai** l'email dell'account (`aidev3@goproject.it`) e **non scegliere un default**: fermarsi e attendere l'indirizzo dall'utente. Il seed promuove a `admin` il profilo con quell'email, DOPO che l'utente si è registrato.
 
 Create `supabase/seed.sql`:
 ```sql
 -- Promuove a admin il profilo associato all'email indicata.
 -- L'utente deve essersi PRIMA registrato (così esistono auth.users + profiles).
--- Sostituire l'email con quella concordata col cliente.
+-- SOSTITUIRE <EMAIL_ADMIN_DA_CONFERMARE> con l'email fornita dall'utente
+-- (MAI l'email dell'account aidev3@goproject.it).
 update public.profiles p
 set role = 'admin'
 from auth.users u
 where u.id = p.id
-  and u.email = 'aidev3@goproject.it';
+  and u.email = '<EMAIL_ADMIN_DA_CONFERMARE>';
 ```
 > `supabase db reset` esegue anche `seed.sql`, ma a DB appena creato non ci sono utenti: la promozione diventa effettiva dopo la prima registrazione. In alternativa, dopo esserti registrato, eseguire il solo UPDATE via Studio SQL editor.
 
