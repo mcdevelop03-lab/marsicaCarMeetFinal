@@ -23,7 +23,8 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "greeting": "Ciao {name}"
+    "greeting": "Ciao {name}",
+    "logout": "Logout"
   },
   "admin": {
     "title": "Pannello Admin",
