@@ -13,7 +13,7 @@
 
 ## 🔜 Prossimo passo immediato
 
-- [ ] Integrare il branch `feat/fase0-fondamenta` (merge in `main`) e iniziare la **Fase 1 — MVP**.
+- [ ] Iniziare il sotto-progetto **1B — Profilo + Garage** (view/edit profilo, avatar, CRUD auto + foto).
 
 ## ✅ Fase 0 — Fondamenta — COMPLETATA (2026-07-08)
 
@@ -33,17 +33,23 @@
 
 ## 🚀 Fase 1 — MVP
 
-### Database
-- [ ] Migrazione SQL: `profiles`, `vehicles`, `events`, `event_registrations`, `event_vehicles`, `event_media`, `gadgets`.
-- [ ] Policy RLS per ogni tabella (pubblico: eventi + media; membri: profili/garage).
-- [ ] Seed primo utente admin.
+### ✅ 1A — Backend + Auth — COMPLETATA (2026-07-09, branch `feat/fase1a-backend-auth`)
 
-### Auth & profilo
-- [ ] Pagine registrati / login / reset password + **"Continua con Google"**.
-- [ ] **Conferma email obbligatoria** + **Cloudflare Turnstile** su registrati/login.
-- [ ] **2FA TOTP opzionale** (attivazione dal profilo).
-- [ ] Trigger creazione `profile` alla registrazione.
-- [ ] Pagina profilo (view + edit: nome, tag, bio, paese, social) e upload avatar. Visibile ai soli loggati.
+> 13 task. Collaudo e2e (browser + Mailpit + SQL) superato. Durante il collaudo sono
+> emersi e corretti 7 bug (GRANT tabelle mancanti, allow-list redirect conferma,
+> Turnstile render, config MFA + QR + errore UI). Build, lint, tsc verdi.
+
+- [x] Migrazione SQL: `profiles`, `vehicles`, `events`, `event_registrations`, `event_vehicles`, `event_media` (+ **GRANT ruoli**).
+- [x] Policy RLS per ogni tabella (pubblico: eventi + media; membri: profili/garage) — verificata su `vehicles`.
+- [x] Seed primo utente admin (`mcdevelop03@gmail.com`).
+- [x] Pagine registrati / login / reset password + **"Continua con Google"** *(OAuth reale rimandato al cloud)*.
+- [x] **Conferma email** + **Cloudflare Turnstile** su registrati/login *(chiavi reali rimandate al cloud)*.
+- [x] **2FA TOTP opzionale** (attivazione da `/impostazioni`) + enforcement AAL2 nelle guardie.
+- [x] Trigger creazione `profile` alla registrazione.
+
+### Database/Auth — resto Fase 1
+- [ ] Tabella `gadgets` (Fase 5 Gadget) — rimandata.
+- [ ] Pagina profilo (view + edit: nome, tag, bio, paese, social) e upload avatar. Visibile ai soli loggati. **[1B]**
 
 ### Garage
 - [ ] Elenco auto proprie.
