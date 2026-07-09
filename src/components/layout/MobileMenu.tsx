@@ -1,15 +1,20 @@
 "use client";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { logout } from "@/app/[locale]/(public)/auth/actions";
 
 export default function MobileMenu({
   links,
+  isAuthenticated,
   onClose,
 }: {
   links: readonly { href: string; label: string }[];
+  isAuthenticated: boolean;
   onClose: () => void;
 }) {
+  const t = useTranslations("nav");
   return (
     <div className="fixed inset-0 z-50 lg:hidden flex">
       <div className="absolute inset-0 bg-background/95 backdrop-blur-md" onClick={onClose} />
@@ -31,6 +36,25 @@ export default function MobileMenu({
               {l.label}
             </Link>
           ))}
+          {isAuthenticated ? (
+            // niente onClose sul submit: chiudere smonterebbe il form prima dell'invio.
+            <form action={logout}>
+              <button
+                type="submit"
+                className="w-full text-left px-4 py-3 rounded-lg hover:bg-white/5 text-accent-red transition-colors font-mono text-xs font-bold uppercase tracking-widest"
+              >
+                {t("logout")}
+              </button>
+            </form>
+          ) : (
+            <Link
+              href="/login"
+              onClick={onClose}
+              className="px-4 py-3 rounded-lg hover:bg-white/5 text-accent-red transition-colors"
+            >
+              {t("login")}
+            </Link>
+          )}
         </nav>
       </div>
     </div>
