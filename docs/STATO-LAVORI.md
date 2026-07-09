@@ -30,6 +30,19 @@ registrazione→conferma email→auto-login, login/logout, guardie, admin, 2FA (
 3. `fix(auth)` — **Turnstile** render esplicito (il widget non partiva: "preloaded but not used").
 4. `fix(2fa)` — **config MFA TOTP disabilitata** (`enroll/verify_enabled=false`) + **QR** rotto con `next/image` (SVG data-URI) + errore UI non mostrato nello stato iniziale.
 
+## 🎨 Rifiniture UI/UX post-1A — 2026-07-09 (su `main`, pushate)
+
+Dopo la chiusura di 1A, migliorie all'interfaccia auth e alla navigazione (non nuove fasi):
+- **Pagine auth a card**: login/registrati/reset avvolte in `AuthShell` (card centrata su sfondo "racing": griglia + alone rosso), campi/bottoni full-width.
+- **Validazione live** (`ValidatedInput`): hint sotto email (formato) e password (min 8), spariscono quando validi.
+- **Submit disabilitato** finché il form non è valido (validazione nativa) + stile disabled.
+- **Vista successo**: dopo registrazione/reset resta solo il messaggio (form e footer nascosti).
+- **Link "Clicca qui per accedere"** dopo l'aggiornamento password.
+- **Fix menu hamburger**: reso fratello dell'header (era compresso dal `backdrop-filter`).
+- **Navigazione da loggato**: `Dashboard`/`Impostazioni`/`Logout` nel menu (o `Accedi` da sloggato). `isAuthenticated` passato dal layout.
+
+> **Avatar profilo accanto al menu**: richiesto, ma **rimandato a 1B** (display + upload). Requisito annotato.
+
 ## 🔧 Come rimettere in moto l'ambiente
 
 Dalla root del progetto Next (`marsicaCarMeetFinal/marsicaCarMeetFinal/`):
@@ -40,6 +53,8 @@ Dalla root del progetto Next (`marsicaCarMeetFinal/marsicaCarMeetFinal/`):
 5. `.env.local` presente (gitignored); se manca vedi [`SETUP.md`](./SETUP.md).
 
 Per promuovere un utente ad admin dopo la registrazione: rieseguire la `update` in `supabase/seed.sql` (il seed promuove solo se l'utente esiste già).
+
+**Credenziali di test locali (volatili — si azzerano con `db reset`):** admin `mcdevelop03@gmail.com` / `Marsica2026!` (2FA disattivo). Da loggato, il **2FA** si attiva da **Impostazioni** (link nel menu/header, non serve più digitare l'URL).
 
 ## 📌 Decisioni e regole permanenti (non dimenticare)
 

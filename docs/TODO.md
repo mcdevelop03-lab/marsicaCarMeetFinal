@@ -1,6 +1,6 @@
 # TODO — Marsica Car Meet
 
-> Documento vivo. Ultima modifica: 2026-07-08.
+> Documento vivo. Ultima modifica: 2026-07-09.
 > Attività operative. Le fasi rimandano a [`ROADMAP.md`](./ROADMAP.md).
 
 ## ✅ Fatto
@@ -10,6 +10,9 @@
 - [x] Fase 3 Analisi del codice → [`CODE_ANALYSIS.md`](./CODE_ANALYSIS.md).
 - [x] **Fase 0 — Fondamenta** completata (2026-07-08) sul branch `feat/fase0-fondamenta`.
       Piano: [`superpowers/plans/2026-07-07-fase0-fondamenta.md`](./superpowers/plans/2026-07-07-fase0-fondamenta.md).
+- [x] **Fase 1A — Backend + Auth** completata e collaudata (2026-07-09), mergiata in `main`.
+- [x] Rifiniture UI/UX auth (2026-07-09): card auth, validazione live, submit disabilitato,
+      vista successo, fix menu hamburger, navigazione loggato, link post-reset. *(Avatar → 1B.)*
 
 ## 🔜 Prossimo passo immediato
 
