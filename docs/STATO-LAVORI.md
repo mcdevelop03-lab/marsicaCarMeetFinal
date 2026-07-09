@@ -51,7 +51,7 @@ Per promuovere un utente ad admin dopo la registrazione: rieseguire la `update` 
 
 ## 🐞 Note aperte (non bloccanti)
 
-- **Reset password con 2FA attivo NON collaudato:** la pagina di reset (`/it/impostazioni/reset`) esige AAL2, quindi con 2FA attivo la sessione di recovery (aal1) verrebbe rimbalzata alla sfida MFA. Interazione da verificare/sistemare in seguito.
+- ✅ **Reset password con 2FA attivo — RISOLTO e collaudato (2026-07-09).** GoTrue esige AAL2 per cambiare password con MFA attivo: ora il link di recovery porta alla sfida MFA e, dopo la verifica, si torna alla pagina di reset (`/it/reset-password/aggiorna`, spostata fuori dal gruppo AAL2) per impostare la nuova password. Commit `fix(auth): reset password funzionante con 2FA attivo`.
 - **Google OAuth / Turnstile reali + progetto Supabase cloud** da configurare (solo codice presente; guida in [`SETUP.md`](./SETUP.md) §6).
 - Logo header troppo piccolo (feedback 2026-07-08).
 - Messaggi di validazione zod hardcoded in italiano + prefisso `/it/` fisso in alcune redirect → sistemare con l'inglese (Fase 3).
