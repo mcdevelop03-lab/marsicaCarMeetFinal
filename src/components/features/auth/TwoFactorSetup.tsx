@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import Image from "next/image";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { enrollTotp, verifyTotp } from "@/app/[locale]/(auth)/impostazioni/actions";
@@ -25,12 +24,20 @@ export default function TwoFactorSetup({ labels }: { labels: Record<string, stri
     return (
       <div className="space-y-3">
         <p className="text-xs font-mono text-white/60">{labels.scanQr}</p>
-        <Image src={state.qr} alt="QR 2FA" width={180} height={180} unoptimized />
+        {/* qr_code è un SVG data-URI generato da Supabase: next/image non lo accetta,
+            usiamo un <img> semplice. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={state.qr} alt="QR 2FA" width={180} height={180} />
         <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder={labels.code} inputMode="numeric" />
         {state.error && <p className="text-xs font-mono text-accent-red">{state.error}</p>}
         <Button onClick={confirm}>{labels.verify}</Button>
       </div>
     );
   }
-  return <Button onClick={start}>{labels.enable2fa}</Button>;
+  return (
+    <div className="space-y-2">
+      {state.error && <p className="text-xs font-mono text-accent-red">{state.error}</p>}
+      <Button onClick={start}>{labels.enable2fa}</Button>
+    </div>
+  );
 }
