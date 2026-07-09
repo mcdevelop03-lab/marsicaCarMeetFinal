@@ -92,7 +92,7 @@ export async function requestReset(_state: AuthState, formData: FormData): Promi
   const origin = (await headers()).get("origin") ?? "";
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${origin}/it/auth/callback?next=/it/impostazioni/reset`,
+    redirectTo: `${origin}/it/auth/callback?next=/it/reset-password/aggiorna`,
   });
   // messaggio neutro (no user enumeration)
   return { success: t("resetSent") };

@@ -21,7 +21,7 @@ export async function getProfile(): Promise<Profile | null> {
   return (data as Profile) ?? null;
 }
 
-export async function requireUser(): Promise<User> {
+export async function requireUser(mfaNext?: string): Promise<User> {
   const user = await getUser();
   if (!user) redirect({ href: "/login", locale: "it" });
 
@@ -30,8 +30,13 @@ export async function requireUser(): Promise<User> {
   if (data?.nextLevel === "aal2" && data.currentLevel !== "aal2") {
     // User has a verified 2FA factor but has not completed the second
     // factor challenge in this session: bounce to the MFA prompt instead
-    // of letting them through to protected pages.
-    redirect({ href: "/login?mfa=1", locale: "it" });
+    // of letting them through to protected pages. `mfaNext` (path senza
+    // prefisso locale, es. "/reset-password/aggiorna") fa tornare l'utente
+    // alla pagina di partenza dopo la sfida invece che alla dashboard.
+    redirect({
+      href: { pathname: "/login", query: mfaNext ? { mfa: "1", next: mfaNext } : { mfa: "1" } },
+      locale: "it",
+    });
   }
 
   return user!;

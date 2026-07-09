@@ -10,16 +10,17 @@ import { verifyMfa } from "../auth/actions-mfa";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mfa?: string; error?: string }>;
+  searchParams: Promise<{ mfa?: string; error?: string; next?: string }>;
 }) {
   const t = await getTranslations("auth");
-  const { mfa, error } = await searchParams;
+  const { mfa, error, next } = await searchParams;
 
   if (mfa === "1") {
     return (
       <form action={verifyMfa} className="max-w-sm space-y-6">
         <p className="text-xs font-mono text-white/60">{t("twoFactorPrompt")}</p>
         <Input name="code" inputMode="numeric" placeholder={t("twoFactorCode")} required />
+        {next && <input type="hidden" name="next" value={next} />}
         {error && <p className="text-xs font-mono text-accent-red">{t("invalidCode")}</p>}
         <Button type="submit">{t("submitLogin")}</Button>
       </form>
