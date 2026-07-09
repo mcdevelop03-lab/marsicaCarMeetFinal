@@ -24,18 +24,18 @@ Implementata sul branch `feat/fase0-fondamenta` (Next.js **16**, non 15).
 
 ## Fase 1 — MVP (community + eventi)
 
-Obiettivo: primo prodotto realmente utile alla community.
+Obiettivo: primo prodotto realmente utile alla community. Suddivisa in sotto-progetti **1A** (Backend+Auth), **1B** (Profilo+Garage), **1C** (Eventi+RSVP+media), **1D** (GDPR+rifinitura).
 
-- [ ] Schema DB: `profiles`, `vehicles`, `events`, `event_registrations`, `event_vehicles`, `event_media`.
-- [ ] RLS su tutte le tabelle (pubblico: eventi + media; membri: profili/garage).
-- [ ] Auth: registrazione + **conferma email**, login/logout, reset, **Google OAuth**, **Turnstile**, **2FA TOTP opzionale**.
-- [ ] Profilo membro: visualizzazione e modifica (nome, tag, bio, paese, social), upload avatar.
-- [ ] Garage: CRUD auto con upload foto (campi obbligatori/opzionali).
-- [ ] Eventi: elenco e dettaglio pubblici (con link mappa esterna); tipi raduno/giro/sociale.
-- [ ] Admin: creazione/gestione eventi + **upload album foto/video dell'evento**.
-- [ ] RSVP con capienza + associazione auto all'evento.
-- [ ] GDPR base: cookie banner + pagine privacy/cookie (struttura).
-- [ ] Guardie di accesso (aree membro/admin).
+- [x] **[1A]** Schema DB: `profiles`, `vehicles`, `events`, `event_registrations`, `event_vehicles`, `event_media`.
+- [x] **[1A]** RLS su tutte le tabelle (pubblico: eventi + media; membri: profili/garage) — inclusi i GRANT di tabella.
+- [x] **[1A]** Auth: registrazione + **conferma email**, login/logout, reset, **2FA TOTP**, guardie AAL2. *(Google OAuth + Turnstile reali: solo codice, config cloud rimandata.)*
+- [ ] **[1B]** Profilo membro: visualizzazione e modifica (nome, tag, bio, paese, social), upload avatar.
+- [ ] **[1B]** Garage: CRUD auto con upload foto (campi obbligatori/opzionali).
+- [ ] **[1C]** Eventi: elenco e dettaglio pubblici (con link mappa esterna); tipi raduno/giro/sociale.
+- [ ] **[1C]** Admin: creazione/gestione eventi + **upload album foto/video dell'evento**.
+- [ ] **[1C]** RSVP con capienza + associazione auto all'evento.
+- [ ] **[1D]** GDPR base: cookie banner + pagine privacy/cookie (struttura).
+- [x] **[1A]** Guardie di accesso (aree membro/admin).
 - **Esito:** membri si registrano, gestiscono auto e partecipano ai raduni creati dall'Admin;
   l'Admin pubblica gli album foto dei raduni conclusi.
 

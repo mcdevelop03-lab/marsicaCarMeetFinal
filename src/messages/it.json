@@ -20,5 +20,49 @@
   },
   "placeholder": {
     "comingSoon": "In arrivo"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "greeting": "Ciao {name}",
+    "logout": "Logout"
+  },
+  "admin": {
+    "title": "Pannello Admin",
+    "placeholder": "In arrivo"
+  },
+  "auth": {
+    "loginTitle": "Accedi",
+    "signupTitle": "Registrati",
+    "resetTitle": "Recupera password",
+    "email": "Email",
+    "password": "Password",
+    "name": "Nome",
+    "submitLogin": "Accedi",
+    "submitSignup": "Crea account",
+    "submitReset": "Invia link",
+    "google": "Continua con Google",
+    "checkEmail": "Ti abbiamo inviato un'email di conferma. Controlla la posta.",
+    "resetSent": "Se l'email esiste, riceverai un link per reimpostare la password.",
+    "passwordUpdated": "Password aggiornata.",
+    "passwordTooShort": "La password deve avere almeno 8 caratteri",
+    "genericError": "Qualcosa è andato storto. Riprova.",
+    "invalidCredentials": "Credenziali non valide.",
+    "turnstileFailed": "Verifica anti-bot non superata.",
+    "twoFactorPrompt": "Inserisci il codice dell'app di autenticazione",
+    "twoFactorCode": "Codice 2FA",
+    "invalidCode": "Codice non valido.",
+    "noAccount": "Non hai un account?",
+    "hasAccount": "Hai già un account?",
+    "forgotPassword": "Password dimenticata?"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "twoFactor": "Autenticazione a due fattori (2FA)",
+    "enable2fa": "Attiva 2FA",
+    "disable2fa": "Disattiva 2FA",
+    "scanQr": "Scansiona il QR con la tua app authenticator, poi inserisci il codice.",
+    "verify": "Verifica",
+    "enabled2fa": "2FA attiva",
+    "code": "Codice"
   }
 }
