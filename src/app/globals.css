@@ -44,6 +44,15 @@ body {
     linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 }
 
+/* Alone rosso soffuso dietro la card delle pagine auth. Colore dal token. */
+.auth-aura {
+  background-image: radial-gradient(
+    55% 45% at 50% 38%,
+    color-mix(in srgb, var(--color-accent-red) 13%, transparent),
+    transparent 70%
+  );
+}
+
 .neon-glow-red {
   box-shadow: 0 0 15px rgba(255, 59, 59, 0.35);
   border-color: rgba(255, 59, 59, 0.6);

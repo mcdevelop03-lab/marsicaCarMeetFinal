@@ -15,7 +15,7 @@ export default function Button({
 }: { variant?: Variant } & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`px-6 py-3 font-mono font-bold text-xs uppercase tracking-widest transition-colors ${styles[variant]} ${className}`}
+      className={`px-6 py-3 font-mono font-bold text-xs uppercase tracking-widest transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none ${styles[variant]} ${className}`}
       {...props}
     />
   );

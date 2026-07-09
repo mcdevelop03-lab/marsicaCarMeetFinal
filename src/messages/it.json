@@ -7,7 +7,11 @@
     "home": "Home",
     "eventi": "Eventi",
     "garage": "Garage",
-    "gadget": "Gadget"
+    "gadget": "Gadget",
+    "dashboard": "Dashboard",
+    "impostazioni": "Impostazioni",
+    "login": "Accedi",
+    "logout": "Logout"
   },
   "home": {
     "heroTitle": "LA MARSICA CORRE INSIEME",
@@ -44,7 +48,10 @@
     "checkEmail": "Ti abbiamo inviato un'email di conferma. Controlla la posta.",
     "resetSent": "Se l'email esiste, riceverai un link per reimpostare la password.",
     "passwordUpdated": "Password aggiornata.",
+    "proceedToLogin": "Clicca qui per accedere",
     "passwordTooShort": "La password deve avere almeno 8 caratteri",
+    "passwordHint": "Minimo 8 caratteri",
+    "emailHint": "Inserisci un'email valida",
     "genericError": "Qualcosa è andato storto. Riprova.",
     "invalidCredentials": "Credenziali non valide.",
     "turnstileFailed": "Verifica anti-bot non superata.",
