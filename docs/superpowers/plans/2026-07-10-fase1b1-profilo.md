@@ -278,7 +278,10 @@ export const profileSchema = z.object({
     .trim()
     .min(3, "Tag troppo corto (minimo 3 caratteri)")
     .max(30, "Tag troppo lungo (massimo 30 caratteri)")
-    .regex(/^[a-z0-9._-]+$/, "Il tag può contenere solo minuscole, numeri, punto, trattino e underscore"),
+    .regex(
+      /^[a-z0-9._-]+$/,
+      "Il tag deve essere tutto minuscolo: ammessi lettere minuscole, numeri, punto, trattino e underscore",
+    ),
   bio: optionalText(300, "Bio troppo lunga (massimo 300 caratteri)"),
   town: optionalText(60, "Comune troppo lungo (massimo 60 caratteri)"),
   instagram: optionalHandle,
@@ -373,7 +376,7 @@ e aggiungi i due blocchi `profile` e `members` **dopo** il blocco `settings` (ri
     "avatarUploadFailed": "Caricamento non riuscito. Riprova.",
     "name": "Nome",
     "tag": "Tag",
-    "tagHint": "Da 3 a 30 caratteri: minuscole, numeri, punto, trattino, underscore",
+    "tagHint": "Deve essere tutto minuscolo, senza spazi. Da 3 a 30 caratteri: lettere minuscole, numeri, punto, trattino, underscore",
     "tagTaken": "Tag già in uso",
     "town": "Comune",
     "bio": "Bio",
