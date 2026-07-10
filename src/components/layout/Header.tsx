@@ -20,6 +20,7 @@ export default function Header({ isAuthenticated }: { isAuthenticated: boolean }
     ...(isAuthenticated
       ? [
           { href: "/dashboard", label: t("dashboard") },
+          { href: "/profilo", label: t("profilo") },
           { href: "/impostazioni", label: t("impostazioni") },
         ]
       : []),
