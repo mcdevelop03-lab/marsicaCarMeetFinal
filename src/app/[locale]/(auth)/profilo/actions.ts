@@ -75,11 +75,26 @@ export async function setAvatar(path: string): Promise<{ error?: string }> {
 
   // Nella cartella dell'utente resta un solo file: gli altri sono orfani.
   // Si elencano e si cancellano invece di ricavare il path dal vecchio URL.
-  const { data: files } = await supabase.storage.from("avatars").list(user.id);
-  const stale = (files ?? [])
-    .map((file) => `${user.id}/${file.name}`)
-    .filter((candidate) => candidate !== path);
-  if (stale.length > 0) await supabase.storage.from("avatars").remove(stale);
+  // L'elenco richiede la policy `avatars_select_own` (migrazione 0006): senza,
+  // la RLS filtra tutto e `list` torna una lista vuota, silenziosamente.
+  //
+  // Un fallimento qui NON è un errore per l'utente: l'avatar nuovo è già salvato
+  // e valido. Lasciamo però una traccia nei log del server, altrimenti una
+  // pulizia rotta è indistinguibile da "non c'era nulla da pulire".
+  const { data: files, error: listError } = await supabase.storage.from("avatars").list(user.id);
+  if (listError) {
+    console.error("setAvatar: elenco della cartella avatar non riuscito", listError);
+  } else {
+    const stale = (files ?? [])
+      .map((file) => `${user.id}/${file.name}`)
+      .filter((candidate) => candidate !== path);
+    if (stale.length > 0) {
+      const { error: removeError } = await supabase.storage.from("avatars").remove(stale);
+      if (removeError) {
+        console.error("setAvatar: rimozione degli avatar orfani non riuscita", removeError);
+      }
+    }
+  }
 
   revalidatePath("/", "layout");
   return {};

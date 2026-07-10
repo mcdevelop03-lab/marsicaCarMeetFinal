@@ -43,6 +43,7 @@ Lo spec chiede le **icone vere** dei marchi. **`lucide-react` v1 le ha rimosse**
 | File | Responsabilità |
 |------|----------------|
 | `supabase/migrations/0005_storage_avatar_limits.sql` | Limiti di peso e MIME sul bucket `avatars` |
+| `supabase/migrations/0006_storage_avatars_select.sql` | Policy `SELECT` sul bucket `avatars` (Task 4): senza, `storage.list()` torna sempre vuoto |
 | `src/lib/profile/socials.ts` | Chiavi social, etichette, costruzione degli URL dagli handle |
 | `src/lib/profile/search.ts` | Escaping dei jolly `ilike` e quoting per il filtro `.or()` di PostgREST |
 | `src/lib/validation/profile.ts` | Schema zod dei campi profilo |
@@ -720,6 +721,7 @@ git commit -m "feat(profilo): pagina /profilo con form di modifica e voce di men
 ## Task 4 — Upload dell'avatar
 
 **File:**
+- Crea: `supabase/migrations/0006_storage_avatars_select.sql`
 - Crea: `src/components/features/profile/AvatarUploader.tsx`
 - Modifica: `src/app/[locale]/(auth)/profilo/actions.ts` (aggiunge `setAvatar`)
 - Modifica: `src/app/[locale]/(auth)/profilo/page.tsx` (monta l'uploader)
@@ -729,6 +731,42 @@ git commit -m "feat(profilo): pagina /profilo con form di modifica e voce di men
 - Produce:
   - `setAvatar(path: string): Promise<{ error?: string }>` (in `profilo/actions.ts`)
   - `<AvatarUploader userId={string} avatarUrl={string | null} />`
+
+- [ ] **Step 0: Migrazione `0006` — policy `SELECT` sul bucket `avatars`**
+
+La `0003` creò per `avatars` le policy di `INSERT`, `UPDATE` e `DELETE`, ma **non quella di `SELECT`**. Su `storage.objects` la RLS è attiva: senza policy di lettura, `storage.list()` chiamato con la sessione dell'utente restituisce **sempre una lista vuota**, e la pulizia dei file orfani nello Step 1 non cancella mai nulla. Il difetto è silenzioso — nessun errore, solo `[]`. (Trovato al collaudo: due upload reali, `list()` → `[]`, mentre il service role vedeva entrambi i file.)
+
+Crea `supabase/migrations/0006_storage_avatars_select.sql`:
+
+```sql
+-- La 0003 ha creato per `avatars` le policy di INSERT, UPDATE e DELETE, ma NON
+-- quella di SELECT. Su `storage.objects` la RLS è attiva: senza policy di lettura
+-- `storage.list()` chiamato con la sessione dell'utente restituisce sempre una
+-- lista vuota, e la pulizia dei file orfani in `setAvatar` non cancella mai nulla
+-- (i vecchi avatar restano nel bucket, pubblicamente scaricabili via URL).
+--
+-- Il bucket è `public = true`, quindi la lettura anonima via URL pubblico passa
+-- già da un'altra strada e questa policy non la tocca: qui abilitiamo soltanto
+-- l'elenco della PROPRIA cartella `{uid}/` da parte dell'utente autenticato.
+create policy "avatars_select_own" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+```
+
+Applicala **senza resettare il database** (gli utenti locali sopravvivono):
+
+```bash
+npx supabase migration up --local
+```
+
+Verifica che la policy esista:
+
+```bash
+docker exec supabase_db_marsicaCarMeetFinal psql -U postgres -d postgres \
+  -c "select policyname, cmd from pg_policies where schemaname='storage' and tablename='objects' and cmd='SELECT';"
+```
+
+Atteso: una riga, `avatars_select_own | SELECT`.
 
 - [ ] **Step 1: La server action `setAvatar`**
 
@@ -755,11 +793,26 @@ export async function setAvatar(path: string): Promise<{ error?: string }> {
 
   // Nella cartella dell'utente resta un solo file: gli altri sono orfani.
   // Si elencano e si cancellano invece di ricavare il path dal vecchio URL.
-  const { data: files } = await supabase.storage.from("avatars").list(user.id);
-  const stale = (files ?? [])
-    .map((file) => `${user.id}/${file.name}`)
-    .filter((candidate) => candidate !== path);
-  if (stale.length > 0) await supabase.storage.from("avatars").remove(stale);
+  // L'elenco richiede la policy `avatars_select_own` (migrazione 0006): senza,
+  // la RLS filtra tutto e `list` torna una lista vuota, silenziosamente.
+  //
+  // Un fallimento qui NON è un errore per l'utente: l'avatar nuovo è già salvato
+  // e valido. Lasciamo però una traccia nei log del server, altrimenti una
+  // pulizia rotta è indistinguibile da "non c'era nulla da pulire".
+  const { data: files, error: listError } = await supabase.storage.from("avatars").list(user.id);
+  if (listError) {
+    console.error("setAvatar: elenco della cartella avatar non riuscito", listError);
+  } else {
+    const stale = (files ?? [])
+      .map((file) => `${user.id}/${file.name}`)
+      .filter((candidate) => candidate !== path);
+    if (stale.length > 0) {
+      const { error: removeError } = await supabase.storage.from("avatars").remove(stale);
+      if (removeError) {
+        console.error("setAvatar: rimozione degli avatar orfani non riuscita", removeError);
+      }
+    }
+  }
 
   revalidatePath("/", "layout");
   return {};
