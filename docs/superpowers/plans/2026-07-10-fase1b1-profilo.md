@@ -246,9 +246,8 @@ Crea `src/lib/validation/profile.ts`. I campi opzionali arrivano dal form come s
 
 ```ts
 import * as z from "zod";
+import type { SocialKey } from "@/lib/profile/socials";
 
-// I quattro campi social qui sotto devono restare allineati a SOCIAL_KEYS
-// (`src/lib/profile/socials.ts`), che ne detta l'ordine nella UI.
 // I campi non obbligatori arrivano dal form come "": va trattata come "assente",
 // altrimenti regex e lunghezze minime scatterebbero su un campo lasciato vuoto.
 const emptyToUndefined = (v: unknown) =>
@@ -288,6 +287,11 @@ export const profileSchema = z.object({
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;
+
+// I quattro campi social di profileSchema devono restare allineati a SOCIAL_KEYS
+// (`src/lib/profile/socials.ts`), che ne detta l'ordine nella UI. Se un social
+// viene aggiunto là senza un campo qui, `Pick` non trova la chiave e `tsc` fallisce.
+export type SocialFields = Pick<ProfileInput, SocialKey>;
 ```
 
 - [ ] **Step 4: Avatar di default**
@@ -399,7 +403,9 @@ npx tsc --noEmit
 npm run lint
 ```
 
-Atteso: entrambi senza errori. In particolare `tsc` deve accettare `_socialFieldsCovered` (prova a togliere `youtube` da `profileSchema`: deve fallire — poi rimettilo).
+Atteso: entrambi senza errori.
+
+Poi verifica che la guardia di tipo morda davvero: togli `youtube: optionalHandle,` da `profileSchema` e rilancia `npx tsc --noEmit`. **Deve fallire** su `SocialFields`. Rimetti la riga e ricontrolla che torni verde.
 
 - [ ] **Step 8: Commit**
 
