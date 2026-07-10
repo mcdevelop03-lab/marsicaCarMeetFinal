@@ -54,3 +54,33 @@ export async function updateProfile(
   revalidatePath("/", "layout");
   return { success: t("saved") };
 }
+
+export async function setAvatar(path: string): Promise<{ error?: string }> {
+  const t = await getTranslations("profile");
+  const user = await requireUser();
+
+  // Difesa in profondità: le policy dello storage consentono la scrittura solo
+  // in `{uid}/`, ma `path` arriva dal client e finisce dritto in `avatar_url`.
+  if (!path.startsWith(`${user.id}/`)) return { error: t("genericError") };
+
+  const supabase = await createClient();
+  // getPublicUrl è sincrono e non fallisce: il bucket `avatars` è pubblico in lettura.
+  const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: urlData.publicUrl })
+    .eq("id", user.id);
+  if (error) return { error: t("genericError") };
+
+  // Nella cartella dell'utente resta un solo file: gli altri sono orfani.
+  // Si elencano e si cancellano invece di ricavare il path dal vecchio URL.
+  const { data: files } = await supabase.storage.from("avatars").list(user.id);
+  const stale = (files ?? [])
+    .map((file) => `${user.id}/${file.name}`)
+    .filter((candidate) => candidate !== path);
+  if (stale.length > 0) await supabase.storage.from("avatars").remove(stale);
+
+  revalidatePath("/", "layout");
+  return {};
+}

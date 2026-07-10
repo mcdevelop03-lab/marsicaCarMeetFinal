@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import Card from "@/components/ui/Card";
 import SectionHeading from "@/components/ui/SectionHeading";
+import AvatarUploader from "@/components/features/profile/AvatarUploader";
 import ProfileForm from "@/components/features/profile/ProfileForm";
 import { getProfile } from "@/lib/auth";
 import { updateProfile } from "./actions";
@@ -14,6 +15,9 @@ export default async function ProfiloPage() {
   return (
     <div className="space-y-8">
       <SectionHeading>{t("title")}</SectionHeading>
+      <Card className="p-6">
+        <AvatarUploader userId={profile!.id} avatarUrl={profile!.avatar_url} />
+      </Card>
       <Card className="p-6">
         <ProfileForm action={updateProfile} profile={profile!} />
       </Card>
