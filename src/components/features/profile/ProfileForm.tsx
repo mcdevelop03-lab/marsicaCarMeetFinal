@@ -12,6 +12,13 @@ export type ProfileState = { error?: string; success?: string };
 const labelClass = "font-mono text-[11px] uppercase tracking-widest text-white/60";
 const hintClass = "block font-mono text-[11px] text-white/40";
 
+// Il browser compila l'attributo `pattern` come new RegExp(`^(?:${pattern})$`, "v").
+// Nel flag `v` il trattino è sintattico dentro una classe di caratteri: senza `\-`
+// la regex NON compila e la spec impone di IGNORARE l'attributo, in silenzio —
+// il campo accetterebbe qualsiasi valore. I `\-` qui sotto non sono superflui.
+const TAG_PATTERN = "[a-z0-9._\\-]+";
+const HANDLE_PATTERN = "[A-Za-z0-9._\\-]+";
+
 export default function ProfileForm({
   action,
   profile,
@@ -45,7 +52,7 @@ export default function ProfileForm({
             required
             minLength={3}
             maxLength={30}
-            pattern="[a-z0-9._-]+"
+            pattern={TAG_PATTERN}
           />
           <span className={hintClass}>{t("tagHint")}</span>
         </label>
@@ -81,7 +88,7 @@ export default function ProfileForm({
                 name={key}
                 defaultValue={profile.socials?.[key] ?? ""}
                 maxLength={30}
-                pattern="[A-Za-z0-9._-]+"
+                pattern={HANDLE_PATTERN}
                 placeholder={t("handlePlaceholder")}
               />
             </label>
