@@ -9,6 +9,8 @@
     "garage": "Garage",
     "gadget": "Gadget",
     "dashboard": "Dashboard",
+    "profilo": "Profilo",
+    "membri": "Membri",
     "impostazioni": "Impostazioni",
     "login": "Accedi",
     "logout": "Logout"
@@ -71,5 +73,37 @@
     "verify": "Verifica",
     "enabled2fa": "2FA attiva",
     "code": "Codice"
+  },
+  "profile": {
+    "title": "Il mio profilo",
+    "avatarTitle": "Foto profilo",
+    "avatarChange": "Cambia foto",
+    "avatarRules": "JPG, PNG o WebP · massimo 2 MB",
+    "avatarType": "Formato non ammesso: usa JPG, PNG o WebP.",
+    "avatarSize": "File troppo grande: massimo 2 MB.",
+    "avatarUploadFailed": "Caricamento non riuscito. Riprova.",
+    "name": "Nome",
+    "tag": "Tag",
+    "tagHint": "Da 3 a 30 caratteri: minuscole, numeri, punto, trattino, underscore",
+    "tagTaken": "Tag già in uso",
+    "town": "Comune",
+    "bio": "Bio",
+    "bioCount": "{count}/300",
+    "socialsTitle": "Social",
+    "handlePlaceholder": "Solo il nome utente, senza @",
+    "save": "Salva",
+    "saved": "Profilo aggiornato.",
+    "genericError": "Qualcosa è andato storto. Riprova."
+  },
+  "members": {
+    "title": "Membri",
+    "searchLabel": "Cerca un membro",
+    "searchPlaceholder": "Nome o tag",
+    "searchSubmit": "Cerca",
+    "latest": "Ultimi iscritti",
+    "results": "Risultati per «{q}»",
+    "empty": "Nessun membro trovato",
+    "noBio": "Questo membro non ha ancora scritto una bio.",
+    "garageTitle": "Garage"
   }
 }
