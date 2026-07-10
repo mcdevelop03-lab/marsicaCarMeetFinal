@@ -28,6 +28,7 @@ export default function Header({
       ? [
           { href: "/dashboard", label: t("dashboard") },
           { href: "/profilo", label: t("profilo") },
+          { href: "/membri", label: t("membri") },
           { href: "/impostazioni", label: t("impostazioni") },
         ]
       : []),
