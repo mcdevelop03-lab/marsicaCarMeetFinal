@@ -449,12 +449,14 @@ export default function Textarea({
 }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
-      className={`w-full px-3 py-2.5 bg-surface-dim border border-white/10 hover:border-white/20 focus:border-accent-red/50 text-xs font-mono text-white placeholder-white/20 focus:outline-none resize-y ${className}`}
+      className={`w-full px-3 py-2.5 bg-surface-dim border border-white/10 hover:border-white/20 focus:border-accent-red/50 user-invalid:border-accent-red text-xs font-mono text-white placeholder-white/20 focus:outline-none resize-y ${className}`}
       {...props}
     />
   );
 }
 ```
+
+> `user-invalid:border-accent-red` (aggiunto anche a `src/components/ui/Input.tsx`) colora di rosso il campo **solo dopo** che l'utente lo ha toccato lasciandolo invalido: all'apertura della pagina nessun campo è rosso. Con nove campi, il solo submit disabilitato non basta a dire *quale* campo blocca il salvataggio.
 
 - [ ] **Step 2: Il form (client)**
 
