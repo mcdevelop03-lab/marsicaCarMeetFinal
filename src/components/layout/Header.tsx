@@ -5,9 +5,16 @@ import { useTranslations } from "next-intl";
 import { Menu } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { logout } from "@/app/[locale]/(public)/auth/actions";
+import Avatar from "@/components/ui/Avatar";
 import MobileMenu from "./MobileMenu";
 
-export default function Header({ isAuthenticated }: { isAuthenticated: boolean }) {
+export default function Header({
+  isAuthenticated,
+  avatar,
+}: {
+  isAuthenticated: boolean;
+  avatar: string | null;
+}) {
   const t = useTranslations("nav");
   const tb = useTranslations("brand");
   const [open, setOpen] = useState(false);
@@ -75,6 +82,17 @@ export default function Header({ isAuthenticated }: { isAuthenticated: boolean }
                 </Link>
               )}
             </nav>
+
+            {isAuthenticated && (
+              <Link href="/profilo" aria-label={t("profilo")} className="shrink-0">
+                <Avatar
+                  src={avatar}
+                  alt={t("profilo")}
+                  size={36}
+                  className="hover:border-accent-red transition-colors"
+                />
+              </Link>
+            )}
 
             <button
               onClick={() => setOpen(true)}

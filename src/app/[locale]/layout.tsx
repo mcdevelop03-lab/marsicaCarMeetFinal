@@ -5,7 +5,7 @@ import { Anybody, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { getUser } from "@/lib/auth";
+import { getProfile } from "@/lib/auth";
 import "../globals.css";
 
 const anybody = Anybody({
@@ -43,7 +43,7 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
 
-  const user = await getUser();
+  const profile = await getProfile();
 
   return (
     <html
@@ -52,7 +52,7 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider>
-          <Header isAuthenticated={!!user} />
+          <Header isAuthenticated={!!profile} avatar={profile?.avatar_url ?? null} />
           <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-12 py-10">{children}</div>
           <Footer />
         </NextIntlClientProvider>
