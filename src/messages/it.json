@@ -104,6 +104,7 @@
     "results": "Risultati per «{q}»",
     "empty": "Nessun membro trovato",
     "noBio": "Questo membro non ha ancora scritto una bio.",
-    "garageTitle": "Garage"
+    "garageTitle": "Garage",
+    "back": "Torna ai membri"
   }
 }

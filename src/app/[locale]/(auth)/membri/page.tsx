@@ -65,7 +65,7 @@ export default async function MembriPage({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {members.map((member) => (
-            <MemberCard key={member.id} member={member} />
+            <MemberCard key={member.id} member={member} q={q || undefined} />
           ))}
         </div>
       )}
