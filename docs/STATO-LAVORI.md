@@ -25,10 +25,33 @@ Rotte aggiunte (tutte sotto `(auth)`): **`/profilo`** (mio, modificabile + uploa
 5. `feat(membri)` — link "Torna ai membri" (Link vero, conserva `?q=`) su richiesta utente.
 
 **Debito noto (follow-up, non bloccante):**
-- **Memoizzazione auth:** `getUser`/`getProfile` non usano `cache()` di React → round-trip GoTrue duplicati per richiesta (una pagina fa ~3 getUser). Da avvolgere in `cache()` o passare il profilo dal layout. Ereditato dalla Fase 1A.
-- **Errori Supabase silenziati:** `/membri` e `/membri/[tag]` scartano l'`error` di lettura (un guasto appare come "nessun risultato"). Almeno loggarlo lato server.
 - Messaggi zod hardcoded in italiano + `locale:"it"` fisso in alcune redirect → da sistemare in Fase 3 (inglese).
 - **Icone social marchi:** `lucide-react` v1 le ha rimosse; i path SVG sono vendorizzati da Simple Icons (CC0) in `src/components/ui/icons/SocialIcon.tsx`.
+
+### 🔧 Follow-up tecnico: memoizzazione dell'autenticazione (candidato per una micro-fase)
+
+**Problema.** Ogni chiamata a `getUser()` in `src/lib/auth/index.ts` fa una richiesta di rete a GoTrue (il servizio auth di Supabase) per validare il JWT — `@supabase/ssr` funziona così. Queste chiamate **non sono deduplicate** all'interno della stessa richiesta HTTP. Aprendo una singola pagina protetta si accumulano:
+- `getProfile()` nel layout `[locale]/layout.tsx` (→ 1 getUser + 1 select su `profiles`)
+- `requireUser()` nel layout `(auth)/layout.tsx` (→ 1 getUser + 1 chiamata MFA `getAuthenticatorAssuranceLevel`)
+- `getProfile()` di nuovo nella pagina, es. `profilo/page.tsx` (→ 1 getUser + 1 select)
+
+Totale per una pagina: **~3 getUser + 2 select profilo + 1 chiamata MFA**. In locale non si nota; in produzione è latenza inutile a ogni navigazione. Segnalato dalla review finale di fase 1B-1 come *Important, non bloccante*. È architettura **ereditata dalla Fase 1A**, non introdotta da 1B-1 — ma 1B-1 la amplifica (il secondo `getProfile` nella pagina duplica quello del layout).
+
+**Fix (due opzioni, non esclusive).**
+1. Avvolgere `getUser` e `getProfile` in `cache()` di React (`import { cache } from "react"`): dedup automatica per-richiesta, cambio centralizzato in un solo file (`src/lib/auth/index.ts`). È la strada consigliata, la meno invasiva. Verificare che `cache()` si comporti bene con `cookies()`/`headers()` di Next 16 (sono già request-scoped).
+2. Far leggere il profilo **una volta sola** al layout e passarlo alle pagine come prop / via context, invece di rileggerlo in ogni pagina. Più lavoro, ma toglie anche le select duplicate.
+
+**File da toccare:** `src/lib/auth/index.ts` (le tre funzioni). Nessuna migrazione.
+
+**Come verificare che funzioni:** aggiungere temporaneamente un `console.count("getUser")` dentro `getUser`, caricare `/it/profilo`, e controllare nel log del dev server che il contatore scenda da ~3 a 1 per richiesta. Rimuovere il `console.count` prima del commit.
+
+**Rischio:** basso. È un'ottimizzazione trasparente al comportamento: nessun cambiamento funzionale visibile, quindi il collaudo è solo "conta le chiamate" + `tsc`/`lint`/`build` verdi.
+
+### 🔧 Follow-up tecnico: errori di lettura Supabase silenziati
+
+**Problema.** In `membri/page.tsx` e `membri/[tag]/page.tsx` il risultato di Supabase viene destrutturato scartando `error` (`const { data } = await …`). Se la query fallisce (rete, RLS, DB giù), l'utente vede *"Nessun membro trovato"* o un 404, indistinguibile da un risultato realmente vuoto. È lo **stesso pattern preesistente** di `getProfile()` in `src/lib/auth/index.ts`, quindi coerente col resto del codebase, ma resta una lacuna.
+
+**Fix minimo:** loggare l'`error` lato server con `console.error` (come già fa `setAvatar` in `profilo/actions.ts`), senza per forza cambiare la UI. **File:** `membri/page.tsx`, `membri/[tag]/page.tsx`. Rischio nullo.
 
 ## ▶️ DA COSA RIPARTIRE: Fase 1B-2 — Garage
 
