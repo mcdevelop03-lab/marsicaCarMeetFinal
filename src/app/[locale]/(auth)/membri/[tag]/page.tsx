@@ -24,7 +24,14 @@ export default async function MembroPage({
   // sui risultati della ricerca da cui l'utente è partito.
   const { q } = await searchParams;
   // I tag sono salvati in minuscolo: normalizziamo l'URL prima di cercare.
-  const wantedTag = decodeURIComponent(tag).toLowerCase();
+  // decodeURIComponent lancia su sequenze percent malformate (es. "abc%zz"):
+  // un URL ostile del genere è semplicemente un tag inesistente, non un 500.
+  let wantedTag: string;
+  try {
+    wantedTag = decodeURIComponent(tag).toLowerCase();
+  } catch {
+    notFound();
+  }
 
   const me = await getProfile();
   // Il mio profilo si modifica da /profilo: non serve una seconda vista.
