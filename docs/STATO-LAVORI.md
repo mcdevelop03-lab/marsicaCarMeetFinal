@@ -6,8 +6,8 @@
 
 ## 🔖 Dove siamo
 
-- **Ultimo completato:** **micro-fase "memoizzazione dell'auth"** ✅ (2026-07-13). Collaudata, mergiata in `main`.
-- **Prima ancora:** **Fase 1B-1 — Profilo** ✅ (8 task su 8). Collaudata e **mergiata in `main`** (commit di merge `24d1659`).
+- **Ultimo completato:** **micro-fase "rifiniture: stato 2FA + errori Supabase"** ✅ (2026-07-13). Collaudata, mergiata in `main`.
+- **Prima ancora:** **micro-fase "memoizzazione dell'auth"** ✅ (2026-07-13) e **Fase 1B-1 — Profilo** ✅ (8 task su 8), entrambe collaudate e mergiate in `main`.
 - **Prossimo:** **Fase 1B-2 — Garage** (non ancora iniziata).
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
@@ -51,11 +51,15 @@ Un solo file toccato (`src/lib/auth/index.ts`), nessuna migrazione, nessuna call
 
 > ⚠️ La trappola delle **letture stantie nelle server action** che questa micro-fase introduce è documentata nella sezione di ripartenza di 1B-2 (sotto) e in un commento in testa a `src/lib/auth/index.ts`.
 
-### 🔧 Follow-up tecnico: errori di lettura Supabase silenziati
+## ✅ Esito micro-fase — Rifiniture: stato 2FA + errori Supabase (2026-07-13)
 
-**Problema.** In `membri/page.tsx` e `membri/[tag]/page.tsx` il risultato di Supabase viene destrutturato scartando `error` (`const { data } = await …`). Se la query fallisce (rete, RLS, DB giù), l'utente vede *"Nessun membro trovato"* o un 404, indistinguibile da un risultato realmente vuoto. È lo **stesso pattern preesistente** di `getProfile()` in `src/lib/auth/index.ts`, quindi coerente col resto del codebase, ma resta una lacuna.
+Due debiti **saldati**. Spec: [`superpowers/specs/2026-07-13-rifiniture-2fa-errori-design.md`](./superpowers/specs/2026-07-13-rifiniture-2fa-errori-design.md) · Piano: [`superpowers/plans/2026-07-13-rifiniture-2fa-errori.md`](./superpowers/plans/2026-07-13-rifiniture-2fa-errori.md)
 
-**Fix minimo:** loggare l'`error` lato server con `console.error` (come già fa `setAvatar` in `profilo/actions.ts`), senza per forza cambiare la UI. **File:** `membri/page.tsx`, `membri/[tag]/page.tsx`. Rischio nullo.
+**Tema A — Impostazioni riflette il 2FA reale.** `TwoFactorSetup` è un componente client e partiva da stato vuoto: la pagina mostrava "Attiva 2FA" **anche a 2FA attivo**, e premere quel bottone creava **un secondo fattore a ogni clic**; la disattivazione dalla UI **non esisteva** (`unenrollTotp` era codice morto, come la stringa `disable2fa`) — chi attivava il 2FA restava senza via d'uscita. Ora la fonte di verità è il server: `impostazioni/page.tsx` legge `listFactors()` (solo i `verified`) e passa `attivo` al componente, che dopo enroll/disattivazione fa `router.refresh()`. `unenrollTotp()` **non accetta più il `factorId` dal client** (lo cerca lato server fra i fattori della sessione) e non chiede un codice TOTP: chi è su quella pagina col 2FA attivo è per forza già in **AAL2**. `enrollTotp()` ripulisce i fattori non verificati residui.
+
+**Tema B — errori Supabase non più silenziati.** In `membri/` un guasto veniva spacciato per "Nessun membro trovato" o per un **404**. Ora l'errore si logga e la UI lo distingue dal vuoto; `notFound()` resta solo per "query riuscita, nessuna riga". Stesso `console.error` aggiunto in `getProfile()`, origine del pattern.
+
+**Collaudo (tutto verde):** 3 clic su "Attiva 2FA" → **1 solo** fattore, non 3; dopo il reload la pagina dice "2FA attiva" (prima diceva "Attiva 2FA"); Annulla non tocca il fattore, Conferma lo rimuove (0 fattori nel DB) e la pagina si aggiorna da sé. Per il Tema B il guasto è stato simulato **revocando `SELECT` su `profiles`** (il PostgREST fermo produce un *blocco*, non un errore: non è quel percorso): `/membri` mostra "Impossibile caricare i dati", `/membri/[tag]` non è più un 404, entrambi loggano il codice `42501`; ripristinato il GRANT tutto torna normale e un tag inesistente dà ancora **HTTP 404**. `tsc`/`lint`/`build` verdi.
 
 ## ▶️ DA COSA RIPARTIRE: Fase 1B-2 — Garage
 
@@ -127,7 +131,7 @@ Per promuovere un utente ad admin dopo la registrazione: rieseguire la `update` 
 
 - ✅ **Reset password con 2FA attivo — RISOLTO e collaudato (2026-07-09).** GoTrue esige AAL2 per cambiare password con MFA attivo: ora il link di recovery porta alla sfida MFA e, dopo la verifica, si torna alla pagina di reset (`/it/reset-password/aggiorna`, spostata fuori dal gruppo AAL2) per impostare la nuova password. Commit `fix(auth): reset password funzionante con 2FA attivo`.
 - **Google OAuth / Turnstile reali + progetto Supabase cloud** da configurare (solo codice presente; guida in [`SETUP.md`](./SETUP.md) §6).
-- **Impostazioni non riflette il 2FA già attivo** (emerso dal collaudo della micro-fase, 2026-07-13; **preesistente**, non causato da essa): la pagina mostra sempre "Attiva 2FA" perché `TwoFactorSetup` è un componente client che parte dallo stato "non attivo" e non legge i fattori esistenti dal server. L'action `unenrollTotp` esiste, ma il bottone per disattivare compare solo nella stessa sessione in cui si è appena fatto l'enroll: **a 2FA attivo non c'è modo, dalla UI, di disattivarlo**. Fix: far leggere alla pagina i fattori (`supabase.auth.mfa.listFactors()`) e passare lo stato reale al componente.
+- ✅ **Impostazioni non rifletteva il 2FA attivo — RISOLTO e collaudato (2026-07-13).** Vedi l'esito della micro-fase di rifinitura.
 - Logo header troppo piccolo (feedback 2026-07-08).
 - Messaggi di validazione zod hardcoded in italiano + prefisso `/it/` fisso in alcune redirect → sistemare con l'inglese (Fase 3).
 - In dev l'app va usata su `localhost:3000` (su `127.0.0.1:3000` l'HMR e il caricamento di script esterni falliscono: artefatto solo-dev).
