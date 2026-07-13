@@ -113,6 +113,8 @@ Per promuovere un utente ad admin dopo la registrazione: rieseguire la `update` 
 
 **Credenziali di test locali (volatili — si azzerano con `db reset`):** admin `mcdevelop03@gmail.com` / `Marsica2026!` (2FA disattivo). Da loggato, il **2FA** si attiva da **Impostazioni** (link nel menu/header, non serve più digitare l'URL).
 
+> ⚠️ **Trappola: non lanciare `npm run build` mentre gira `next dev`.** Corrompe `.next` (il manifest delle server action) e tutte le pagine con `<form action={serverAction}>` iniziano a dare 404/500. **Rimedio:** killare il dev server, `rm -rf .next`, riavviare.
+
 ## 📌 Decisioni e regole permanenti (non dimenticare)
 
 - **Email:** MAI usare l'email dell'account (`aidev3@goproject.it`). Admin di seed = **`mcdevelop03@gmail.com`**. Chiedere sempre conferma prima di usare qualsiasi email.
