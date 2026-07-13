@@ -72,7 +72,10 @@
     "scanQr": "Scansiona il QR con la tua app authenticator, poi inserisci il codice.",
     "verify": "Verifica",
     "enabled2fa": "2FA attiva",
-    "code": "Codice"
+    "code": "Codice",
+    "confirmDisable": "Sei sicuro? Senza 2FA il tuo account sarà protetto dalla sola password.",
+    "confirm": "Conferma",
+    "cancel": "Annulla"
   },
   "profile": {
     "title": "Il mio profilo",
@@ -103,6 +106,7 @@
     "latest": "Ultimi iscritti",
     "results": "Risultati per «{q}»",
     "empty": "Nessun membro trovato",
+    "loadError": "Impossibile caricare i dati. Riprova più tardi.",
     "noBio": "Questo membro non ha ancora scritto una bio.",
     "garageTitle": "Garage",
     "back": "Torna ai membri"

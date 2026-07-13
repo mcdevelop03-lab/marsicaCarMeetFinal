@@ -46,7 +46,11 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   const user = await getUser();
   if (!user) return null;
   const supabase = await createClient();
-  const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  // Comportamento invariato (si continua a tornare null), ma un profilo che non
+  // si riesce a leggere non deve più essere indistinguibile da un profilo assente:
+  // è questo il pattern da cui nasceva il silenzio anche in membri/.
+  if (error) console.error("getProfile: lettura del profilo non riuscita", error);
   return (data as Profile) ?? null;
 });
 

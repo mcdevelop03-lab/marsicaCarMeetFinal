@@ -38,7 +38,30 @@ export default async function MembroPage({
   if (me?.tag === wantedTag) redirect({ href: "/profilo", locale: "it" });
 
   const supabase = await createClient();
-  const { data } = await supabase.from("profiles").select("*").eq("tag", wantedTag).maybeSingle();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("tag", wantedTag)
+    .maybeSingle();
+
+  // Un guasto NON è un 404: rispondere "questo membro non esiste" quando in
+  // realtà non siamo riusciti a controllare è una bugia. `notFound()` resta solo
+  // per il caso "query riuscita, nessuna riga".
+  if (error) {
+    console.error("Membro: lettura del profilo non riuscita", error);
+    return (
+      <div className="space-y-8">
+        <Link
+          href="/membri"
+          className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-white/40 transition-colors hover:text-white"
+        >
+          <ArrowLeft size={14} aria-hidden="true" />
+          {t("back")}
+        </Link>
+        <p className="font-mono text-xs text-accent-red">{t("loadError")}</p>
+      </div>
+    );
+  }
   if (!data) notFound();
 
   const member = data as Profile;
