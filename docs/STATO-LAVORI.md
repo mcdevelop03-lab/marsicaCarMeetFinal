@@ -1,12 +1,13 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-12**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-13**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
 ## 🔖 Dove siamo
 
-- **Ultimo completato:** **Fase 1B-1 — Profilo** ✅ (8 task su 8). Collaudata; **da mergiare in `main`** (branch `feat/fase1b1-profilo`).
+- **Ultimo completato:** **micro-fase "memoizzazione dell'auth"** ✅ (2026-07-13). Collaudata, mergiata in `main`.
+- **Prima ancora:** **Fase 1B-1 — Profilo** ✅ (8 task su 8). Collaudata e **mergiata in `main`** (commit di merge `24d1659`).
 - **Prossimo:** **Fase 1B-2 — Garage** (non ancora iniziata).
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
@@ -28,24 +29,27 @@ Rotte aggiunte (tutte sotto `(auth)`): **`/profilo`** (mio, modificabile + uploa
 - Messaggi zod hardcoded in italiano + `locale:"it"` fisso in alcune redirect → da sistemare in Fase 3 (inglese).
 - **Icone social marchi:** `lucide-react` v1 le ha rimosse; i path SVG sono vendorizzati da Simple Icons (CC0) in `src/components/ui/icons/SocialIcon.tsx`.
 
-### 🔧 Follow-up tecnico: memoizzazione dell'autenticazione (candidato per una micro-fase)
+## ✅ Esito micro-fase — Memoizzazione dell'autenticazione (2026-07-13)
 
-**Problema.** Ogni chiamata a `getUser()` in `src/lib/auth/index.ts` fa una richiesta di rete a GoTrue (il servizio auth di Supabase) per validare il JWT — `@supabase/ssr` funziona così. Queste chiamate **non sono deduplicate** all'interno della stessa richiesta HTTP. Aprendo una singola pagina protetta si accumulano:
-- `getProfile()` nel layout `[locale]/layout.tsx` (→ 1 getUser + 1 select su `profiles`)
-- `requireUser()` nel layout `(auth)/layout.tsx` (→ 1 getUser + 1 chiamata MFA `getAuthenticatorAssuranceLevel`)
-- `getProfile()` di nuovo nella pagina, es. `profilo/page.tsx` (→ 1 getUser + 1 select)
+Debito **saldato**. Spec: [`superpowers/specs/2026-07-13-memoizzazione-auth-design.md`](./superpowers/specs/2026-07-13-memoizzazione-auth-design.md) · Piano: [`superpowers/plans/2026-07-13-memoizzazione-auth.md`](./superpowers/plans/2026-07-13-memoizzazione-auth.md)
 
-Totale per una pagina: **~3 getUser + 2 select profilo + 1 chiamata MFA**. In locale non si nota; in produzione è latenza inutile a ogni navigazione. Segnalato dalla review finale di fase 1B-1 come *Important, non bloccante*. È architettura **ereditata dalla Fase 1A**, non introdotta da 1B-1 — ma 1B-1 la amplifica (il secondo `getProfile` nella pagina duplica quello del layout).
+Un solo file toccato (`src/lib/auth/index.ts`), nessuna migrazione, nessuna call-site modificata:
+1. `getUser` e `getProfile` avvolte in **`cache()` di React** (dedup per render pass).
+2. **`getProfile` ora passa dalla `getUser()` memoizzata** invece di chiamare `supabase.auth.getUser()` per conto suo. Era il punto decisivo: senza, i due `getProfile` avrebbero continuato a fare un round-trip GoTrue ciascuno anche con `getUser` cachata.
+3. Il controllo AAL estratto in una **`getAal()`** memoizzata. `requireUser` **non** è memoizzabile: fa `redirect()`, che funziona lanciando un'eccezione.
+4. Contatore **dev-only** (`traccia`) permanente: se una fase futura rompe la deduplica, il log del dev server lo mostra subito.
 
-**Fix (due opzioni, non esclusive).**
-1. Avvolgere `getUser` e `getProfile` in `cache()` di React (`import { cache } from "react"`): dedup automatica per-richiesta, cambio centralizzato in un solo file (`src/lib/auth/index.ts`). È la strada consigliata, la meno invasiva. Verificare che `cache()` si comporti bene con `cookies()`/`headers()` di Next 16 (sono già request-scoped).
-2. Far leggere il profilo **una volta sola** al layout e passarlo alle pagine come prop / via context, invece di rileggerlo in ogni pagina. Più lavoro, ma toglie anche le select duplicate.
+**Numeri misurati** su `/it/profilo` (baseline riprodotta rimettendo temporaneamente la vecchia implementazione, non stimata):
 
-**File da toccare:** `src/lib/auth/index.ts` (le tre funzioni). Nessuna migrazione.
+| una richiesta | getUser | getProfile | getAal |
+|---|---|---|---|
+| prima | **3** | **2** | 1 |
+| dopo | **1** | **1** | 1 |
+| dopo, con 2FA attivo (AAL2) | **1** | **1** | 1 |
 
-**Come verificare che funzioni:** aggiungere temporaneamente un `console.count("getUser")` dentro `getUser`, caricare `/it/profilo`, e controllare nel log del dev server che il contatore scenda da ~3 a 1 per richiesta. Rimuovere il `console.count` prima del commit.
+**Collaudo (tutto verde):** salvataggio profilo + upload avatar → dopo `revalidatePath` header e dashboard mostrano i dati **nuovi** (nessuna lettura stantia: è il test diretto della trappola qui sotto); pulizia avatar orfani ancora funzionante; guardia `(auth)`, login/logout, pannello admin; **enforcement 2FA** attivato davvero via TOTP (con sola password → `/it/login?mfa=1`, poi sfida MFA → dashboard), che è il percorso passante dalla nuova `getAal()`. `tsc`/`lint`/`build` verdi.
 
-**Rischio:** basso. È un'ottimizzazione trasparente al comportamento: nessun cambiamento funzionale visibile, quindi il collaudo è solo "conta le chiamate" + `tsc`/`lint`/`build` verdi.
+> ⚠️ La trappola delle **letture stantie nelle server action** che questa micro-fase introduce è documentata nella sezione di ripartenza di 1B-2 (sotto) e in un commento in testa a `src/lib/auth/index.ts`.
 
 ### 🔧 Follow-up tecnico: errori di lettura Supabase silenziati
 
@@ -61,6 +65,16 @@ Sotto-progetto successivo (vedi [ROADMAP.md](./ROADMAP.md) e [TODO.md](./TODO.md
 - **Riempire il segnaposto "Garage"** in `/membri/[tag]` (oggi mostra "In arrivo").
 
 Prima di iniziare: brainstorming → spec → piano con checkbox (come per 1A e 1B-1).
+
+### ⚠️ Trappola da conoscere PRIMA di scrivere le server action del garage
+
+Dalla micro-fase di **memoizzazione dell'auth** (spec: [`superpowers/specs/2026-07-13-memoizzazione-auth-design.md`](./superpowers/specs/2026-07-13-memoizzazione-auth-design.md)), `getUser()` e `getProfile()` in `src/lib/auth/index.ts` sono avvolte in `cache()` di React.
+
+`cache()` dura **un render pass**, e una server action gira **prima** del render che essa stessa innesca con `revalidatePath`. Quindi:
+
+> **In una server action, non leggere il profilo (o altri dati) con una funzione memoizzata *prima* di mutarli e poi fidarti del valore memoizzato *dopo*: serviresti dati pre-update.**
+
+Leggere l'**identità** (`requireUser()` → `getUser()`) è invece sempre sicuro: l'utente non cambia dentro una richiesta. È quello che fanno oggi `updateProfile` e `setAvatar` in `profilo/actions.ts`, ed è il motivo per cui la memoizzazione è innocua nel codice attuale — ma le action del garage sono il primo posto dove il rischio può armarsi davvero. Se una action del garage deve rileggere un dato che ha appena scritto, fa una query fresca con `createClient()`, non passa dal DAL memoizzato.
 
 ## 🧪 Esito collaudo 1A (Task 13) — 2026-07-09
 
@@ -111,6 +125,7 @@ Per promuovere un utente ad admin dopo la registrazione: rieseguire la `update` 
 
 - ✅ **Reset password con 2FA attivo — RISOLTO e collaudato (2026-07-09).** GoTrue esige AAL2 per cambiare password con MFA attivo: ora il link di recovery porta alla sfida MFA e, dopo la verifica, si torna alla pagina di reset (`/it/reset-password/aggiorna`, spostata fuori dal gruppo AAL2) per impostare la nuova password. Commit `fix(auth): reset password funzionante con 2FA attivo`.
 - **Google OAuth / Turnstile reali + progetto Supabase cloud** da configurare (solo codice presente; guida in [`SETUP.md`](./SETUP.md) §6).
+- **Impostazioni non riflette il 2FA già attivo** (emerso dal collaudo della micro-fase, 2026-07-13; **preesistente**, non causato da essa): la pagina mostra sempre "Attiva 2FA" perché `TwoFactorSetup` è un componente client che parte dallo stato "non attivo" e non legge i fattori esistenti dal server. L'action `unenrollTotp` esiste, ma il bottone per disattivare compare solo nella stessa sessione in cui si è appena fatto l'enroll: **a 2FA attivo non c'è modo, dalla UI, di disattivarlo**. Fix: far leggere alla pagina i fattori (`supabase.auth.mfa.listFactors()`) e passare lo stato reale al componente.
 - Logo header troppo piccolo (feedback 2026-07-08).
 - Messaggi di validazione zod hardcoded in italiano + prefisso `/it/` fisso in alcune redirect → sistemare con l'inglese (Fase 3).
 - In dev l'app va usata su `localhost:3000` (su `127.0.0.1:3000` l'HMR e il caricamento di script esterni falliscono: artefatto solo-dev).
