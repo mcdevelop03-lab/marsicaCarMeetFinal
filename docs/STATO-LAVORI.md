@@ -6,7 +6,8 @@
 
 ## 🔖 Dove siamo
 
-- **Ultimo completato:** **Fase 1B-1 — Profilo** ✅ (8 task su 8). Collaudata; **da mergiare in `main`** (branch `feat/fase1b1-profilo`).
+- **Ultimo completato:** **Fase 1B-1 — Profilo** ✅ (8 task su 8). Collaudata e **mergiata in `main`** (commit di merge `24d1659`).
+- **In corso:** **micro-fase "memoizzazione dell'auth"** (branch `feat/micro-memo-auth`) — spec approvato e committato, implementazione da fare.
 - **Prossimo:** **Fase 1B-2 — Garage** (non ancora iniziata).
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
@@ -61,6 +62,16 @@ Sotto-progetto successivo (vedi [ROADMAP.md](./ROADMAP.md) e [TODO.md](./TODO.md
 - **Riempire il segnaposto "Garage"** in `/membri/[tag]` (oggi mostra "In arrivo").
 
 Prima di iniziare: brainstorming → spec → piano con checkbox (come per 1A e 1B-1).
+
+### ⚠️ Trappola da conoscere PRIMA di scrivere le server action del garage
+
+Dalla micro-fase di **memoizzazione dell'auth** (spec: [`superpowers/specs/2026-07-13-memoizzazione-auth-design.md`](./superpowers/specs/2026-07-13-memoizzazione-auth-design.md)), `getUser()` e `getProfile()` in `src/lib/auth/index.ts` sono avvolte in `cache()` di React.
+
+`cache()` dura **un render pass**, e una server action gira **prima** del render che essa stessa innesca con `revalidatePath`. Quindi:
+
+> **In una server action, non leggere il profilo (o altri dati) con una funzione memoizzata *prima* di mutarli e poi fidarti del valore memoizzato *dopo*: serviresti dati pre-update.**
+
+Leggere l'**identità** (`requireUser()` → `getUser()`) è invece sempre sicuro: l'utente non cambia dentro una richiesta. È quello che fanno oggi `updateProfile` e `setAvatar` in `profilo/actions.ts`, ed è il motivo per cui la memoizzazione è innocua nel codice attuale — ma le action del garage sono il primo posto dove il rischio può armarsi davvero. Se una action del garage deve rileggere un dato che ha appena scritto, fa una query fresca con `createClient()`, non passa dal DAL memoizzato.
 
 ## 🧪 Esito collaudo 1A (Task 13) — 2026-07-09
 
