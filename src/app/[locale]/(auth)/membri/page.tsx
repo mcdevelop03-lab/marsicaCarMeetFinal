@@ -31,9 +31,14 @@ export default async function MembriPage({
   // Niente `let query` riassegnata: `.order()` restituisce un builder di tipo
   // diverso da `.not()`, e TypeScript rifiuterebbe l'assegnazione.
   const pattern = q ? quoteOrValue(ilikePattern(q)) : null;
-  const { data } = pattern
+  const { data, error } = pattern
     ? await base.or(`name.ilike.${pattern},tag.ilike.${pattern}`).order("name").limit(SEARCH_LIMIT)
     : await base.order("created_at", { ascending: false }).limit(LATEST_LIMIT);
+
+  // Senza questo, una query fallita (rete, RLS, DB giù) mostrava "Nessun membro
+  // trovato": un guasto indistinguibile da una community davvero vuota, e senza
+  // traccia nei log.
+  if (error) console.error("Membri: lettura dei profili non riuscita", error);
 
   const members = (data ?? []) as MemberSummary[];
 
@@ -60,7 +65,9 @@ export default async function MembriPage({
         {q ? t("results", { q }) : t("latest")}
       </h3>
 
-      {members.length === 0 ? (
+      {error ? (
+        <p className="font-mono text-xs text-accent-red">{t("loadError")}</p>
+      ) : members.length === 0 ? (
         <p className="font-mono text-xs text-white/40">{t("empty")}</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

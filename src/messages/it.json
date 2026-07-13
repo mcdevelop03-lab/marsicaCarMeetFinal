@@ -106,6 +106,7 @@
     "latest": "Ultimi iscritti",
     "results": "Risultati per «{q}»",
     "empty": "Nessun membro trovato",
+    "loadError": "Impossibile caricare i dati. Riprova più tardi.",
     "noBio": "Questo membro non ha ancora scritto una bio.",
     "garageTitle": "Garage",
     "back": "Torna ai membri"
