@@ -6,9 +6,9 @@
 
 ## 🔖 Dove siamo
 
+- 🔵 **IN CORSO: Fase 1B-2 — Garage.** Branch **`feat/fase1b2-garage`** (solo locale, non pushato). **Spec e piano scritti e committati; implementazione NON iniziata: 0 task su 9.**
 - **Ultimo completato:** **micro-fase "rifiniture: stato 2FA + errori Supabase"** ✅ (2026-07-13). Collaudata, mergiata in `main`.
 - **Prima ancora:** **micro-fase "memoizzazione dell'auth"** ✅ (2026-07-13) e **Fase 1B-1 — Profilo** ✅ (8 task su 8), entrambe collaudate e mergiate in `main`.
-- **Prossimo:** **Fase 1B-2 — Garage** (non ancora iniziata).
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
@@ -61,14 +61,34 @@ Due debiti **saldati**. Spec: [`superpowers/specs/2026-07-13-rifiniture-2fa-erro
 
 **Collaudo (tutto verde):** 3 clic su "Attiva 2FA" → **1 solo** fattore, non 3; dopo il reload la pagina dice "2FA attiva" (prima diceva "Attiva 2FA"); Annulla non tocca il fattore, Conferma lo rimuove (0 fattori nel DB) e la pagina si aggiorna da sé. Per il Tema B il guasto è stato simulato **revocando `SELECT` su `profiles`** (il PostgREST fermo produce un *blocco*, non un errore: non è quel percorso): `/membri` mostra "Impossibile caricare i dati", `/membri/[tag]` non è più un 404, entrambi loggano il codice `42501`; ripristinato il GRANT tutto torna normale e un tag inesistente dà ancora **HTTP 404**. `tsc`/`lint`/`build` verdi.
 
-## ▶️ DA COSA RIPARTIRE: Fase 1B-2 — Garage
+## ▶️ DA COSA RIPARTIRE: Fase 1B-2 — Garage, **Task 1**
 
-Sotto-progetto successivo (vedi [ROADMAP.md](./ROADMAP.md) e [TODO.md](./TODO.md)):
-- **Garage:** CRUD auto (marca/modello/anno/foto obbligatori; categoria/descrizione/specifiche opzionali) + upload foto; vista garage di un membro in sola lettura per gli altri loggati.
-- **Spostare `/garage`** dal gruppo `(public)` a `(auth)` (i dati richiedono login; in 1B-1 non è stata toccata).
-- **Riempire il segnaposto "Garage"** in `/membri/[tag]` (oggi mostra "In arrivo").
+**Brainstorming, spec e piano sono già fatti e approvati.** Si riparte dall'**implementazione del Task 1**.
 
-Prima di iniziare: brainstorming → spec → piano con checkbox (come per 1A e 1B-1).
+- **Branch:** `feat/fase1b2-garage` (già creato; contiene solo i due commit di spec e piano). ⚠️ **Solo locale, non pushato.**
+- **Piano (9 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-13-fase1b2-garage.md`](./superpowers/plans/2026-07-13-fase1b2-garage.md)
+- **Spec:** [`superpowers/specs/2026-07-13-fase1b2-garage-design.md`](./superpowers/specs/2026-07-13-fase1b2-garage-design.md)
+
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e riprendi la Fase 1B-2 dal Task 1 del piano."*
+
+### I 9 task (nessuno ancora fatto)
+
+1. **Migrazione `0007`** + tipo `Vehicle` ← **si riparte da qui**
+2. Compressione immagini (`compress.ts`) + avatar che la usa
+3. Validazione veicolo + componente `Select` + stringhe
+4. Server action (crea/aggiorna/elimina)
+5. `VehicleForm` + `/garage/nuova`
+6. `/garage` (il mio garage) + schede + cancellazione; rimozione di `(public)/garage`
+7. `/garage/[id]/modifica`
+8. Garage del membro in `/membri/[tag]`
+9. Collaudo dal vivo e chiusura
+
+### Cose da sapere PRIMA di ripartire
+
+- **Il Task 1 fa `npx supabase db reset`:** le utenze locali si azzerano. Per il collaudo (Task 9) **servono DUE account** (registrarli e confermarli da Mailpit su http://127.0.0.1:54324), perché la sola lettura del garage altrui va provata da un secondo utente. Per l'admin, rieseguire la `update` in `supabase/seed.sql`.
+- **Perché la migrazione viene per prima:** il bucket `vehicles` ha **gli stessi due difetti già pagati in 1B-1** — manca la policy SELECT sullo storage (senza, la cancellazione delle foto **fallisce in silenzio**: era il bug della `0006`, tappato solo per `avatars`) e mancano limite di dimensione e vincolo MIME (la `0005`, idem). La `0007` li chiude, e aggiunge `vehicles.image_path` per cancellare il file giusto.
+- **Compressione delle immagini** (richiesta dell'utente): ogni foto viene ridotta a 1600px di lato lungo e riscritta in WebP **dal browser**, prima dell'upload. Utilità condivisa, usata anche dall'avatar.
+- **L'upload parte al SALVATAGGIO**, non alla scelta del file (al contrario dell'avatar): `image_url` è `NOT NULL`, quindi caricare prima che la riga esista seminerebbe file orfani a ogni modulo abbandonato.
 
 ### ⚠️ Trappola da conoscere PRIMA di scrivere le server action del garage
 
