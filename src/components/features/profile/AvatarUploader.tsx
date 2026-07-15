@@ -6,6 +6,7 @@ import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { comprimiImmagine } from "@/lib/images/compress";
 import { setAvatar } from "@/app/[locale]/(auth)/profilo/actions";
 
 // Stessi limiti della migrazione 0005. Qui servono solo per il feedback
@@ -38,15 +39,23 @@ export default function AvatarUploader({
 
     setError(null);
     if (!EXTENSIONS[file.type]) return setError(t("avatarType"));
-    if (file.size > MAX_BYTES) return setError(t("avatarSize"));
 
     setUploading(true);
+    // Si comprime PRIMA di controllare la dimensione: una foto da telefono di 4 MB
+    // è perfettamente accettabile una volta ridotta, e respingerla sarebbe assurdo.
+    const daCaricare = await comprimiImmagine(file);
+    if (daCaricare.size > MAX_BYTES) {
+      setUploading(false);
+      return setError(t("avatarSize"));
+    }
+
     // Il nome cambia a ogni caricamento: niente cache stantia del browser.
-    const path = `${userId}/avatar-${Date.now()}.${EXTENSIONS[file.type]}`;
+    const estensione = EXTENSIONS[daCaricare.type] ?? "webp";
+    const path = `${userId}/avatar-${Date.now()}.${estensione}`;
     const supabase = createClient();
     const { error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { contentType: file.type });
+      .upload(path, daCaricare, { contentType: daCaricare.type });
     setUploading(false);
     if (uploadError) return setError(t("avatarUploadFailed"));
 
