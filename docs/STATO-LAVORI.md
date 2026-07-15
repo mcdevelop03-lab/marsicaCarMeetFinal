@@ -1,14 +1,16 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-13**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-15**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
 ## 🔖 Dove siamo
 
-- 🔵 **IN CORSO: Fase 1B-2 — Garage.** Branch **`feat/fase1b2-garage`** (solo locale, non pushato). **Spec e piano scritti e committati; implementazione NON iniziata: 0 task su 9.**
-- **Ultimo completato:** **micro-fase "rifiniture: stato 2FA + errori Supabase"** ✅ (2026-07-13). Collaudata, mergiata in `main`.
-- **Prima ancora:** **micro-fase "memoizzazione dell'auth"** ✅ (2026-07-13) e **Fase 1B-1 — Profilo** ✅ (8 task su 8), entrambe collaudate e mergiate in `main`.
+- 🟢 **Fase 1B-2 — Garage ✅ COMPLETATA** (9 task su 9, collaudata dal vivo). Con essa si chiude **l'intera Fase 1B (Profilo + Garage)**. Branch **`feat/fase1b2-garage`**.
+- ▶️ **PROSSIMO: Fase 1C — Eventi + RSVP + media** (ancora da progettare: brainstorming → spec → piano).
+- **Ultimo completato:** **Fase 1B-2 — Garage** ✅ (2026-07-15). Collaudata dal vivo (vedi esito sotto).
+- **Prima ancora:** micro-fase **"rifiniture: stato 2FA + errori Supabase"** ✅ (2026-07-13), micro-fase **"memoizzazione dell'auth"** ✅ (2026-07-13) e **Fase 1B-1 — Profilo** ✅ (8 task su 8), tutte collaudate e mergiate in `main`.
+- **Piano 1B-2:** [`superpowers/plans/2026-07-13-fase1b2-garage.md`](./superpowers/plans/2026-07-13-fase1b2-garage.md) · **Spec:** [`superpowers/specs/2026-07-13-fase1b2-garage-design.md`](./superpowers/specs/2026-07-13-fase1b2-garage-design.md)
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
@@ -61,44 +63,28 @@ Due debiti **saldati**. Spec: [`superpowers/specs/2026-07-13-rifiniture-2fa-erro
 
 **Collaudo (tutto verde):** 3 clic su "Attiva 2FA" → **1 solo** fattore, non 3; dopo il reload la pagina dice "2FA attiva" (prima diceva "Attiva 2FA"); Annulla non tocca il fattore, Conferma lo rimuove (0 fattori nel DB) e la pagina si aggiorna da sé. Per il Tema B il guasto è stato simulato **revocando `SELECT` su `profiles`** (il PostgREST fermo produce un *blocco*, non un errore: non è quel percorso): `/membri` mostra "Impossibile caricare i dati", `/membri/[tag]` non è più un 404, entrambi loggano il codice `42501`; ripristinato il GRANT tutto torna normale e un tag inesistente dà ancora **HTTP 404**. `tsc`/`lint`/`build` verdi.
 
-## ▶️ DA COSA RIPARTIRE: Fase 1B-2 — Garage, **Task 1**
+## ✅ Esito Fase 1B-2 — Garage (2026-07-15) — chiude la Fase 1B
 
-**Brainstorming, spec e piano sono già fatti e approvati.** Si riparte dall'**implementazione del Task 1**.
+**Cosa fa:** ogni membro ha un garage di auto (con foto) che può creare, modificare ed eliminare; il garage altrui è visibile in **sola lettura** agli altri loggati.
 
-- **Branch:** `feat/fase1b2-garage` (già creato; contiene solo i due commit di spec e piano). ⚠️ **Solo locale, non pushato.**
-- **Piano (9 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-13-fase1b2-garage.md`](./superpowers/plans/2026-07-13-fase1b2-garage.md)
-- **Spec:** [`superpowers/specs/2026-07-13-fase1b2-garage-design.md`](./superpowers/specs/2026-07-13-fase1b2-garage-design.md)
+**Rotte aggiunte (tutte sotto `(auth)`):** **`/garage`** (il mio garage, griglia di schede con Modifica/Elimina), **`/garage/nuova`** (creazione), **`/garage/[id]/modifica`** (404 se l'auto non è tua). Il **garage del membro** è ora mostrato in sola lettura in **`/membri/[tag]`** (al posto del vecchio segnaposto "in arrivo"). Rimosso il segnaposto pubblico `(public)/garage`: la voce "Garage" dell'header ora punta alla rotta `(auth)` (da sloggato → login).
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e riprendi la Fase 1B-2 dal Task 1 del piano."*
+**Migrazione `0007_vehicles_storage.sql`:** chiude sul bucket `vehicles` gli stessi due difetti già pagati per `avatars` in 1B-1 — **policy SELECT `vehicles_select_own`** (senza, la cancellazione delle foto falliva in silenzio) + **limite 2 MB e vincolo MIME** — e aggiunge la colonna **`vehicles.image_path`** per cancellare il file giusto.
 
-### I 9 task (nessuno ancora fatto)
+**Compressione immagini (richiesta utente):** utilità condivisa `src/lib/images/compress.ts` — ogni foto è ridotta a 1600px di lato lungo e riscritta in **WebP dal browser** prima dell'upload (nessuna libreria). Usata sia dal `VehicleForm` sia dall'avatar (regressione verificata). L'upload dell'auto parte **al salvataggio** (non alla scelta del file), perché `image_url` è `NOT NULL` e caricare prima seminerebbe orfani.
 
-1. **Migrazione `0007`** + tipo `Vehicle` ← **si riparte da qui**
-2. Compressione immagini (`compress.ts`) + avatar che la usa
-3. Validazione veicolo + componente `Select` + stringhe
-4. Server action (crea/aggiorna/elimina)
-5. `VehicleForm` + `/garage/nuova`
-6. `/garage` (il mio garage) + schede + cancellazione; rimozione di `(public)/garage`
-7. `/garage/[id]/modifica`
-8. Garage del membro in `/membri/[tag]`
-9. Collaudo dal vivo e chiusura
+**Collaudo dal vivo (tutto verde, 2026-07-15, browser via Playwright + Mailpit + psql), 2 account (admin `mcdevelop03@gmail.com` + membro `membro.test@example.com`):**
+1. **Creazione:** riga con `image_path` valorizzato, `specs` jsonb corretto, 1 file in `{uid}/`.
+2. **Compressione:** foto realistica **6.75 MB → WebP 158 KB** (−98%); il MIME salvato è sempre `image/webp` (con rumore puro incomprimibile 3.44 MB → 756 KB, comunque WebP e −78%: caso peggiore di test).
+3. **Sostituzione foto:** il conteggio file **non cresce** — la vecchia foto è cancellata (prova che la policy SELECT della `0007` funziona), nuovo `image_path` aggiornato.
+4. **Eliminazione:** conferma in-linea a due passi; **Annulla** non tocca nulla, **Conferma** rimuove riga **e** file (0 orfani).
+5. **Sola lettura e guardie:** dal 2° account il garage del 1° si vede **senza** Modifica/Elimina; `/garage/[id-altrui]/modifica` → **HTTP 404**; il proprio `/garage` mostra solo le proprie auto; da **sloggato** `/garage` → login.
+6. **RLS dal vivo:** con la sessione del 2° utente, `UPDATE`/`DELETE` via PostgREST su un veicolo altrui → **0 righe** (auto integra).
+7. **Storage negativo:** upload nel bucket `vehicles` di file >2 MB → **413**, MIME `application/pdf` → **415**, cartella di un altro utente → **403** (RLS).
+8. **Regressione avatar:** foto profilo grande → salvata come **WebP 158 KB**, un solo file (nessun orfano).
+9. **Build:** `rm -rf .next && npm run build` **verde** (`tsc`/`lint` verdi a ogni task).
 
-### Cose da sapere PRIMA di ripartire
-
-- **Il Task 1 fa `npx supabase db reset`:** le utenze locali si azzerano. Per il collaudo (Task 9) **servono DUE account** (registrarli e confermarli da Mailpit su http://127.0.0.1:54324), perché la sola lettura del garage altrui va provata da un secondo utente. Per l'admin, rieseguire la `update` in `supabase/seed.sql`.
-- **Perché la migrazione viene per prima:** il bucket `vehicles` ha **gli stessi due difetti già pagati in 1B-1** — manca la policy SELECT sullo storage (senza, la cancellazione delle foto **fallisce in silenzio**: era il bug della `0006`, tappato solo per `avatars`) e mancano limite di dimensione e vincolo MIME (la `0005`, idem). La `0007` li chiude, e aggiunge `vehicles.image_path` per cancellare il file giusto.
-- **Compressione delle immagini** (richiesta dell'utente): ogni foto viene ridotta a 1600px di lato lungo e riscritta in WebP **dal browser**, prima dell'upload. Utilità condivisa, usata anche dall'avatar.
-- **L'upload parte al SALVATAGGIO**, non alla scelta del file (al contrario dell'avatar): `image_url` è `NOT NULL`, quindi caricare prima che la riga esista seminerebbe file orfani a ogni modulo abbandonato.
-
-### ⚠️ Trappola da conoscere PRIMA di scrivere le server action del garage
-
-Dalla micro-fase di **memoizzazione dell'auth** (spec: [`superpowers/specs/2026-07-13-memoizzazione-auth-design.md`](./superpowers/specs/2026-07-13-memoizzazione-auth-design.md)), `getUser()` e `getProfile()` in `src/lib/auth/index.ts` sono avvolte in `cache()` di React.
-
-`cache()` dura **un render pass**, e una server action gira **prima** del render che essa stessa innesca con `revalidatePath`. Quindi:
-
-> **In una server action, non leggere il profilo (o altri dati) con una funzione memoizzata *prima* di mutarli e poi fidarti del valore memoizzato *dopo*: serviresti dati pre-update.**
-
-Leggere l'**identità** (`requireUser()` → `getUser()`) è invece sempre sicuro: l'utente non cambia dentro una richiesta. È quello che fanno oggi `updateProfile` e `setAvatar` in `profilo/actions.ts`, ed è il motivo per cui la memoizzazione è innocua nel codice attuale — ma le action del garage sono il primo posto dove il rischio può armarsi davvero. Se una action del garage deve rileggere un dato che ha appena scritto, fa una query fresca con `createClient()`, non passa dal DAL memoizzato.
+**Debito noto (follow-up, non bloccante):** un **admin** può cancellare l'auto altrui (policy `vehicles_delete_owner_or_admin` sulla tabella) ma **non il file** nello storage — le policy dello storage limitano ciascuno alla propria cartella `{uid}/`, quindi resta un **file orfano** nel bucket. Fix possibile: policy admin sullo storage o funzione `SECURITY DEFINER` per la pulizia.
 
 ## 🧪 Esito collaudo 1A (Task 13) — 2026-07-09
 
