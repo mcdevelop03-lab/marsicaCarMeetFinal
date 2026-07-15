@@ -6,9 +6,10 @@ import Avatar from "@/components/ui/Avatar";
 import Card from "@/components/ui/Card";
 import SectionHeading from "@/components/ui/SectionHeading";
 import SocialLinks from "@/components/features/profile/SocialLinks";
+import VehicleCard from "@/components/features/garage/VehicleCard";
 import { getProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile } from "@/types/database";
+import type { Profile, Vehicle } from "@/types/database";
 
 export default async function MembroPage({
   params,
@@ -18,7 +19,7 @@ export default async function MembroPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const t = await getTranslations("members");
-  const tp = await getTranslations("placeholder");
+  const tg = await getTranslations("garage");
   const { tag } = await params;
   // `q` arriva dalla card di /membri: serve solo a ricostruire il link di ritorno
   // sui risultati della ricerca da cui l'utente è partito.
@@ -67,6 +68,18 @@ export default async function MembroPage({
   const member = data as Profile;
   const displayName = member.name ?? `@${member.tag}`;
 
+  // Le auto del membro: la RLS `vehicles_select_authenticated` consente la lettura
+  // a qualunque loggato, e la scheda in sola lettura non espone comandi.
+  const { data: vehiclesData, error: vehiclesError } = await supabase
+    .from("vehicles")
+    .select("*")
+    .eq("owner_id", member.id)
+    .order("created_at", { ascending: false });
+  if (vehiclesError) {
+    console.error("Membro: lettura del garage non riuscita", vehiclesError);
+  }
+  const vehicles = (vehiclesData ?? []) as Vehicle[];
+
   // Link vero, non `history.back()`: la pagina può essere aperta da un URL
   // condiviso, e in quel caso la cronologia non ha nulla a cui tornare.
   const backHref = q ? `/membri?q=${encodeURIComponent(q)}` : "/membri";
@@ -102,10 +115,19 @@ export default async function MembroPage({
         <SocialLinks socials={member.socials} />
       </Card>
 
-      {/* Segnaposto: la Fase 1B-2 sostituirà questa sezione col garage del membro. */}
       <div className="space-y-4">
         <SectionHeading>{t("garageTitle")}</SectionHeading>
-        <p className="font-mono text-xs text-white/40">{tp("comingSoon")}</p>
+        {vehiclesError ? (
+          <p className="font-mono text-xs text-accent-red">{t("loadError")}</p>
+        ) : vehicles.length === 0 ? (
+          <p className="font-mono text-xs text-white/40">{tg("emptyOther")}</p>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2">
+            {vehicles.map((vehicle) => (
+              <VehicleCard key={vehicle.id} vehicle={vehicle} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
