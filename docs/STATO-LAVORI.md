@@ -6,13 +6,64 @@
 
 ## 🔖 Dove siamo
 
-- 🟢 **Fase 1B-2 — Garage ✅ COMPLETATA** (9 task su 9, collaudata dal vivo). Con essa si chiude **l'intera Fase 1B (Profilo + Garage)**. Branch **`feat/fase1b2-garage`**.
-- ▶️ **PROSSIMO: Fase 1C — Eventi + RSVP + media** (ancora da progettare: brainstorming → spec → piano).
-- **Ultimo completato:** **Fase 1B-2 — Garage** ✅ (2026-07-15). Collaudata dal vivo (vedi esito sotto).
-- **Prima ancora:** micro-fase **"rifiniture: stato 2FA + errori Supabase"** ✅ (2026-07-13), micro-fase **"memoizzazione dell'auth"** ✅ (2026-07-13) e **Fase 1B-1 — Profilo** ✅ (8 task su 8), tutte collaudate e mergiate in `main`.
+- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Task 1, 2 e 3 su 10 completati** (ognuno con review indipendente pulita). **Si riparte dal Task 4.**
+- 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
+- **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** *(in corso)* → **1C-2 RSVP** → **1C-3 Album foto**.
+- **Piano 1C-1 (10 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-15-fase1c1-eventi.md`](./superpowers/plans/2026-07-15-fase1c1-eventi.md) · **Spec:** [`superpowers/specs/2026-07-15-fase1c1-eventi-design.md`](./superpowers/specs/2026-07-15-fase1c1-eventi-design.md)
 - **Piano 1B-2:** [`superpowers/plans/2026-07-13-fase1b2-garage.md`](./superpowers/plans/2026-07-13-fase1b2-garage.md) · **Spec:** [`superpowers/specs/2026-07-13-fase1b2-garage-design.md`](./superpowers/specs/2026-07-13-fase1b2-garage-design.md)
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
+
+## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **Task 4**
+
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e riprendi la Fase 1C-1 dal Task 4 del piano."*
+
+**Brainstorming, spec e piano sono fatti e approvati.** Si esegue col metodo **subagent-driven**: un subagent implementa il task, un secondo lo rivede in modo indipendente, il controller verifica di persona le affermazioni chiave, **poi si chiede l'ok all'utente prima del task successivo**.
+
+- **Branch:** `feat/fase1c1-eventi`. ⚠️ **Solo locale, non pushato.**
+- **Ledger di avanzamento** (sopravvive alla perdita di contesto, è la mappa di recupero): [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md). ⚠️ **Fidarsi del ledger e di `git log`, non della memoria della conversazione.** I task che risultano `complete` lì **non vanno rifatti**.
+
+### I 10 task
+
+| # | Task | Stato |
+|---|---|---|
+| 1 | Migrazione `0008` + tipi `Event` | ✅ `38fa545` |
+| 2 | Logica pura (fuso/stato/slug) + **vitest** | ✅ `fdebd45` — 22/22 test |
+| 3 | Date, validazione, stringhe | ✅ `a6bedb2` |
+| 4 | **Server action admin** (crea/aggiorna/annulla/ripristina/elimina) | ⬅️ **si riparte da qui** |
+| 5 | `EventForm` + `/admin/eventi/nuovo` | — |
+| 6 | Elenco admin + azioni | — |
+| 7 | `/admin/eventi/[id]/modifica` | — |
+| 8 | `EventCard` + `/eventi` pubblica | — |
+| 9 | `/eventi/[slug]` dettaglio | — |
+| 10 | Collaudo dal vivo e chiusura | — |
+
+Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più capace) + **una sola wave di fix** con tutti i Minor accumulati nel ledger.
+
+### Cose da sapere PRIMA di ripartire
+
+- **Il progetto ora ha i test.** La Fase 1C-1 ha introdotto **vitest** (`npm test`), usato **solo per la logica pura**: `src/lib/date/fuso.ts`, `src/lib/events/stato.ts`, `src/lib/events/slug.ts`. **22 test, tutti verdi.** Pagine, form e action restano verificati dal vivo. Aggiungere `npm test` alle verifiche di ogni task.
+- **Lo stato dell'evento NON è un campo del DB:** lo calcola `statoEvento()` dalle date, a ogni render. Nella colonna `status` si scrive **solo** `'upcoming'` (= non annullato) o `'canceled'`; `'ongoing'`/`'completed'` non si usano mai (c'è un `comment on column` nel DB che lo dice).
+- **Il fuso è la trappola di questa fase.** Le date sono istanti assoluti e il server in produzione gira in **UTC**, ma il club è italiano: tutta la matematica di `Europe/Rome` sta **solo** in `src/lib/date/fuso.ts` (`mezzanotteSuccessiva`, `istanteDaOraItaliana`), ed è coperta da test. **Non duplicarla altrove.** In particolare `<input type="datetime-local">` non ha fuso: l'ora va convertita con `istanteDaOraItaliana()`, mai con `new Date(valore)`.
+- **Il Task 1 ha fatto `npx supabase db reset`:** le utenze locali sono **azzerate**. Per il collaudo (Task 10) servono **DUE account** (registrarli e confermarli da Mailpit su http://127.0.0.1:54324) e l'admin va ripromosso rieseguendo la `update` di `supabase/seed.sql`.
+- **Migrazione `0008` già applicata e verificata:** limiti 2 MB + MIME su `event-covers` **e** `event-media`, colonna `events.cover_path`, `events.starts_at` ora `NOT NULL`, commento su `status`.
+- **Ai bucket eventi NON manca la policy SELECT** (a differenza di `avatars`/`vehicles`): la `0003` li protegge con una policy **`for all`**, che in Postgres copre anche la SELECT. Non aggiungerne una: sarebbe un duplicato.
+- **Le RLS degli eventi ci sono già** dalla `0002` (`events_select_public` = lettura pubblica anche da sloggati, `events_admin_write` = solo admin). Il layout `(admin)` chiama già `requireAdmin()`, **ma le server action non sono coperte da un layout**: ognuna deve richiamarlo per conto proprio.
+
+### ⚠️ Minor già noti, da sistemare nella wave finale (non bloccanti)
+
+1. **`fuso.test.ts`, test "usa il giorno ITALIANO, non quello UTC"** — con l'input `2026-07-12T21:30:00Z` il giorno italiano (23:30 del 12) e quello UTC (12) **coincidono**: il test non discrimina davvero, e la proprietà "usa il giorno italiano" **oggi non è coperta**. Fix: usare `2026-07-12T22:30:00Z` (a Roma è già il 13), atteso `"2026-07-13T22:00:00.000Z"`. *(È un difetto del piano, non dell'implementer.)*
+2. **Commenti che citano `src/lib/events/stato.ts`** in `database.ts` e nel **commento SQL persistito nel DB**: se un giorno quella funzione venisse rinominata, va aggiornato anche il commento dentro Postgres.
+3. **`eventSchema`**: con `starts_at` vuoto scatta anche il `refine` "fine dopo inizio". Impatto nullo (la action mostra solo `issues[0]`, il campo è `required`). Nessun fix necessario.
+
+### Decisioni di design della 1C-1 (già prese, non ridiscuterle)
+
+- **Stato derivato dalle date**; l'admin può solo **annullare**. Senza `ends_at`, l'evento resta "in corso" **fino a fine giornata italiana** (mezzanotte successiva) — così un raduno delle 10:00 non risulta "concluso" alle 10:01.
+- **Pagina pubblica unica:** "Prossimi raduni" e sotto "Conclusi". Un **annullato con data futura resta fra i Prossimi**, con badge `ANNULLATO`: chi doveva venire deve vederlo.
+- **Copertina facoltativa**, con segnaposto grafico che mostra il tipo di evento.
+- **Slug generato dal titolo alla creazione e poi immutabile:** correggere il titolo non deve rompere i link già condivisi.
+- **Annullare è l'azione normale; eliminare è possibile solo se l'evento è vuoto** (niente iscritti né foto): le foreign key sono `on delete cascade` e si porterebbero via iscrizioni e album.
+- **Path della copertina piatto** (`{uuid}.webp`), non `{uid}/` né `{event-id}/`: in creazione l'evento non ha ancora un id, e `cover_path` registra comunque il file esatto.
 
 ## ✅ Esito Fase 1B-1 — Profilo (2026-07-12)
 
@@ -109,6 +160,17 @@ Dopo la chiusura di 1A, migliorie all'interfaccia auth e alla navigazione (non n
 - **Navigazione da loggato**: `Dashboard`/`Impostazioni`/`Logout` nel menu (o `Accedi` da sloggato). `isAuthenticated` passato dal layout.
 
 > **Avatar profilo accanto al menu**: ✅ **fatto in Fase 1B-1** (display nell'header + upload da `/profilo`).
+
+## 🔮 Cosa aspetta le prossime sotto-fasi (1C-2 e 1C-3)
+
+**1C-2 — RSVP.** Prima di progettarla vanno affrontati **due nodi già individuati leggendo le RLS**, che cambiano il design:
+
+1. **La capienza non è mostrabile con le RLS attuali.** La policy è `registrations_select_self_or_admin`: un membro vede **solo la propria** iscrizione, quindi **non può contare le altre** → non possiamo scrivere *"restano 8 posti su 20"* senza una via dedicata (funzione `SECURITY DEFINER`, contatore denormalizzato, o modifica delle RLS).
+2. **La capienza non è applicabile senza corsa.** `registrations_insert_self` controlla **solo** `user_id = auth.uid()`: **nessun controllo di capienza**. Se lo si mettesse nella server action, **due utenti che prenotano insieme l'ultimo posto passerebbero entrambi**. Va risolto a livello DB.
+
+Nota: l'enum `registration_status` include `waitlist`, ma **RF-24 dice "RSVP bloccato a esaurimento posti"**, non "va in lista d'attesa". La lista d'attesa sarebbe un sottosistema intero (promozione automatica, notifiche): probabilmente **YAGNI**, da confermare nel brainstorming.
+
+**1C-3 — Album foto.** Il bucket `event-media` è **già configurato** dalla `0008` (2 MB, solo immagini). Per D-171 i **video sono link YouTube**, quindi quel bucket ospita **solo foto** e la compressione WebP esistente copre tutto. Lì avrà senso il path `{event-id}/`, perché le foto sono molte e si caricano su un evento già esistente.
 
 ## 🔧 Come rimettere in moto l'ambiente
 
