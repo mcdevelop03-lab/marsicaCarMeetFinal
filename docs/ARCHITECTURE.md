@@ -1,6 +1,6 @@
 # ARCHITECTURE — Marsica Car Meet
 
-> Documento vivo. Ultima modifica: 2026-07-07.
+> Documento vivo. Ultima modifica: 2026-07-15.
 > Ogni scelta architetturale va motivata e registrata qui. Decisioni di **prodotto/scope**
 > in [DECISIONS.md](./DECISIONS.md).
 
@@ -218,6 +218,40 @@ senza una tabella `hotspots` separata (D-134).
   eventi, `event_media` e news richiedono `profiles.role = 'admin'`.
 - Doppio controllo: Server Actions/Route verificano il ruolo prima di chiamare il DB.
 
+### Dati a riposo e cifratura (D-173/174)
+
+**Nessuna cifratura a livello di colonna**: non si usa pgcrypto/pgsodium/Vault. Cosa protegge cosa:
+
+| Dato | Come è protetto |
+|---|---|
+| **Password** | **Hash bcrypt** irreversibile, gestito da Supabase GoTrue in `auth.users.encrypted_password`. **Non la salviamo noi**: nel nostro schema non esiste alcuna colonna password. Nemmeno l'admin può leggerla — per questo l'unica via è il reset. |
+| **Email** | **In chiaro**, per necessità funzionale: serve per cercare l'utente al login, **spedire** conferma e reset, e garantire l'unicità. Cifrarla non aggiungerebbe nulla (l'app dovrebbe comunque decifrarla per usarla); un hash renderebbe impossibile l'invio. |
+| **`profiles` / `vehicles`** (nome, tag, bio, comune, social, dati auto) | **In chiaro.** Sono dati che il membro **pubblica volontariamente** in una community e **non sono dati particolari** ex art. 9 GDPR. |
+| **Tutti** | **RLS + auth** (controllo d'accesso), **TLS** in transito, **cifratura del disco** lato piattaforma su Supabase Cloud (in locale è un volume Docker, non cifrato). |
+
+Perché non cifrare le colonne: **romperebbe la ricerca `/membri`** (nessun `ILIKE` su testo cifrato) e le
+predicate RLS, e introdurrebbe gestione delle chiavi — costo reale a fronte di beneficio quasi nullo su
+dati già pubblici per scelta. **Da rivalutare** (D-174) se si raccoglieranno targa, indirizzo, telefono,
+data di nascita, documenti o dati di pagamento: in quel caso cifratura mirata sulle singole colonne
+(pgcrypto / Vault) oppure, preferibilmente, non raccoglierli.
+
+### Upload e storage — regole permanenti
+
+- **Ogni punto di upload immagini passa da `comprimiImmagine()`** (`src/lib/images/compress.ts`):
+  resize a 1600px sul lato lungo + riscrittura **WebP nel browser**, prima dell'upload. Senza, una foto
+  da telefono (3–7 MB) sfonda il limite di 2 MB del bucket e l'utente viene respinto per una foto legittima.
+- **Ogni bucket nasce con `file_size_limit` + `allowed_mime_types` + policy SELECT.** Sono i tre difetti
+  già pagati con le migrazioni **0005** (limiti `avatars`), **0006** (SELECT `avatars`) e **0007** (tutti e
+  tre per `vehicles`): senza policy SELECT la cancellazione dei file **fallisce in silenzio** (`list()`/
+  `remove()` non vedono nulla) e restano orfani pubblicamente scaricabili; i controlli nel browser sono
+  solo feedback, non difesa.
+- ⚠️ **Debito aperto:** i bucket **`event-covers`** ed **`event-media`** esistono dalla `0003` ma sono
+  **scoperti** (niente limiti, niente MIME, niente policy SELECT) e nessun codice li usa ancora. Vanno
+  chiusi con una migrazione **prima** di scrivere il codice della Fase 1C.
+- ⚠️ **`comprimiImmagine()` gestisce solo immagini**: su un video `createImageBitmap` lancia e la funzione
+  restituisce **l'originale intatto, in silenzio** (comportamento voluto). Con D-171 il problema non si
+  presenta — i video sono link YouTube e `event-media` resta solo-immagini.
+
 ## 7. Internazionalizzazione
 
 - `next-intl` con segmento `[locale]` nell'URL. **Al lancio solo `/it`** (D-151); l'infrastruttura
@@ -274,6 +308,9 @@ senza una tabella `hotspots` separata (D-134).
 | 2026-07-07 | **Auth: Google + Turnstile + MFA TOTP** dal lancio, conferma email obbligatoria | Anti-bot reale (Turnstile) e 2FA nativa; scartato il codice-2FA via email (custom + deliverability) — D-143/144/145. |
 | 2026-07-07 | **Italiano al lancio**, EN in Fase 3 | Pubblico locale italiano; struttura i18n comunque predisposta per non rifare nulla — D-151. |
 | 2026-07-07 | **E-commerce escluso in modo permanente** | La sezione Gadget resta sola vetrina; carrello del mockup rimosso del tutto — D-161 (chiude D-4). |
+| 2026-07-15 | **Compressione WebP nel browser su ogni upload immagine** + **ogni bucket nasce con limiti/MIME/policy SELECT** | Una foto da telefono (3–7 MB) sfonderebbe il limite di 2 MB; senza policy SELECT la cancellazione dei file fallisce **in silenzio**. Regole nate dalle migrazioni 0005/0006/0007 — vedi §6. Debito: `event-covers`/`event-media` ancora scoperti. |
+| 2026-07-15 | **Media eventi: gallery nostra + video via link YouTube + link Drive per gli originali** | Un video 1080p da 1 minuto pesa 60–130 MB contro ~1 GB di free tier, e comprimerlo nel browser non è realistico. `event_media.url` supportava già un URL esterno: nessuna modifica di schema — D-171 (chiude D-A3). |
+| 2026-07-15 | **Nessuna cifratura di colonna nel DB** | Password già hash bcrypt lato GoTrue, email in chiaro per necessità funzionale, resto dei dati pubblicati volontariamente e non particolari ex art. 9. Cifrare romperebbe ricerca e RLS — D-173; da rivalutare con dati sensibili (D-174). |
 
 ## 12. Costi e mantenimento
 
