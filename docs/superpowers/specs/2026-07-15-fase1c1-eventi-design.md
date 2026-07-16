@@ -98,6 +98,8 @@ Fa quattro cose, tutte da chiudere **prima** di scrivere il codice (è la lezion
 
 **Campi** (`*` = obbligatorio): titolo\*, tipo\* (raduno/giro/sociale), data e ora inizio\*, data e ora fine, luogo, link mappa, capienza, descrizione, copertina.
 
+⚠️ **Le date passano da `<input type="datetime-local">`, che non ha fuso:** mostra e restituisce **ora locale** come `"2026-07-12T10:00"`. Passarla a `new Date()` la farebbe interpretare col fuso del **server**, che in produzione è **UTC**: il raduno finirebbe salvato con **due ore di anticipo**. La conversione a istante assoluto la fa `istanteDaOraItaliana()` (in `fuso.ts`, testata); la strada inversa, per riempire il form in modifica, è `perInputDatetime()`.
+
 - La **capienza** in 1C-1 si limita a essere **salvata e mostrata** ("Capienza: 20 posti"). Viene *usata* per bloccare le iscrizioni solo in 1C-2.
 - Il **link mappa** (`map_url`) è un URL esterno inserito dall'admin (D-134). Il campo `coords` **non si tocca**: serve alla mappa interattiva della Fase 2.
 - Un form **unico** riusato da `nuovo` e `modifica`, come `VehicleForm` in 1B-2.
@@ -118,7 +120,11 @@ L'upload parte **al salvataggio**, non alla scelta del file — stessa scelta di
 
 **Sostituzione e pulizia**, identiche ad `aggiornaVeicolo` (1B-2): si carica il nuovo file, si aggiorna la riga e **solo dopo** si cancella il vecchio, leggendo il path da `cover_path`. L'ordine conta: cancellare prima e poi fallire l'update lascerebbe l'evento con un'immagine rotta. Un file orfano residuo **non** è un errore per l'utente (l'evento è salvo e corretto) ma **va loggato**, altrimenti una pulizia rotta è indistinguibile dal silenzio. Stessa pulizia all'eliminazione dell'evento.
 
-Il path è `{event-id}/{uuid}.webp`. ⚠️ **Non** replica lo schema `{uid}/` di avatar e auto: lì la cartella per-utente *è* la regola di sicurezza (`(storage.foldername(name))[1] = auth.uid()`), qui invece scrive **solo l'admin** (`event_covers_admin_write` verifica `is_admin()`, non la cartella), e raggruppare per evento rende la pulizia ovvia. Di conseguenza le action **non** devono copiare il controllo `path.startsWith(user.id)` del garage: sarebbe sbagliato e bloccherebbe tutto.
+Il path è **`{uuid}.webp`**, piatto nella radice del bucket.
+
+⚠️ **Non** replica lo schema `{uid}/` di avatar e auto: lì la cartella per-utente *è* la regola di sicurezza (`(storage.foldername(name))[1] = auth.uid()`), mentre qui scrive **solo l'admin** e `event_covers_admin_write` verifica `is_admin()`, **non** la cartella. Di conseguenza le action **non** devono copiare il controllo `path.startsWith(user.id)` del garage: sarebbe sbagliato e bloccherebbe tutto.
+
+**Perché piatto e non `{event-id}/`:** in creazione l'upload avviene **prima** dell'`insert`, quindi l'id dell'evento **non esiste ancora**. Raggruppare per evento richiederebbe di inventare una cartella alla creazione e di usarne un'altra in modifica — cioè copertine dello stesso evento sparse in cartelle diverse, il peggio dei due mondi. Dato che `cover_path` registra il file esatto e la copertina è **una sola per evento**, la cartella non aggiungerebbe nulla. (Diverso sarà `event-media` in 1C-3: lì le foto sono molte e si caricano su un evento **già esistente**, quindi `{event-id}/` avrà senso.)
 
 ### Annulla / Ripristina / Elimina
 
@@ -138,8 +144,9 @@ Il path è `{event-id}/{uuid}.webp`. ⚠️ **Non** replica lo schema `{uid}/` d
 
 | File | Ruolo |
 |---|---|
-| `src/lib/events/stato.ts` | `statoEvento(event, now?)` → l'unica fonte di verità dello stato. Funzione pura. |
-| `src/lib/events/slug.ts` | Generazione dello slug dal titolo + gestione dei duplicati. |
+| `src/lib/events/stato.ts` | `statoEvento(event, now?)` → l'unica fonte di verità dello stato. Funzione pura, **coperta da test**. Il parametro `now` iniettabile serve proprio a renderla testabile. |
+| `src/lib/date/fuso.ts` | Tutta la matematica del fuso italiano, in un posto solo, **coperta da test**: `mezzanotteSuccessiva(d)` (confine di giornata, ora legale inclusa) e `istanteDaOraItaliana(v)` (`"2026-07-12T10:00"` dall'input → istante ISO assoluto). |
+| `src/lib/events/slug.ts` | `slugDa(titolo)` → generazione dello slug. Pura, **coperta da test**. La gestione dei duplicati vive nella action (richiede il DB). |
 | `src/lib/date/format.ts` | Formattazione date in it-IT (`Intl.DateTimeFormat`). **Oggi non esiste nulla del genere** nel progetto. |
 | `src/lib/validation/event.ts` | Schema zod dell'evento. |
 | `src/components/features/events/EventCard.tsx` | Scheda evento, riusata dalla lista pubblica e dall'admin. |
@@ -151,7 +158,8 @@ Il path è `{event-id}/{uuid}.webp`. ⚠️ **Non** replica lo schema `{uid}/` d
 - **Colori solo da token**; **stringhe UI solo via next-intl** (`src/messages/it.json`), mai hardcoded.
 - **Immagini utente con `<img>` semplice** + `eslint-disable-next-line @next/next/no-img-element` (il progetto non configura `remotePatterns`).
 - **`useRouter`/`Link`/`redirect` da `@/i18n/navigation`**, mai da `next/navigation`.
-- **Niente test automatici** (il progetto non ha infrastruttura): verifica = `tsc` + `lint` + `build` + collaudo dal vivo.
+- **Test automatici: solo sulla logica pura.** Questa fase introduce **vitest** (unica dipendenza di sviluppo) e lo usa **esclusivamente** per `statoEvento()` e la generazione dello slug. Tutto il resto — pagine, form, action — resta verificato come sempre: `tsc` + `lint` + `build` + collaudo dal vivo. **Decisione dell'utente, 2026-07-15**, che aggiorna la convenzione "niente test automatici" delle fasi 1A/1B.
+  **Perché proprio qui:** `statoEvento()` è una funzione pura ma con la logica più insidiosa della fase (confine di giornata + fuso + ora legale). Dal vivo si verificherebbe solo costruendo eventi con date ad arte, e il caso dell'**ora legale non sarebbe verificabile affatto**; con un test è questione di secondi. Le pagine, al contrario, si collaudano bene dal vivo e non giustificano l'infrastruttura.
 - **Lint pulito**: zero errori e zero warning.
 - ⚠️ **Non lanciare `npm run build` mentre gira `next dev`**: corrompe `.next`.
 - **Next.js 16** (non 15): consultare `node_modules/next/dist/docs/` prima di toccare API Next.
@@ -169,4 +177,4 @@ Il path è `{event-id}/{uuid}.webp`. ⚠️ **Non** replica lo schema `{uid}/` d
 9. **RLS dal vivo:** con la sessione di un membro non-admin, `insert`/`update` su `events` via PostgREST → respinti.
 10. **Eliminazione:** consentita su evento vuoto; l'annullamento conserva l'evento.
 11. **Errore ≠ 404:** slug inesistente → **404**; guasto simulato → messaggio d'errore, **non** un 404.
-12. `tsc` / `lint` / `build` verdi.
+12. `tsc` / `lint` / `build` / `npm test` verdi.
