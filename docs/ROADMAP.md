@@ -1,6 +1,6 @@
 # ROADMAP — Marsica Car Meet
 
-> Documento vivo. Ultima modifica: 2026-07-08.
+> Documento vivo. Ultima modifica: 2026-07-15.
 > Sequenza pensata per uno sviluppatore singolo: ogni fase produce qualcosa di usabile.
 > Scelte di scope in [`DECISIONS.md`](./DECISIONS.md).
 
@@ -29,10 +29,10 @@ Obiettivo: primo prodotto realmente utile alla community. Suddivisa in sotto-pro
 - [x] **[1A]** Schema DB: `profiles`, `vehicles`, `events`, `event_registrations`, `event_vehicles`, `event_media`.
 - [x] **[1A]** RLS su tutte le tabelle (pubblico: eventi + media; membri: profili/garage) — inclusi i GRANT di tabella.
 - [x] **[1A]** Auth: registrazione + **conferma email**, login/logout, reset, **2FA TOTP**, guardie AAL2. *(Google OAuth + Turnstile reali: solo codice, config cloud rimandata.)*
-- [ ] **[1B]** Profilo membro: visualizzazione e modifica (nome, tag, bio, paese, social), upload avatar.
-- [ ] **[1B]** Garage: CRUD auto con upload foto (campi obbligatori/opzionali).
+- [x] **[1B-1]** Profilo membro: visualizzazione e modifica (nome, tag, bio, paese, social), upload avatar. *(2026-07-12)*
+- [x] **[1B-2]** Garage: CRUD auto con upload foto (campi obbligatori/opzionali). *(2026-07-15 — con compressione WebP nel browser, migrazione `0007`)*
 - [ ] **[1C]** Eventi: elenco e dettaglio pubblici (con link mappa esterna); tipi raduno/giro/sociale.
-- [ ] **[1C]** Admin: creazione/gestione eventi + **upload album foto/video dell'evento**.
+- [ ] **[1C]** Admin: creazione/gestione eventi + **album foto dell'evento** (video = link YouTube, D-171).
 - [ ] **[1C]** RSVP con capienza + associazione auto all'evento.
 - [ ] **[1D]** GDPR base: cookie banner + pagine privacy/cookie (struttura).
 - [x] **[1A]** Guardie di accesso (aree membro/admin).
@@ -49,7 +49,7 @@ Obiettivo: raccontare il club e facilitare la scoperta.
 - [ ] Gestione utenti nel pannello admin (ruoli, sospensioni).
 - [ ] Lista partecipanti/auto per evento (admin).
 - [ ] Cancellazione account/dati (GDPR).
-- [ ] Upload video diretto vs embed (decisione D-1).
+- [x] ~~Upload video diretto vs embed (decisione D-1)~~ → **deciso in anticipo (D-171, 2026-07-15): solo embed esterno**, link YouTube. Niente upload video, né ora né in Fase 2.
 - **Esito:** piattaforma ricca di contenuti, con mappa e gestione utenti.
 
 ## Fase 3 — Rifiniture & merch
