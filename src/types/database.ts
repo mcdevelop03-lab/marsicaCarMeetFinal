@@ -58,3 +58,31 @@ export type Vehicle = {
   specs: VehicleSpecs;
   created_at: string;
 };
+
+export const EVENT_TYPES = ["raduno", "giro", "sociale"] as const;
+export type EventType = (typeof EVENT_TYPES)[number];
+
+// L'enum `event_status` del DB ha quattro valori, ma con lo stato derivato dalle date
+// ne scriviamo solo due: 'upcoming' (= non annullato) e 'canceled'. Vedi la migrazione
+// 0008 e `src/lib/events/stato.ts`.
+export type EventStatusDb = "upcoming" | "ongoing" | "completed" | "canceled";
+
+export type Event = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  // Riservato alla mappa interattiva della Fase 2: la 1C-1 non lo tocca.
+  coords: unknown | null;
+  starts_at: string; // NOT NULL dalla migrazione 0008
+  ends_at: string | null;
+  capacity: number | null;
+  status: EventStatusDb;
+  type: EventType;
+  map_url: string | null;
+  cover_url: string | null;
+  cover_path: string | null; // colonna aggiunta dalla migrazione 0008
+  created_by: string | null;
+  created_at: string;
+};
