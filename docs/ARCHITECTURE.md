@@ -245,9 +245,13 @@ data di nascita, documenti o dati di pagamento: in quel caso cifratura mirata su
   tre per `vehicles`): senza policy SELECT la cancellazione dei file **fallisce in silenzio** (`list()`/
   `remove()` non vedono nulla) e restano orfani pubblicamente scaricabili; i controlli nel browser sono
   solo feedback, non difesa.
-- ⚠️ **Debito aperto:** i bucket **`event-covers`** ed **`event-media`** esistono dalla `0003` ma sono
-  **scoperti** (niente limiti, niente MIME, niente policy SELECT) e nessun codice li usa ancora. Vanno
-  chiusi con una migrazione **prima** di scrivere il codice della Fase 1C.
+- ⚠️ **Debito aperto:** i bucket **`event-covers`** ed **`event-media`** esistono dalla `0003` ma non hanno
+  **né `file_size_limit` né `allowed_mime_types`**, e nessun codice li usa ancora. Vanno chiusi con una
+  migrazione **prima** di scrivere il codice della Fase 1C.
+  **Nota (verificata il 2026-07-15):** a differenza di `avatars`/`vehicles`, per questi due la **policy
+  SELECT non manca**. La `0003` li protegge con una policy **`for all`**, che in Postgres copre anche la
+  SELECT; `avatars`/`vehicles` usavano invece comandi espliciti (`for insert`/`update`/`delete`), ed è per
+  questo che sono servite la `0006` e la `0007`. Sui bucket eventi mancano quindi **due** difetti su tre.
 - ⚠️ **`comprimiImmagine()` gestisce solo immagini**: su un video `createImageBitmap` lancia e la funzione
   restituisce **l'originale intatto, in silenzio** (comportamento voluto). Con D-171 il problema non si
   presenta — i video sono link YouTube e `event-media` resta solo-immagini.
@@ -308,7 +312,7 @@ data di nascita, documenti o dati di pagamento: in quel caso cifratura mirata su
 | 2026-07-07 | **Auth: Google + Turnstile + MFA TOTP** dal lancio, conferma email obbligatoria | Anti-bot reale (Turnstile) e 2FA nativa; scartato il codice-2FA via email (custom + deliverability) — D-143/144/145. |
 | 2026-07-07 | **Italiano al lancio**, EN in Fase 3 | Pubblico locale italiano; struttura i18n comunque predisposta per non rifare nulla — D-151. |
 | 2026-07-07 | **E-commerce escluso in modo permanente** | La sezione Gadget resta sola vetrina; carrello del mockup rimosso del tutto — D-161 (chiude D-4). |
-| 2026-07-15 | **Compressione WebP nel browser su ogni upload immagine** + **ogni bucket nasce con limiti/MIME/policy SELECT** | Una foto da telefono (3–7 MB) sfonderebbe il limite di 2 MB; senza policy SELECT la cancellazione dei file fallisce **in silenzio**. Regole nate dalle migrazioni 0005/0006/0007 — vedi §6. Debito: `event-covers`/`event-media` ancora scoperti. |
+| 2026-07-15 | **Compressione WebP nel browser su ogni upload immagine** + **ogni bucket nasce con limiti/MIME/policy SELECT** | Una foto da telefono (3–7 MB) sfonderebbe il limite di 2 MB; senza policy SELECT la cancellazione dei file fallisce **in silenzio**. Regole nate dalle migrazioni 0005/0006/0007 — vedi §6. Debito: a `event-covers`/`event-media` mancano **limiti e MIME** (la SELECT è già coperta dalla loro policy `for all`). |
 | 2026-07-15 | **Media eventi: gallery nostra + video via link YouTube + link Drive per gli originali** | Un video 1080p da 1 minuto pesa 60–130 MB contro ~1 GB di free tier, e comprimerlo nel browser non è realistico. `event_media.url` supportava già un URL esterno: nessuna modifica di schema — D-171 (chiude D-A3). |
 | 2026-07-15 | **Nessuna cifratura di colonna nel DB** | Password già hash bcrypt lato GoTrue, email in chiaro per necessità funzionale, resto dei dati pubblicati volontariamente e non particolari ex art. 9. Cifrare romperebbe ricerca e RLS — D-173; da rivalutare con dati sensibili (D-174). |
 
