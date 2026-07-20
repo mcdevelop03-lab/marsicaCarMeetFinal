@@ -65,9 +65,23 @@ export function mezzanotteSuccessiva(d: Date): Date {
  * raduno verrebbe salvato con due ore di anticipo. Qui il valore viene esplicitamente
  * letto come ora di Roma.
  */
+//
+// Limite noto (cambio da ora legale a ora solare, ultima domenica di ottobre): quel
+// giorno le 02:30 italiane si presentano DUE volte (00:30Z e 01:30Z sono entrambe
+// "02:30" locali, perché l'ora ripete). Un round-trip perfetto è impossibile per
+// definizione — non c'è modo di sapere, dalla sola stringa "02:30", a quale delle due
+// occorrenze l'admin si riferisse. Questa funzione le fa collassare entrambe sulla
+// seconda (l'istante più tardo, con scarto +1): non è un bug da inseguire.
 export function istanteDaOraItaliana(valore: string): string {
-  // Si parte interpretandolo come UTC solo per scoprire quale scarto italiano è in
-  // vigore in quella data (l'ora legale cambia fra +1 e +2).
+  // Prima ipotesi: si interpreta il valore come UTC solo per scoprire quale scarto
+  // italiano è probabilmente in vigore in quella data (l'ora legale cambia fra +1 e +2).
   const ipotesi = new Date(`${valore}:00Z`);
-  return new Date(ipotesi.getTime() - scarto(ipotesi)).toISOString();
+  // Vicino al cambio di ora legale, lo scarto calcolato su `ipotesi` può essere quello
+  // sbagliato: `ipotesi` è ancora "ora italiana letta come se fosse UTC", cioè può
+  // cadere dalla parte sbagliata del salto rispetto all'istante reale. Si ricalcola lo
+  // scarto una seconda volta, questa volta sul primo istante stimato (che è già vicino
+  // a quello vero): a quel punto lo scarto è quello corretto per l'istante reale, non
+  // per la sua approssimazione grezza.
+  const primo = new Date(ipotesi.getTime() - scarto(ipotesi));
+  return new Date(ipotesi.getTime() - scarto(primo)).toISOString();
 }

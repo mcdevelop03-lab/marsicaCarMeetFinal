@@ -49,4 +49,41 @@ describe("istanteDaOraItaliana", () => {
     // 12 luglio, 23:30 italiane = 21:30 UTC dello stesso giorno.
     expect(istanteDaOraItaliana("2026-07-12T23:30")).toBe("2026-07-12T21:30:00.000Z");
   });
+
+  describe("cambio di ora legale (ultima domenica di marzo, 2026: notte 28→29)", () => {
+    it("round-trip stabile appena prima del salto (00:30Z, ancora scarto +1)", () => {
+      // 2026-03-29T00:30:00.000Z, letta in Italia, è ancora 01:30 (scarto +1: l'ora
+      // legale scatta solo alle 02:00 locali, che diventano le 03:00).
+      expect(istanteDaOraItaliana("2026-03-29T01:30")).toBe("2026-03-29T00:30:00.000Z");
+    });
+
+    it("round-trip stabile un minuto prima del salto (00:59Z)", () => {
+      expect(istanteDaOraItaliana("2026-03-29T01:59")).toBe("2026-03-29T00:59:00.000Z");
+    });
+
+    it("round-trip stabile appena dopo il salto (01:30Z, già scarto +2)", () => {
+      // Dopo il salto le 02:00 locali sono diventate le 03:00: 2026-03-29T01:30:00.000Z
+      // corrisponde a "03:30" italiane (scarto +2), non a "02:30" (che non esiste).
+      expect(istanteDaOraItaliana("2026-03-29T03:30")).toBe("2026-03-29T01:30:00.000Z");
+    });
+
+    it("round-trip stabile in piena estate (nessuna regressione, scarto +2)", () => {
+      expect(istanteDaOraItaliana("2026-07-12T10:00")).toBe("2026-07-12T08:00:00.000Z");
+    });
+
+    it("round-trip stabile in pieno inverno (nessuna regressione, scarto +1)", () => {
+      expect(istanteDaOraItaliana("2026-01-15T10:00")).toBe("2026-01-15T09:00:00.000Z");
+    });
+  });
+
+  describe("cambio da ora legale a ora solare (ultima domenica di ottobre, 2026: notte 25)", () => {
+    it("LIMITE NOTO, non un bug: le 02:30 italiane esistono due volte quella notte " +
+      "(l'ora si ripete). Sia 00:30Z sia 01:30Z si presentano come input \"02:30\": " +
+      "un round-trip perfetto per entrambe è impossibile per definizione (la stringa " +
+      "dell'input non porta l'informazione su quale delle due occorrenze fosse). " +
+      "Questa funzione fa collassare l'input sulla seconda occorrenza (scarto +1, " +
+      "l'istante più tardo) in modo deterministico.", () => {
+      expect(istanteDaOraItaliana("2026-10-25T02:30")).toBe("2026-10-25T01:30:00.000Z");
+    });
+  });
 });
