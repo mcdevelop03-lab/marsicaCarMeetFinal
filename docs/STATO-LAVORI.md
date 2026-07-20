@@ -1,12 +1,12 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-15**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-20**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
 ## 🔖 Dove siamo
 
-- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Task 1, 2 e 3 su 10 completati** (ognuno con review indipendente pulita). **Si riparte dal Task 4.**
+- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Task 1, 2, 3 e 4 su 10 completati** (ognuno con review indipendente). **Si riparte dal Task 5.**
 - 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
 - **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** *(in corso)* → **1C-2 RSVP** → **1C-3 Album foto**.
 - **Piano 1C-1 (10 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-15-fase1c1-eventi.md`](./superpowers/plans/2026-07-15-fase1c1-eventi.md) · **Spec:** [`superpowers/specs/2026-07-15-fase1c1-eventi-design.md`](./superpowers/specs/2026-07-15-fase1c1-eventi-design.md)
@@ -14,9 +14,9 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **Task 4**
+## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **Task 5**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e riprendi la Fase 1C-1 dal Task 4 del piano."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e riprendi la Fase 1C-1 dal Task 5 del piano."*
 
 **Brainstorming, spec e piano sono fatti e approvati.** Si esegue col metodo **subagent-driven**: un subagent implementa il task, un secondo lo rivede in modo indipendente, il controller verifica di persona le affermazioni chiave, **poi si chiede l'ok all'utente prima del task successivo**.
 
@@ -30,8 +30,8 @@
 | 1 | Migrazione `0008` + tipi `Event` | ✅ `38fa545` |
 | 2 | Logica pura (fuso/stato/slug) + **vitest** | ✅ `fdebd45` — 22/22 test |
 | 3 | Date, validazione, stringhe | ✅ `a6bedb2` |
-| 4 | **Server action admin** (crea/aggiorna/annulla/ripristina/elimina) | ⬅️ **si riparte da qui** |
-| 5 | `EventForm` + `/admin/eventi/nuovo` | — |
+| 4 | Server action admin (crea/aggiorna/annulla/ripristina/elimina) | ✅ `0951d5b` — 50/50 test |
+| 5 | **`EventForm` + `/admin/eventi/nuovo`** | ⬅️ **si riparte da qui** |
 | 6 | Elenco admin + azioni | — |
 | 7 | `/admin/eventi/[id]/modifica` | — |
 | 8 | `EventCard` + `/eventi` pubblica | — |
@@ -42,7 +42,8 @@ Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più
 
 ### Cose da sapere PRIMA di ripartire
 
-- **Il progetto ora ha i test.** La Fase 1C-1 ha introdotto **vitest** (`npm test`), usato **solo per la logica pura**: `src/lib/date/fuso.ts`, `src/lib/events/stato.ts`, `src/lib/events/slug.ts`. **22 test, tutti verdi.** Pagine, form e action restano verificati dal vivo. Aggiungere `npm test` alle verifiche di ogni task.
+- **Le date dell'evento sono validate a fondo (Task 4).** `eventSchema` respinge, con messaggi distinti: campo vuoto, **formato** diverso da `datetime-local` (`pippo`, secondi extra), **data inesistente nel calendario** (`31 febbraio`, mese 13, ora 25) e **anno fuori da 2000–2100**. Il controllo di calendario è un **round-trip** su `toISOString()`, non una tabella giorni-per-mese: gestisce i bisestili da sé (`2028-02-29` sì, `2026-02-29` e `1900-02-29` no) ed è coperto da test. **Non indebolirlo**: senza, `istanteDaOraItaliana()` o lancia `RangeError` (500) o salva in silenzio una data sbagliata.
+- **Il progetto ora ha i test.** La Fase 1C-1 ha introdotto **vitest** (`npm test`), usato **solo per la logica pura**: `src/lib/date/fuso.ts`, `src/lib/events/stato.ts`, `src/lib/events/slug.ts`, `src/lib/validation/event.ts`. **50 test, tutti verdi.** Pagine, form e action restano verificati dal vivo. Aggiungere `npm test` alle verifiche di ogni task.
 - **Lo stato dell'evento NON è un campo del DB:** lo calcola `statoEvento()` dalle date, a ogni render. Nella colonna `status` si scrive **solo** `'upcoming'` (= non annullato) o `'canceled'`; `'ongoing'`/`'completed'` non si usano mai (c'è un `comment on column` nel DB che lo dice).
 - **Il fuso è la trappola di questa fase.** Le date sono istanti assoluti e il server in produzione gira in **UTC**, ma il club è italiano: tutta la matematica di `Europe/Rome` sta **solo** in `src/lib/date/fuso.ts` (`mezzanotteSuccessiva`, `istanteDaOraItaliana`), ed è coperta da test. **Non duplicarla altrove.** In particolare `<input type="datetime-local">` non ha fuso: l'ora va convertita con `istanteDaOraItaliana()`, mai con `new Date(valore)`.
 - **Il Task 1 ha fatto `npx supabase db reset`:** le utenze locali sono **azzerate**. Per il collaudo (Task 10) servono **DUE account** (registrarli e confermarli da Mailpit su http://127.0.0.1:54324) e l'admin va ripromosso rieseguendo la `update` di `supabase/seed.sql`.
@@ -50,7 +51,15 @@ Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più
 - **Ai bucket eventi NON manca la policy SELECT** (a differenza di `avatars`/`vehicles`): la `0003` li protegge con una policy **`for all`**, che in Postgres copre anche la SELECT. Non aggiungerne una: sarebbe un duplicato.
 - **Le RLS degli eventi ci sono già** dalla `0002` (`events_select_public` = lettura pubblica anche da sloggati, `events_admin_write` = solo admin). Il layout `(admin)` chiama già `requireAdmin()`, **ma le server action non sono coperte da un layout**: ognuna deve richiamarlo per conto proprio.
 
+### 🔧 Micro-fase da fare (emersa dalla review del Task 4): `revalidatePath`
+
+**Tutte** le chiamate del progetto passano un path che **non combacia con la struttura dei file di route**: si scrive `revalidatePath("/admin/eventi")`, ma il doc di Next 16 (`node_modules/next/dist/docs/.../revalidatePath.md`, righe 26 e 81) dice che il path è la **struttura dei file**, non l'URL, e che **con un segmento dinamico il parametro `type` è obbligatorio**. La forma corretta è `revalidatePath("/[locale]/admin/eventi", "page")`.
+
+Oggi il difetto è **mascherato**: in Next 16 una server action rinfresca comunque le pagine già visitate — comportamento che il doc stesso dichiara **"temporary"**. Il pattern sbagliato è ovunque (`garage/actions.ts:74,145,184`, profilo, eventi): **va corretto in un colpo solo, in una micro-fase dedicata, con collaudo dal vivo della cache.** Non farlo dentro un task della 1C-1.
+
 ### ⚠️ Minor già noti, da sistemare nella wave finale (non bloccanti)
+
+0. **Task 4** — `annullaEvento`/`ripristinaEvento` non distinguono "fatto" da "id inesistente" (un `update` che non colpisce righe non è un errore Supabase: la UI mostra successo); copertina orfana se l'insert fallisce dopo l'upload del client; `coverPath` preso grezzo dal `FormData` senza validazione; `aggiornamento: Record<string, unknown>` disattiva il type-check dei nomi di colonna.
 
 1. **`fuso.test.ts`, test "usa il giorno ITALIANO, non quello UTC"** — con l'input `2026-07-12T21:30:00Z` il giorno italiano (23:30 del 12) e quello UTC (12) **coincidono**: il test non discrimina davvero, e la proprietà "usa il giorno italiano" **oggi non è coperta**. Fix: usare `2026-07-12T22:30:00Z` (a Roma è già il 13), atteso `"2026-07-13T22:00:00.000Z"`. *(È un difetto del piano, non dell'implementer.)*
 2. **Commenti che citano `src/lib/events/stato.ts`** in `database.ts` e nel **commento SQL persistito nel DB**: se un giorno quella funzione venisse rinominata, va aggiornato anche il commento dentro Postgres.
