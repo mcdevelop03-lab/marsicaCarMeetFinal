@@ -124,3 +124,102 @@ describe("eventSchema — date di calendario inesistenti (forma valida, calendar
     }
   });
 });
+
+describe("eventSchema — anni bisestili (round-trip su 29 febbraio)", () => {
+  it("respinge 2026-02-29 (2026 non è bisestile)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "2026-02-29T10:00" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.filter((i) => i.path[0] === "starts_at").map((i) => i.message);
+      expect(messages).toContain("Data di inizio inesistente nel calendario");
+    }
+  });
+
+  it("accetta 2028-02-29 (2028 è bisestile)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "2028-02-29T10:00" });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.starts_at).toBe("2028-02-29T10:00");
+    }
+  });
+
+  it("accetta 2024-02-29 (2024 è bisestile)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "2024-02-29T10:00" });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.starts_at).toBe("2024-02-29T10:00");
+    }
+  });
+
+  it("respinge 1900-02-29 (secolare divisibile per 100 ma non per 400, non bisestile)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "1900-02-29T10:00" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.filter((i) => i.path[0] === "starts_at").map((i) => i.message);
+      expect(messages).toContain("Data di inizio inesistente nel calendario");
+    }
+  });
+
+  it("accetta 2000-02-29 (secolare divisibile per 400, bisestile)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "2000-02-29T10:00" });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.starts_at).toBe("2000-02-29T10:00");
+    }
+  });
+});
+
+describe("eventSchema — anno ammesso (2000-2100)", () => {
+  it("respinge 1999-12-31T23:59 (anno prima del 2000)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "1999-12-31T23:59" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.filter((i) => i.path[0] === "starts_at").map((i) => i.message);
+      expect(messages).toContain("Anno della data di inizio fuori dall'intervallo ammesso (2000-2100)");
+    }
+  });
+
+  it("accetta 2000-01-01T00:00 (limite inferiore incluso)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "2000-01-01T00:00" });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.starts_at).toBe("2000-01-01T00:00");
+    }
+  });
+
+  it("accetta 2100-12-31T23:59 (limite superiore incluso)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "2100-12-31T23:59" });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.starts_at).toBe("2100-12-31T23:59");
+    }
+  });
+
+  it("respinge 2101-01-01T00:00 (anno dopo il 2100)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "2101-01-01T00:00" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.filter((i) => i.path[0] === "starts_at").map((i) => i.message);
+      expect(messages).toContain("Anno della data di inizio fuori dall'intervallo ammesso (2000-2100)");
+    }
+  });
+
+  it("respinge 0000-01-01T00:00 (calendarialmente valido ma anno assurdo, es. POST manuale)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "0000-01-01T00:00" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.filter((i) => i.path[0] === "starts_at").map((i) => i.message);
+      expect(messages).toContain("Anno della data di inizio fuori dall'intervallo ammesso (2000-2100)");
+    }
+  });
+});

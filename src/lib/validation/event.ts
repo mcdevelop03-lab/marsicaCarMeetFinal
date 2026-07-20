@@ -22,6 +22,20 @@ function eDataCalendarioValida(valore: string): boolean {
   return istante.toISOString().slice(0, 16) === valore;
 }
 
+// `eDataCalendarioValida` accetta anche date calendarialmente esistenti ma
+// assurde per un'app di raduni, es. "0000-01-01T00:00": `istanteDaOraItaliana`
+// la converte con i dati storici di fuso LMT di Roma (ante 1893), producendo
+// un istante palesemente sbagliato ma senza errore. Restringiamo l'anno a un
+// secolo ragionevole: fuori da qui è per forza un errore o un POST manuale.
+// Funzione condivisa da starts_at ed ends_at, come `eDataCalendarioValida`.
+const ANNO_MINIMO = 2000;
+const ANNO_MASSIMO = 2100;
+
+function eAnnoAmmesso(valore: string): boolean {
+  const anno = Number(valore.slice(0, 4));
+  return anno >= ANNO_MINIMO && anno <= ANNO_MASSIMO;
+}
+
 export const eventSchema = z
   .object({
     title: z
@@ -37,7 +51,8 @@ export const eventSchema = z
       .trim()
       .min(1, "La data di inizio è obbligatoria")
       .regex(FORMATO_DATETIME_LOCAL, "Formato della data di inizio non valido")
-      .refine(eDataCalendarioValida, "Data di inizio inesistente nel calendario"),
+      .refine(eDataCalendarioValida, "Data di inizio inesistente nel calendario")
+      .refine(eAnnoAmmesso, "Anno della data di inizio fuori dall'intervallo ammesso (2000-2100)"),
     ends_at: z.preprocess(
       vuotoAUndefined,
       z
@@ -45,6 +60,7 @@ export const eventSchema = z
         .trim()
         .regex(FORMATO_DATETIME_LOCAL, "Formato della data di fine non valido")
         .refine(eDataCalendarioValida, "Data di fine inesistente nel calendario")
+        .refine(eAnnoAmmesso, "Anno della data di fine fuori dall'intervallo ammesso (2000-2100)")
         .optional(),
     ),
     location: z.preprocess(
