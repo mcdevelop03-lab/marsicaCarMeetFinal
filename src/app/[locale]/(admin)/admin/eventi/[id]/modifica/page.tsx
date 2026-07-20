@@ -24,7 +24,12 @@ export default async function ModificaEventoPage({
 
   // Un guasto NON è un 404 (lezione della micro-fase sugli errori silenziati):
   // `notFound()` resta solo per "query riuscita, nessuna riga".
+  // Eccezione simmetrica: un 404 non è un guasto. Un `id` che non è un UUID valido
+  // fa rifiutare la query a Postgres con il codice 22P02 ("invalid input syntax for
+  // type uuid"): non può corrispondere a nessun evento, mai, quindi non è un caso da
+  // "riprova più tardi" ma un vero 404 (anche nello status HTTP).
   if (error) {
+    if (error.code === "22P02") notFound();
     console.error("Modifica evento: lettura non riuscita", error);
     return <p className="font-mono text-xs text-accent-red">{te("loadError")}</p>;
   }
