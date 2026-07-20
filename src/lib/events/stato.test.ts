@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { statoEvento } from "./stato";
+import { eConcluso, statoEvento } from "./stato";
+import type { EventStatusDb } from "@/types/database";
 
 // Helper locale: costruisce il minimo che `statoEvento` legge.
-const ev = (starts_at: string, ends_at: string | null = null, status = "upcoming" as const) => ({
+const ev = (starts_at: string, ends_at: string | null = null, status: EventStatusDb = "upcoming") => ({
   status,
   starts_at,
   ends_at,
@@ -46,5 +47,41 @@ describe("statoEvento", () => {
   it("un raduno delle 10:00 non è concluso alle 10:01 (la regressione che ci interessa)", () => {
     const adesso = new Date("2026-07-12T08:01:00Z");
     expect(statoEvento(ev("2026-07-12T08:00:00Z"), adesso)).toBe("in-corso");
+  });
+
+  it("annullato con data PASSATA: statoEvento dice comunque annullato", () => {
+    const adesso = new Date("2026-07-20T10:00:00Z");
+    const e = ev("2024-05-01T10:00:00Z", null, "canceled");
+    expect(statoEvento(e, adesso)).toBe("annullato");
+  });
+
+  it("annullato con data FUTURA: statoEvento dice comunque annullato", () => {
+    const adesso = new Date("2026-07-20T10:00:00Z");
+    const e = ev("2026-08-01T10:00:00Z", null, "canceled");
+    expect(statoEvento(e, adesso)).toBe("annullato");
+  });
+});
+
+describe("eConcluso", () => {
+  it("un annullato con data passata È concluso (ignora l'annullamento, guarda solo le date)", () => {
+    const adesso = new Date("2026-07-20T10:00:00Z");
+    const e = ev("2024-05-01T10:00:00Z", null, "canceled");
+    expect(eConcluso(e, adesso)).toBe(true);
+  });
+
+  it("un annullato con data futura NON è concluso", () => {
+    const adesso = new Date("2026-07-20T10:00:00Z");
+    const e = ev("2026-08-01T10:00:00Z", null, "canceled");
+    expect(eConcluso(e, adesso)).toBe(false);
+  });
+
+  it("un normale futuro non è concluso", () => {
+    const adesso = new Date("2026-07-20T10:00:00Z");
+    expect(eConcluso(ev("2026-09-01T10:00:00Z"), adesso)).toBe(false);
+  });
+
+  it("un normale passato è concluso", () => {
+    const adesso = new Date("2026-07-20T10:00:00Z");
+    expect(eConcluso(ev("2026-01-01T10:00:00Z"), adesso)).toBe(true);
   });
 });

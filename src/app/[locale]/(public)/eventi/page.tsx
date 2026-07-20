@@ -2,31 +2,26 @@ import { getTranslations } from "next-intl/server";
 import SectionHeading from "@/components/ui/SectionHeading";
 import EventCard from "@/components/features/events/EventCard";
 import { createClient } from "@/lib/supabase/server";
-import { statoEvento } from "@/lib/events/stato";
+import { eConcluso } from "@/lib/events/stato";
 import type { Event } from "@/types/database";
+
+// Le colonne che servono davvero a `EventCard` e a `statoEvento`/`eConcluso`. `select("*")`
+// consegnerebbe anche `created_by` (FK a `profiles`) a chiunque: la lettura è pubblica
+// (`events_select_public` vale pure per gli sloggati, D-146), ma l'identità dei membri no
+// (`profiles_select_authenticated`) — niente colonne in più di quelle usate.
+const COLONNE_PUBBLICHE =
+  "id, slug, title, location, starts_at, ends_at, status, type, cover_url";
 
 export default async function EventiPage() {
   const t = await getTranslations("events");
 
   const supabase = await createClient();
-  // Lettura pubblica: la policy `events_select_public` la consente anche da sloggati (D-146).
-  const { data, error } = await supabase.from("events").select("*");
+  const { data, error } = await supabase.from("events").select(COLONNE_PUBBLICHE);
 
   // Un guasto non deve travestirsi da "nessun raduno" (lezione della micro-fase
   // "errori Supabase silenziati").
-  if (error) console.error("Eventi: lettura non riuscita", error);
-  const eventi = (data ?? []) as Event[];
-
-  // Gli annullati con data futura restano fra i PROSSIMI, con il loro badge: chi
-  // pensava di venire deve vederlo. Passata la data scendono fra i conclusi.
-  const prossimi = eventi
-    .filter((e) => statoEvento(e) !== "concluso")
-    .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-  const conclusi = eventi
-    .filter((e) => statoEvento(e) === "concluso")
-    .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
-
   if (error) {
+    console.error("Eventi: lettura non riuscita", error);
     return (
       <div className="space-y-8">
         <SectionHeading>{t("title")}</SectionHeading>
@@ -34,6 +29,19 @@ export default async function EventiPage() {
       </div>
     );
   }
+  const eventi = (data ?? []) as unknown as Event[];
+
+  // Gli annullati con data futura restano fra i PROSSIMI, con il loro badge: chi
+  // pensava di venire deve vederlo. Passata la data scendono fra i conclusi, sempre
+  // con il badge ANNULLATO (`eConcluso` ignora l'annullamento di proposito: la
+  // decisione "prossimo o concluso" è solo temporale, il badge resta affare di
+  // `statoEvento`, usato da `EventCard`).
+  const prossimi = eventi
+    .filter((e) => !eConcluso(e))
+    .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
+  const conclusi = eventi
+    .filter((e) => eConcluso(e))
+    .sort((a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime());
 
   return (
     <div className="space-y-12">
