@@ -39,7 +39,7 @@ export default async function AdminEventiPage() {
       </div>
 
       {error ? (
-        <p className="font-mono text-xs text-accent-red">{t("genericError")}</p>
+        <p className="font-mono text-xs text-accent-red">{te("loadError")}</p>
       ) : eventi.length === 0 ? (
         <p className="font-mono text-xs text-white/40">{t("empty")}</p>
       ) : (
@@ -76,7 +76,7 @@ export default async function AdminEventiPage() {
                   >
                     {t("edit")}
                   </Link>
-                  <EventAdminActions id={evento.id} annullato={evento.status === "canceled"} />
+                  <EventAdminActions id={evento.id} annullato={stato === "annullato"} />
                 </div>
               </Card>
             );

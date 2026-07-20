@@ -68,11 +68,27 @@ export default function EventAdminActions({ id, annullato }: { id: string; annul
             {t("restoreEvent")}
           </Button>
         ) : (
-          <Button type="button" variant="outline" onClick={() => setConferma("annulla")}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setErrore(null);
+              setConferma("annulla");
+            }}
+            disabled={pending}
+          >
             {t("cancelEvent")}
           </Button>
         )}
-        <Button type="button" variant="ghost" onClick={() => setConferma("elimina")}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            setErrore(null);
+            setConferma("elimina");
+          }}
+          disabled={pending}
+        >
           {t("delete")}
         </Button>
       </div>
