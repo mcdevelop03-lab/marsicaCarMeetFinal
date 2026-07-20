@@ -74,6 +74,22 @@ describe("istanteDaOraItaliana", () => {
     it("round-trip stabile in pieno inverno (nessuna regressione, scarto +1)", () => {
       expect(istanteDaOraItaliana("2026-01-15T10:00")).toBe("2026-01-15T09:00:00.000Z");
     });
+
+    it(
+      "ORA INESISTENTE, non un bug: le 02:00-02:59 del 29 marzo 2026 non esistono " +
+        "mai (alle 02:00 locali gli orologi saltano alle 03:00). Per un'ora " +
+        "inesistente non c'è nessuno scarto \"corretto\": l'iterazione oscilla fra " +
+        "+1 e +2 senza convergere (periodo 2), quindi fermarsi al secondo passaggio " +
+        "è una scelta, non un'approssimazione. Qui va in avanti per convenzione " +
+        "(03:30 locali, dopo il salto), non indietro (01:30 locali, prima del " +
+        "salto): una TERZA iterazione darebbe proprio quest'ultima, cioè un " +
+        "risultato peggiore. Il numero di iterazioni in `istanteDaOraItaliana` è " +
+        "quindi deliberato: un futuro `while` \"fino a convergenza\" non convergerebbe " +
+        "mai qui e manderebbe silenziosamente gli orari all'indietro.",
+      () => {
+        expect(istanteDaOraItaliana("2026-03-29T02:30")).toBe("2026-03-29T01:30:00.000Z");
+      },
+    );
   });
 
   describe("cambio da ora legale a ora solare (ultima domenica di ottobre, 2026: notte 25)", () => {

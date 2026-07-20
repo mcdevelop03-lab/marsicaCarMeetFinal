@@ -80,8 +80,11 @@ export function istanteDaOraItaliana(valore: string): string {
   // sbagliato: `ipotesi` è ancora "ora italiana letta come se fosse UTC", cioè può
   // cadere dalla parte sbagliata del salto rispetto all'istante reale. Si ricalcola lo
   // scarto una seconda volta, questa volta sul primo istante stimato (che è già vicino
-  // a quello vero): a quel punto lo scarto è quello corretto per l'istante reale, non
-  // per la sua approssimazione grezza.
+  // a quello vero): per ogni ora locale che esiste davvero, a quel punto lo scarto è
+  // quello giusto. Due passaggi sono anche il punto di arresto voluto, non
+  // un'approssimazione da raffinare: per l'unica ora locale che NON esiste (lo
+  // spring-forward di marzo, vedi test) non c'è nessuno scarto "corretto" da
+  // convergere, e iterare ancora oscillerebbe soltanto fra due valori sbagliati.
   const primo = new Date(ipotesi.getTime() - scarto(ipotesi));
   return new Date(ipotesi.getTime() - scarto(primo)).toISOString();
 }
