@@ -6,7 +6,7 @@
 
 ## 🔖 Dove siamo
 
-- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Task 1-5 su 10 completati** (ognuno con review indipendente). **Si riparte dal Task 6.**
+- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Task 1-6 su 10 completati** (ognuno con review indipendente). **Si riparte dal Task 7.**
 - 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
 - **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** *(in corso)* → **1C-2 RSVP** → **1C-3 Album foto**.
 - **Piano 1C-1 (10 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-15-fase1c1-eventi.md`](./superpowers/plans/2026-07-15-fase1c1-eventi.md) · **Spec:** [`superpowers/specs/2026-07-15-fase1c1-eventi-design.md`](./superpowers/specs/2026-07-15-fase1c1-eventi-design.md)
@@ -14,9 +14,9 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **Task 6**
+## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **Task 7**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e riprendi la Fase 1C-1 dal Task 6 del piano."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e riprendi la Fase 1C-1 dal Task 7 del piano."*
 
 **Brainstorming, spec e piano sono fatti e approvati.** Si esegue col metodo **subagent-driven**: un subagent implementa il task, un secondo lo rivede in modo indipendente, il controller verifica di persona le affermazioni chiave, **poi si chiede l'ok all'utente prima del task successivo**.
 
@@ -32,8 +32,8 @@
 | 3 | Date, validazione, stringhe | ✅ `a6bedb2` |
 | 4 | Server action admin (crea/aggiorna/annulla/ripristina/elimina) | ✅ `0951d5b` — 50/50 test |
 | 5 | `EventForm` + `/admin/eventi/nuovo` | ✅ `30b61f7` |
-| 6 | **Elenco admin + azioni** | ⬅️ **si riparte da qui** |
-| 7 | `/admin/eventi/[id]/modifica` | — |
+| 6 | Elenco admin + azioni | ✅ `8dd7bd9` |
+| 7 | **`/admin/eventi/[id]/modifica`** | ⬅️ **si riparte da qui** |
 | 8 | `EventCard` + `/eventi` pubblica | — |
 | 9 | `/eventi/[slug]` dettaglio | — |
 | 10 | Collaudo dal vivo e chiusura | — |
@@ -57,6 +57,8 @@ Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più
 **Tutte** le chiamate del progetto passano un path che **non combacia con la struttura dei file di route**: si scrive `revalidatePath("/admin/eventi")`, ma il doc di Next 16 (`node_modules/next/dist/docs/.../revalidatePath.md`, righe 26 e 81) dice che il path è la **struttura dei file**, non l'URL, e che **con un segmento dinamico il parametro `type` è obbligatorio**. La forma corretta è `revalidatePath("/[locale]/admin/eventi", "page")`.
 
 Oggi il difetto è **mascherato**: in Next 16 una server action rinfresca comunque le pagine già visitate — comportamento che il doc stesso dichiara **"temporary"**. Il pattern sbagliato è ovunque (`garage/actions.ts:74,145,184`, profilo, eventi): **va corretto in un colpo solo, in una micro-fase dedicata, con collaudo dal vivo della cache.** Non farlo dentro un task della 1C-1.
+
+**Quanto brucia, precisamente** (chiarito dalla review del Task 6): l'**elenco admin non dipende da quel meccanismo**. È una pagina dinamica — `createClient()` legge i cookie — quindi non esiste nessun render cachato lato server da invalidare, e il `router.refresh()` che `EventAdminActions` chiama dopo ogni azione la rifà da sé. Il debito morde sulla **superficie pubblica `/eventi`**, non sul pannello.
 
 ### 🗑️ Pulizia dello storage — debito di sistema (deciso: NON si patcha a pezzi)
 
