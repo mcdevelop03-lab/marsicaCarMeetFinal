@@ -9,6 +9,19 @@ const vuotoAUndefined = (v: unknown) =>
 // Formato esatto prodotto da <input type="datetime-local"> (niente secondi, niente fuso).
 const FORMATO_DATETIME_LOCAL = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
+// La regex sopra controlla solo la FORMA della stringa, non che sia una data di
+// calendario esistente: "2026-02-31T10:00" la supera, ma 31 febbraio non esiste.
+// `new Date` con una stringa ISO non lo segnala con un errore: alcuni componenti
+// fuori range (mese, ora, minuti) danno "Invalid Date", ma il giorno del mese
+// trabocca in silenzio nel mese successivo (31 feb → 3 marzo). Il modo robusto per
+// intercettare entrambi i casi è il round-trip: si ricostruisce la data e si
+// verifica che la sua rappresentazione ISO coincida esattamente con l'input.
+function eDataCalendarioValida(valore: string): boolean {
+  const istante = new Date(`${valore}:00Z`);
+  if (Number.isNaN(istante.getTime())) return false;
+  return istante.toISOString().slice(0, 16) === valore;
+}
+
 export const eventSchema = z
   .object({
     title: z
@@ -23,13 +36,15 @@ export const eventSchema = z
       .string()
       .trim()
       .min(1, "La data di inizio è obbligatoria")
-      .regex(FORMATO_DATETIME_LOCAL, "Formato della data di inizio non valido"),
+      .regex(FORMATO_DATETIME_LOCAL, "Formato della data di inizio non valido")
+      .refine(eDataCalendarioValida, "Data di inizio inesistente nel calendario"),
     ends_at: z.preprocess(
       vuotoAUndefined,
       z
         .string()
         .trim()
         .regex(FORMATO_DATETIME_LOCAL, "Formato della data di fine non valido")
+        .refine(eDataCalendarioValida, "Data di fine inesistente nel calendario")
         .optional(),
     ),
     location: z.preprocess(

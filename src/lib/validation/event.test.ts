@@ -85,3 +85,42 @@ describe("eventSchema — formato date (datetime-local)", () => {
     }
   });
 });
+
+describe("eventSchema — date di calendario inesistenti (forma valida, calendario no)", () => {
+  const casiInesistenti: Array<[string, string]> = [
+    ["2026-02-31T10:00", "31 febbraio non esiste (trabocca in silenzio al 3 marzo)"],
+    ["2026-13-01T10:00", "mese 13 non esiste"],
+    ["2026-07-12T25:99", "ora 25 e minuti 99 fuori range"],
+    ["2026-00-00T00:00", "mese 00 e giorno 00 non esistono"],
+    ["2026-07-32T10:00", "giorno 32 non esiste"],
+  ];
+
+  it.each(casiInesistenti)("respinge starts_at = %s (%s)", (valore) => {
+    const result = eventSchema.safeParse({ ...base, starts_at: valore });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.filter((i) => i.path[0] === "starts_at").map((i) => i.message);
+      expect(messages).toContain("Data di inizio inesistente nel calendario");
+    }
+  });
+
+  it.each(casiInesistenti)("respinge ends_at = %s (%s)", (valore) => {
+    const result = eventSchema.safeParse({ ...base, ends_at: valore });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.filter((i) => i.path[0] === "ends_at").map((i) => i.message);
+      expect(messages).toContain("Data di fine inesistente nel calendario");
+    }
+  });
+
+  it("continua ad accettare una data di calendario realmente esistente (2026-07-12T10:00)", () => {
+    const result = eventSchema.safeParse({ ...base, starts_at: "2026-07-12T10:00" });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.starts_at).toBe("2026-07-12T10:00");
+    }
+  });
+});
