@@ -6,7 +6,18 @@ import { statoEvento } from "@/lib/events/stato";
 import { formattaDataBreve } from "@/lib/date/format";
 import type { Event } from "@/types/database";
 
-export default async function EventCard({ event }: { event: Event }) {
+/**
+ * I soli campi che la card renderizza, compresi quelli che passa a `statoEvento`: niente
+ * `Event` intero, così una select parziale come quella della pagina pubblica soddisfa il
+ * tipo per davvero, non a forza di cast (stesso stile di `EventoPerStato`/`EventoPerData`
+ * in `src/lib/events/stato.ts`).
+ */
+export type EventoPerCard = Pick<
+  Event,
+  "slug" | "title" | "location" | "starts_at" | "ends_at" | "status" | "type" | "cover_url"
+>;
+
+export default async function EventCard({ event }: { event: EventoPerCard }) {
   const t = await getTranslations("events");
   const stato = statoEvento(event);
 

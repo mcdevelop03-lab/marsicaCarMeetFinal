@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import SectionHeading from "@/components/ui/SectionHeading";
-import EventCard from "@/components/features/events/EventCard";
+import EventCard, { type EventoPerCard } from "@/components/features/events/EventCard";
 import { createClient } from "@/lib/supabase/server";
 import { eConcluso } from "@/lib/events/stato";
 import type { Event } from "@/types/database";
@@ -11,6 +11,10 @@ import type { Event } from "@/types/database";
 // (`profiles_select_authenticated`) — niente colonne in più di quelle usate.
 const COLONNE_PUBBLICHE =
   "id, slug, title, location, starts_at, ends_at, status, type, cover_url";
+
+// `id` serve solo alla `key` di React qui in pagina; il resto sono gli stessi campi che
+// `EventCard` dichiara di usare davvero (vedi `EventoPerCard` lì) — non `Event` intero.
+type EventoPubblico = EventoPerCard & Pick<Event, "id">;
 
 export default async function EventiPage() {
   const t = await getTranslations("events");
@@ -29,7 +33,7 @@ export default async function EventiPage() {
       </div>
     );
   }
-  const eventi = (data ?? []) as unknown as Event[];
+  const eventi = (data ?? []) as EventoPubblico[];
 
   // Gli annullati con data futura restano fra i PROSSIMI, con il loro badge: chi
   // pensava di venire deve vederlo. Passata la data scendono fra i conclusi, sempre
