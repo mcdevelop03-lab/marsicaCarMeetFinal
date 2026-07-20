@@ -6,7 +6,7 @@
 
 ## 🔖 Dove siamo
 
-- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Task 1-6 su 10 completati** (ognuno con review indipendente). **Si riparte dal Task 7.**
+- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Task 1-7 su 10 completati** (ognuno con review indipendente). **Si riparte dal Task 8.**
 - 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
 - **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** *(in corso)* → **1C-2 RSVP** → **1C-3 Album foto**.
 - **Piano 1C-1 (10 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-15-fase1c1-eventi.md`](./superpowers/plans/2026-07-15-fase1c1-eventi.md) · **Spec:** [`superpowers/specs/2026-07-15-fase1c1-eventi-design.md`](./superpowers/specs/2026-07-15-fase1c1-eventi-design.md)
@@ -14,9 +14,9 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **Task 7**
+## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **Task 8**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e riprendi la Fase 1C-1 dal Task 7 del piano."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e riprendi la Fase 1C-1 dal Task 8 del piano."*
 
 **Brainstorming, spec e piano sono fatti e approvati.** Si esegue col metodo **subagent-driven**: un subagent implementa il task, un secondo lo rivede in modo indipendente, il controller verifica di persona le affermazioni chiave, **poi si chiede l'ok all'utente prima del task successivo**.
 
@@ -30,11 +30,11 @@
 | 1 | Migrazione `0008` + tipi `Event` | ✅ `38fa545` |
 | 2 | Logica pura (fuso/stato/slug) + **vitest** | ✅ `fdebd45` — 22/22 test |
 | 3 | Date, validazione, stringhe | ✅ `a6bedb2` |
-| 4 | Server action admin (crea/aggiorna/annulla/ripristina/elimina) | ✅ `0951d5b` — 50/50 test |
+| 4 | Server action admin (crea/aggiorna/annulla/ripristina/elimina) | ✅ `0951d5b` |
 | 5 | `EventForm` + `/admin/eventi/nuovo` | ✅ `30b61f7` |
 | 6 | Elenco admin + azioni | ✅ `8dd7bd9` |
-| 7 | **`/admin/eventi/[id]/modifica`** | ⬅️ **si riparte da qui** |
-| 8 | `EventCard` + `/eventi` pubblica | — |
+| 7 | `/admin/eventi/[id]/modifica` | ✅ `d85f5df` — 57/57 test |
+| 8 | **`EventCard` + `/eventi` pubblica** | ⬅️ **si riparte da qui** |
 | 9 | `/eventi/[slug]` dettaglio | — |
 | 10 | Collaudo dal vivo e chiusura | — |
 
@@ -46,7 +46,11 @@ Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più
 - **Tre cose che solo il collaudo (Task 10) può dire**, segnalate dalla review del Task 5: che il cambio di `<Select>` e la scelta dal picker `datetime-local` emettano l'evento `input` (se non lo fanno, il bottone Salva **resta spento a form valido**, perché `checkValidity()` è ricalcolato su `onInput`); che l'indicatore del calendario di `datetime-local` sia visibile sul tema scuro (`Input.tsx` non lo stila); il doppio submit rapido durante l'upload.
 - **Il progetto ora ha i test.** La Fase 1C-1 ha introdotto **vitest** (`npm test`), usato **solo per la logica pura**: `src/lib/date/fuso.ts`, `src/lib/events/stato.ts`, `src/lib/events/slug.ts`, `src/lib/validation/event.ts`. **50 test, tutti verdi.** Pagine, form e action restano verificati dal vivo. Aggiungere `npm test` alle verifiche di ogni task.
 - **Lo stato dell'evento NON è un campo del DB:** lo calcola `statoEvento()` dalle date, a ogni render. Nella colonna `status` si scrive **solo** `'upcoming'` (= non annullato) o `'canceled'`; `'ongoing'`/`'completed'` non si usano mai (c'è un `comment on column` nel DB che lo dice).
-- **Il fuso è la trappola di questa fase.** Le date sono istanti assoluti e il server in produzione gira in **UTC**, ma il club è italiano: tutta la matematica di `Europe/Rome` sta **solo** in `src/lib/date/fuso.ts` (`mezzanotteSuccessiva`, `istanteDaOraItaliana`), ed è coperta da test. **Non duplicarla altrove.** In particolare `<input type="datetime-local">` non ha fuso: l'ora va convertita con `istanteDaOraItaliana()`, mai con `new Date(valore)`.
+- **Il fuso è la trappola di questa fase** — e ha morso davvero, vedi qui sotto. Le date sono istanti assoluti e il server in produzione gira in **UTC**, ma il club è italiano: tutta la matematica di `Europe/Rome` sta **solo** in `src/lib/date/fuso.ts` (`mezzanotteSuccessiva`, `istanteDaOraItaliana`), ed è coperta da test. **Non duplicarla altrove.** In particolare `<input type="datetime-local">` non ha fuso: l'ora va convertita con `istanteDaOraItaliana()`, mai con `new Date(valore)`.
+
+- 🚨 **`istanteDaOraItaliana` calcola lo scarto DUE VOLTE, e non è un caso.** Con un solo passaggio, un evento delle **01:30 del 29 marzo arretrava di un'ora a ogni apri-e-salva** della pagina di modifica, anche senza toccare il campo (corruzione silenziosa; il bug è emerso nel Task 7, primo chiamante del ramo "modifica"). Due limiti sono **deliberati e blindati da test — non "correggerli"**:
+  - **Ottobre, ora ripetuta:** il 25 ottobre le 02:30 italiane esistono **due volte**, quindi sia `00:30Z` sia `01:30Z` si presentano come input `"02:30"`. Un round-trip perfetto è **impossibile per definizione**: la stringa non porta l'informazione su quale occorrenza fosse. Collassano sulla seconda.
+  - **Marzo, ora inesistente:** le 02:00–02:59 del 29 marzo **non esistono**, e per un'ora inesistente **non c'è nessun punto fisso**: l'iterazione **non converge**, oscilla con periodo 2. Fermarsi a due passaggi è la scelta giusta (manda avanti, alle 03:30 locali). ⚠️ **Un refactor "miglioriamolo con un `while` fino a convergenza" romperebbe tutto in silenzio, mandando gli orari all'indietro.** C'è un test apposta.
 - **Il Task 1 ha fatto `npx supabase db reset`:** le utenze locali sono **azzerate**. Per il collaudo (Task 10) servono **DUE account** (registrarli e confermarli da Mailpit su http://127.0.0.1:54324) e l'admin va ripromosso rieseguendo la `update` di `supabase/seed.sql`.
 - **Migrazione `0008` già applicata e verificata:** limiti 2 MB + MIME su `event-covers` **e** `event-media`, colonna `events.cover_path`, `events.starts_at` ora `NOT NULL`, commento su `status`.
 - **Ai bucket eventi NON manca la policy SELECT** (a differenza di `avatars`/`vehicles`): la `0003` li protegge con una policy **`for all`**, che in Postgres copre anche la SELECT. Non aggiungerne una: sarebbe un duplicato.
@@ -68,6 +72,7 @@ Il bucket `event-covers` accumula file orfani in tre casi, tutti scoperti dalla 
 
 ### ⚠️ Minor già noti, da sistemare nella wave finale (non bloccanti)
 
+0. **Task 7** — `garage/[id]/modifica/page.tsx` ha la struttura **identica** alla pagina di modifica dell'evento ma **non** ha ricevuto il fix `22P02`: un id veicolo malformato mostra ancora "Riprova più tardi" con HTTP 200 invece di un 404. Le due pagine gemelle ora divergono.
 0. **Task 5** — il blocco di upload immagine è alla **terza copia** quasi identica (`EventForm`, `VehicleForm`, `AvatarUploader`): `labelClass`/`hintClass`, `MIME_AMMESSI`, `ESTENSIONI`, gli stati `file`/`anteprima`/`errore`/`caricando`, `onFileChange` e il markup del picker. Candidato a un hook `useUploadImmagine(bucket)` + un `<ImagePicker>`; `URL.createObjectURL` non è mai revocato in nessuna delle tre. Inoltre: `comprimiImmagine` restituisce l'**originale** se `createImageBitmap` fallisce o se il WebP non migliora, quindi in quel ramo un file >2 MB viene respinto dal bucket e l'utente vede solo il generico `uploadFailed`, mentre la stringa `coverRules` promette che "viene compressa automaticamente".
 0. **Task 4** — `annullaEvento`/`ripristinaEvento` non distinguono "fatto" da "id inesistente" (un `update` che non colpisce righe non è un errore Supabase: la UI mostra successo); copertina orfana se l'insert fallisce dopo l'upload del client; `coverPath` preso grezzo dal `FormData` senza validazione; `aggiornamento: Record<string, unknown>` disattiva il type-check dei nomi di colonna.
 
