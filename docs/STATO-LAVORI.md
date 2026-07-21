@@ -6,7 +6,8 @@
 
 ## 🔖 Dove siamo
 
-- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Implementazione, review finale whole-branch e wave di fix: FATTE.** Resta **solo il Task 10 — collaudo dal vivo**, che chiude la fase. **76/76 test verdi, `tsc`/`lint` puliti.**
+- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Implementazione + review finale + wave di fix + collaudo dal vivo (Task 10): TUTTO FATTO.** Restano solo: **1)** decidere il push/chiusura del branch con l'utente; **2)** due debiti nuovi non bloccanti (sotto). **76/76 test verdi, `tsc`/`lint` puliti.**
+- 🧪 **Collaudo dal vivo (2026-07-21) — superato.** UI provata dall'utente (crea/modifica/annulla/ripristina/elimina + toast + modale + gate admin + copertina + stato/data). Sicurezza verificata dal controller (RLS member/anon/admin, storage 2 MB+MIME, 404 slug). **Migliorie UX emerse dal collaudo committate in 5 commit** (`412f7eb`→`03cbac3`): pannello gestione dentro `/eventi` per l'admin, "torna indietro" con conferma, rifiniture form, toast su tutte le azioni, conferme in modale, fix CTA home. Dettaglio nel ledger [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md).
 - 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
 - **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** *(in corso)* → **1C-2 RSVP** → **1C-3 Album foto**.
 - **Piano 1C-1 (10 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-15-fase1c1-eventi.md`](./superpowers/plans/2026-07-15-fase1c1-eventi.md) · **Spec:** [`superpowers/specs/2026-07-15-fase1c1-eventi-design.md`](./superpowers/specs/2026-07-15-fase1c1-eventi-design.md)
@@ -14,9 +15,13 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **Task 10 (collaudo dal vivo)**
+## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **chiusura del branch**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la 1C-1 è tutta implementata e rivista, facciamo il collaudo dal vivo del Task 10."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la 1C-1 è implementata, rivista e collaudata; decidiamo push e chiusura del branch."*
+
+**La 1C-1 è completa e collaudata.** Il branch `feat/fase1c1-eventi` è **solo locale**. Prossimo passo con l'utente: **chiudere il branch** (`superpowers:finishing-a-development-branch` → merge su `main` / push), tenendo presente i debiti non bloccanti qui sotto (revalidatePath, storage orfani, `created_by`) da affrontare in micro-fasi dedicate. Poi si passa alla **1C-2 (RSVP)** — che ha già due nodi di design noti (vedi "Cosa aspetta le prossime sotto-fasi").
+
+**Storico — checklist del collaudo Task 10 (superata il 2026-07-21):**
 
 **Tutto il codice è scritto e rivisto** (Task 1-9 + review finale whole-branch + wave di fix). Resta **solo il collaudo dal vivo**, che richiede l'ambiente acceso (Docker + `npx supabase start` + `npm run dev` + browser + Mailpit + psql) — vedi "Come rimettere in moto l'ambiente" più sotto. ⚠️ **Il Task 1 ha fatto `db reset`: le utenze locali sono azzerate.** Servono **due account** (registrarli e confermarli da Mailpit) e l'admin va ripromosso rieseguendo la `update` di `supabase/seed.sql`.
 
@@ -93,6 +98,10 @@ Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più
 Oggi il difetto è **mascherato**: in Next 16 una server action rinfresca comunque le pagine già visitate — comportamento che il doc stesso dichiara **"temporary"**. Il pattern sbagliato è ovunque (`garage/actions.ts:74,145,184`, profilo, eventi): **va corretto in un colpo solo, in una micro-fase dedicata, con collaudo dal vivo della cache.** Non farlo dentro un task della 1C-1.
 
 **Quanto brucia, precisamente** (chiarito dalla review del Task 6): l'**elenco admin non dipende da quel meccanismo**. È una pagina dinamica — `createClient()` legge i cookie — quindi non esiste nessun render cachato lato server da invalidare, e il `router.refresh()` che `EventAdminActions` chiama dopo ogni azione la rifà da sé. Il debito morde sulla **superficie pubblica `/eventi`**, non sul pannello.
+
+### 🔒 `created_by` degli eventi leggibile da un anonimo (debito, basso impatto)
+
+Emerso dalle prove di sicurezza del collaudo (2026-07-21). Un anonimo può leggere `events.created_by` (l'UUID del profilo admin) via **PostgREST diretto** (`GET /rest/v1/events?select=created_by`): le RLS filtrano le **righe** (`events_select_public` è `using(true)`), **non le colonne**, quindi la protezione di quel campo è **solo applicativa** (la pagina `/eventi` fa una `select` esplicita che lo esclude). L'anonimo **non** accede comunque alla tabella `profiles` (protetta): trapela solo un UUID opaco, non i dati del profilo. **Non bloccante.** Fix possibile: revocare il `SELECT` su `created_by` ai ruoli `anon`/`authenticated`, oppure una vista pubblica che lo esclude.
 
 ### 🗑️ Pulizia dello storage — debito di sistema (deciso: NON si patcha a pezzi)
 
