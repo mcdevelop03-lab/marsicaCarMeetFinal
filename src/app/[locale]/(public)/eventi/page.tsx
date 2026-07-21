@@ -1,6 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import SectionHeading from "@/components/ui/SectionHeading";
 import EventCard, { type EventoPerCard } from "@/components/features/events/EventCard";
+import EventiGestione from "@/components/features/events/EventiGestione";
+import FlashToast from "@/components/features/events/FlashToast";
+import { getProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { eConcluso } from "@/lib/events/stato";
 import type { Event } from "@/types/database";
@@ -16,8 +19,25 @@ const COLONNE_PUBBLICHE =
 // `EventCard` dichiara di usare davvero (vedi `EventoPerCard` lì) — non `Event` intero.
 type EventoPubblico = EventoPerCard & Pick<Event, "id">;
 
-export default async function EventiPage() {
+export default async function EventiPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ flash?: string }>;
+}) {
   const t = await getTranslations("events");
+  const ta = await getTranslations("adminEvents");
+
+  // Messaggio "flash" dopo un'azione admin (arriva via ?flash=..., da redirect o
+  // router.replace). Solo chiavi note: un valore arbitrario nell'URL non mostra nulla.
+  const { flash } = await searchParams;
+  const messaggiFlash: Record<string, string> = {
+    creato: ta("toastCreato"),
+    aggiornato: ta("toastAggiornato"),
+    annullato: ta("toastAnnullato"),
+    ripristinato: ta("toastRipristinato"),
+    eliminato: ta("toastEliminato"),
+  };
+  const messaggioFlash = flash ? messaggiFlash[flash] : undefined;
 
   const supabase = await createClient();
   const { data, error } = await supabase.from("events").select(COLONNE_PUBBLICHE);
@@ -34,6 +54,12 @@ export default async function EventiPage() {
     );
   }
   const eventi = (data ?? []) as EventoPubblico[];
+
+  // Vista base uguale per tutti; se chi guarda è admin, in fondo alla stessa pagina si
+  // aggiunge il pannello di gestione (principio "niente rotte parallele"). `getProfile`
+  // è memoizzato con `cache()`, quindi non costa una query in più rispetto al layout.
+  const profile = await getProfile();
+  const isAdmin = profile?.role === "admin";
 
   // Gli annullati con data futura restano fra i PROSSIMI, con il loro badge: chi
   // pensava di venire deve vederlo. Passata la data scendono fra i conclusi, sempre
@@ -74,6 +100,12 @@ export default async function EventiPage() {
           </div>
         )}
       </div>
+
+      {isAdmin && <EventiGestione />}
+
+      {messaggioFlash && (
+        <FlashToast key={flash} message={messaggioFlash} closeLabel={ta("toastChiudi")} />
+      )}
     </div>
   );
 }

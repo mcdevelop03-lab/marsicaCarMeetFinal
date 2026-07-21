@@ -90,9 +90,8 @@ export async function creaEvento(_state: EventState, formData: FormData): Promis
     return { error: t("genericError") };
   }
 
-  revalidatePath("/admin/eventi");
   revalidatePath("/eventi");
-  redirect({ href: "/admin/eventi", locale: "it" });
+  redirect({ href: { pathname: "/eventi", query: { flash: "creato" } }, locale: "it" });
   // Il `redirect` di next-intl non è tipizzato `never`: senza questo return TypeScript
   // si lamenta che non tutti i rami restituiscono un valore. Mai eseguito.
   return {};
@@ -155,9 +154,8 @@ export async function aggiornaEvento(
     if (removeError) console.error("aggiornaEvento: vecchia copertina non rimossa", removeError);
   }
 
-  revalidatePath("/admin/eventi");
   revalidatePath("/eventi");
-  redirect({ href: "/admin/eventi", locale: "it" });
+  redirect({ href: { pathname: "/eventi", query: { flash: "aggiornato" } }, locale: "it" });
   return {};
 }
 
@@ -173,7 +171,6 @@ export async function annullaEvento(id: string): Promise<{ error?: string }> {
     return { error: t("genericError") };
   }
 
-  revalidatePath("/admin/eventi");
   revalidatePath("/eventi");
   return {};
 }
@@ -191,7 +188,6 @@ export async function ripristinaEvento(id: string): Promise<{ error?: string }> 
     return { error: t("genericError") };
   }
 
-  revalidatePath("/admin/eventi");
   revalidatePath("/eventi");
   return {};
 }
@@ -244,7 +240,6 @@ export async function eliminaEvento(id: string): Promise<{ error?: string }> {
     if (removeError) console.error("eliminaEvento: copertina non rimossa", removeError);
   }
 
-  revalidatePath("/admin/eventi");
   revalidatePath("/eventi");
   return {};
 }

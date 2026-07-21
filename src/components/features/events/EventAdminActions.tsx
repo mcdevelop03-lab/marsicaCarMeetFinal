@@ -1,7 +1,8 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
 import { useRouter } from "@/i18n/navigation";
 import {
   annullaEvento,
@@ -17,8 +18,9 @@ export default function EventAdminActions({ id, annullato }: { id: string; annul
   const [conferma, setConferma] = useState<Conferma>("nessuna");
   const [errore, setErrore] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const chiudiConferma = useCallback(() => setConferma("nessuna"), []);
 
-  function esegui(azione: () => Promise<{ error?: string }>) {
+  function esegui(azione: () => Promise<{ error?: string }>, flash: string) {
     startTransition(async () => {
       const r = await azione();
       setConferma("nessuna");
@@ -27,31 +29,11 @@ export default function EventAdminActions({ id, annullato }: { id: string; annul
         return;
       }
       setErrore(null);
-      router.refresh();
+      // Naviga a /eventi col messaggio flash: la lista si aggiorna con dati freschi e il
+      // toast compare a livello pagina — così sopravvive anche quando la riga eliminata
+      // scompare (un toast dentro la riga si smonterebbe insieme a essa).
+      router.replace({ pathname: "/eventi", query: { flash } });
     });
-  }
-
-  if (conferma !== "nessuna") {
-    const messaggio = conferma === "annulla" ? t("confirmCancel") : t("confirmDelete");
-    const azione = conferma === "annulla" ? () => annullaEvento(id) : () => eliminaEvento(id);
-    return (
-      <div className="space-y-2">
-        <p className="font-mono text-[11px] text-white/60">{messaggio}</p>
-        <div className="flex gap-2">
-          <Button type="button" onClick={() => esegui(azione)} disabled={pending}>
-            {t("confirm")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setConferma("nessuna")}
-            disabled={pending}
-          >
-            {t("cancel")}
-          </Button>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -66,7 +48,7 @@ export default function EventAdminActions({ id, annullato }: { id: string; annul
           <Button
             type="button"
             variant="outline"
-            onClick={() => esegui(() => ripristinaEvento(id))}
+            onClick={() => esegui(() => ripristinaEvento(id), "ripristinato")}
             disabled={pending}
           >
             {t("restoreEvent")}
@@ -96,6 +78,34 @@ export default function EventAdminActions({ id, annullato }: { id: string; annul
           {t("delete")}
         </Button>
       </div>
+
+      {conferma !== "nessuna" && (
+        <Modal
+          title={conferma === "annulla" ? t("cancelEvent") : t("delete")}
+          onClose={chiudiConferma}
+        >
+          <p className="font-mono text-xs text-white/60">
+            {conferma === "annulla" ? t("confirmCancel") : t("confirmDelete")}
+          </p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button type="button" variant="outline" onClick={chiudiConferma} disabled={pending}>
+              {t("cancel")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() =>
+                esegui(
+                  conferma === "annulla" ? () => annullaEvento(id) : () => eliminaEvento(id),
+                  conferma === "annulla" ? "annullato" : "eliminato",
+                )
+              }
+              disabled={pending}
+            >
+              {t("confirm")}
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
