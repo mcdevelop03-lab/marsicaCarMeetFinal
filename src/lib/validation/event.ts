@@ -82,8 +82,8 @@ export const eventSchema = z
     capacity: z.preprocess(
       vuotoAUndefined,
       z.coerce
-        .number()
-        .int()
+        .number("La capienza deve essere un numero")
+        .int("La capienza deve essere un numero intero")
         .min(1, "La capienza deve essere almeno 1")
         .max(10000, "Capienza non valida (massimo 10000)")
         .optional(),

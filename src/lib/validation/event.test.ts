@@ -271,3 +271,45 @@ describe("eventSchema — map_url (solo http/https, no schemi eseguibili)", () =
     }
   });
 });
+
+describe("eventSchema — capacity (messaggi in italiano, non i default inglesi di Zod)", () => {
+  it("accetta capacity vuoto e lo trasforma in undefined", () => {
+    const result = eventSchema.safeParse({ ...base, capacity: "" });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.capacity).toBeUndefined();
+    }
+  });
+
+  it("accetta capacity valido (es. '20')", () => {
+    const result = eventSchema.safeParse({ ...base, capacity: "20" });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.capacity).toBe(20);
+    }
+  });
+
+  it("respinge capacity decimale (es. '20.5') con messaggio italiano, non il default Zod in inglese", () => {
+    const result = eventSchema.safeParse({ ...base, capacity: "20.5" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.filter((i) => i.path[0] === "capacity").map((i) => i.message);
+      expect(messages).toContain("La capienza deve essere un numero intero");
+      expect(messages).not.toContain("Invalid input: expected int, received number");
+    }
+  });
+
+  it("respinge capacity non numerico (es. 'abc') con messaggio italiano, non il default Zod in inglese", () => {
+    const result = eventSchema.safeParse({ ...base, capacity: "abc" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.filter((i) => i.path[0] === "capacity").map((i) => i.message);
+      expect(messages).toContain("La capienza deve essere un numero");
+      expect(messages).not.toContain("Invalid input: expected number, received NaN");
+    }
+  });
+});

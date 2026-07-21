@@ -109,7 +109,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
       </div>
 
       <Card className="space-y-4 p-6">
-        {evento.location && (
+        {(evento.location || evento.map_url) && (
           <p className="flex items-center gap-2 font-mono text-xs text-white/60">
             <MapPin size={12} aria-hidden="true" />
             {evento.location}

@@ -56,7 +56,11 @@ export default function EventAdminActions({ id, annullato }: { id: string; annul
 
   return (
     <div className="space-y-2">
-      {errore && <p className="font-mono text-[11px] text-accent-red">{errore}</p>}
+      {errore && (
+        <p role="alert" className="font-mono text-[11px] text-accent-red">
+          {errore}
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
         {annullato ? (
           <Button
