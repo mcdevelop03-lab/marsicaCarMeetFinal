@@ -67,9 +67,17 @@ export const eventSchema = z
       vuotoAUndefined,
       z.string().trim().max(120, "Luogo troppo lungo (massimo 120 caratteri)").optional(),
     ),
+    // Solo http/https: `z.url()` da solo accetta qualunque schema (es. "javascript:",
+    // "data:", "vbscript:"), che finirebbe reso com'è in un <a href> nella pagina
+    // pubblica dell'evento — stored XSS. `protocol` restringe lo schema ammesso.
     map_url: z.preprocess(
       vuotoAUndefined,
-      z.url({ message: "Il link alla mappa non è un indirizzo valido" }).optional(),
+      z
+        .url({
+          protocol: /^https?$/,
+          message: "Il link alla mappa deve iniziare con http:// o https://",
+        })
+        .optional(),
     ),
     capacity: z.preprocess(
       vuotoAUndefined,

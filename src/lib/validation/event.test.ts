@@ -223,3 +223,51 @@ describe("eventSchema — anno ammesso (2000-2100)", () => {
     }
   });
 });
+
+describe("eventSchema — map_url (solo http/https, no schemi eseguibili)", () => {
+  it("accetta map_url vuoto e lo trasforma in undefined", () => {
+    const result = eventSchema.safeParse({ ...base, map_url: "" });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.map_url).toBeUndefined();
+    }
+  });
+
+  it("accetta un link https realistico a Google Maps con query string", () => {
+    const url = "https://maps.google.com/?q=Avezzano,+AQ&z=15";
+    const result = eventSchema.safeParse({ ...base, map_url: url });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.map_url).toBe(url);
+    }
+  });
+
+  it("accetta un link http (non https)", () => {
+    const url = "http://osm.org/go/xyz";
+    const result = eventSchema.safeParse({ ...base, map_url: url });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.map_url).toBe(url);
+    }
+  });
+
+  const schemiPericolosi: Array<[string, string]> = [
+    ["javascript:alert(1)", "schema javascript: eseguibile"],
+    ["data:text/html,<script>alert(1)</script>", "schema data: eseguibile via markup"],
+    ["vbscript:msgbox(1)", "schema vbscript: eseguibile"],
+    ["ftp://x.it", "schema ftp, non un link mappa valido"],
+  ];
+
+  it.each(schemiPericolosi)("respinge map_url = %s (%s)", (valore) => {
+    const result = eventSchema.safeParse({ ...base, map_url: valore });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.filter((i) => i.path[0] === "map_url").map((i) => i.message);
+      expect(messages).toContain("Il link alla mappa deve iniziare con http:// o https://");
+    }
+  });
+});
