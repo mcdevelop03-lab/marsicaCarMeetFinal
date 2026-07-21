@@ -6,7 +6,7 @@
 
 ## 🔖 Dove siamo
 
-- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Task 1-8 su 10 completati** (ognuno con review indipendente). **Si riparte dal Task 9.**
+- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Implementazione FINITA: Task 1-9 su 10 completati** (ognuno con review indipendente). **Prossimo passo: review finale whole-branch + una wave di fix, poi il Task 10 (collaudo).**
 - 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
 - **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** *(in corso)* → **1C-2 RSVP** → **1C-3 Album foto**.
 - **Piano 1C-1 (10 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-15-fase1c1-eventi.md`](./superpowers/plans/2026-07-15-fase1c1-eventi.md) · **Spec:** [`superpowers/specs/2026-07-15-fase1c1-eventi-design.md`](./superpowers/specs/2026-07-15-fase1c1-eventi-design.md)
@@ -14,11 +14,16 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **Task 9**
+## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **review finale whole-branch**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e riprendi la Fase 1C-1 dal Task 9 del piano."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: l'implementazione della 1C-1 è finita, procedi con la review finale whole-branch e la wave di fix."*
 
-> **Dopo il Task 9:** prima del Task 10 (collaudo), **review finale whole-branch** con il modello più capace + **una sola wave di fix** che raccolga tutti i Minor accumulati nel ledger.
+**L'implementazione (Task 1-9) è completa.** Prima del collaudo (Task 10) restano, in quest'ordine:
+1. **Review finale whole-branch** col modello più capace, su tutto il diff dalla base del branch a `HEAD`. Il pacchetto si genera con `scripts/review-package $(git merge-base main HEAD) HEAD`.
+2. **Una sola wave di fix** che raccolga i Minor accumulati nel ledger (`.superpowers/sdd/progress.md`) — vedi anche la lista qui sotto — più tutto ciò che la review finale aggiunge. Un solo subagent con l'elenco completo, non uno per finding.
+3. **Task 10 — collaudo dal vivo** (browser + Mailpit + psql), che chiude la fase.
+
+> ⚠️ **Non iniziare il Task 10 prima** della review finale e della wave di fix.
 
 **Brainstorming, spec e piano sono fatti e approvati.** Si esegue col metodo **subagent-driven**: un subagent implementa il task, un secondo lo rivede in modo indipendente, il controller verifica di persona le affermazioni chiave, **poi si chiede l'ok all'utente prima del task successivo**.
 
@@ -37,7 +42,8 @@
 | 6 | Elenco admin + azioni | ✅ `8dd7bd9` |
 | 7 | `/admin/eventi/[id]/modifica` | ✅ `d85f5df` — 57/57 test |
 | 8 | `EventCard` + `/eventi` pubblica | ✅ `c0bbd21` — 65/65 test |
-| 9 | **`/eventi/[slug]` dettaglio** | ⬅️ **si riparte da qui** |
+| 9 | `/eventi/[slug]` dettaglio | ✅ `572dbdc` — 72/72 test |
+| — | **Review finale whole-branch + wave di fix** | ⬅️ **si riparte da qui** |
 | 10 | Collaudo dal vivo e chiusura | — |
 
 Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più capace) + **una sola wave di fix** con tutti i Minor accumulati nel ledger.
@@ -46,7 +52,7 @@ Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più
 
 - **Le date dell'evento sono validate a fondo (Task 4).** `eventSchema` respinge, con messaggi distinti: campo vuoto, **formato** diverso da `datetime-local` (`pippo`, secondi extra), **data inesistente nel calendario** (`31 febbraio`, mese 13, ora 25) e **anno fuori da 2000–2100**. Il controllo di calendario è un **round-trip** su `toISOString()`, non una tabella giorni-per-mese: gestisce i bisestili da sé (`2028-02-29` sì, `2026-02-29` e `1900-02-29` no) ed è coperto da test. **Non indebolirlo**: senza, `istanteDaOraItaliana()` o lancia `RangeError` (500) o salva in silenzio una data sbagliata.
 - **Tre cose che solo il collaudo (Task 10) può dire**, segnalate dalla review del Task 5: che il cambio di `<Select>` e la scelta dal picker `datetime-local` emettano l'evento `input` (se non lo fanno, il bottone Salva **resta spento a form valido**, perché `checkValidity()` è ricalcolato su `onInput`); che l'indicatore del calendario di `datetime-local` sia visibile sul tema scuro (`Input.tsx` non lo stila); il doppio submit rapido durante l'upload.
-- **Il progetto ora ha i test.** La Fase 1C-1 ha introdotto **vitest** (`npm test`), usato **solo per la logica pura**: `src/lib/date/fuso.ts`, `src/lib/events/stato.ts`, `src/lib/events/slug.ts`, `src/lib/validation/event.ts`. **65 test, tutti verdi.** Pagine, form e action restano verificati dal vivo. Aggiungere `npm test` alle verifiche di ogni task.
+- **Il progetto ora ha i test.** La Fase 1C-1 ha introdotto **vitest** (`npm test`), usato **solo per la logica pura**: `src/lib/date/fuso.ts`, `src/lib/events/stato.ts`, `src/lib/events/slug.ts`, `src/lib/validation/event.ts`. **72 test, tutti verdi.** Pagine, form e action restano verificati dal vivo. Aggiungere `npm test` alle verifiche di ogni task.
 - **Lo stato dell'evento NON è un campo del DB:** lo calcola `statoEvento()` dalle date, a ogni render. Nella colonna `status` si scrive **solo** `'upcoming'` (= non annullato) o `'canceled'`; `'ongoing'`/`'completed'` non si usano mai (c'è un `comment on column` nel DB che lo dice).
 - ⚠️ **`statoEvento()` ritorna `'annullato'` PRIMA di guardare le date** (l'annullamento vince sempre, e il badge `ANNULLATO` deve restare anche a data passata). Quindi **non usare `statoEvento(e) !== 'concluso'` per dire "è ancora un prossimo raduno"**: un annullato non diventa mai `'concluso'` e resterebbe fra i Prossimi in eterno (era il Critical del Task 8). Per la sola domanda "è finito?" c'è **`eConcluso(e)`** in `src/lib/events/stato.ts`, che ignora l'annullamento e guarda solo la data. `statoEvento` per il badge, `eConcluso` per la partizione.
 - ⚠️ **Ordinare le date per istante, non per stringa:** `starts_at.localeCompare(...)` è **sbagliato** (PostgREST include la frazione di secondo solo quando è ≠ 0, e gli offset possono differire). Usare `new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()`.
@@ -77,6 +83,7 @@ Il bucket `event-covers` accumula file orfani in tre casi, tutti scoperti dalla 
 
 ### ⚠️ Minor già noti, da sistemare nella wave finale (non bloccanti)
 
+0. **Task 9** — **`generateMetadata` manca** sul dettaglio `/eventi/[slug]`: è una pagina pubblica e condivisibile (lo slug immutabile serve proprio a condividere il link), ma senza di essa `<title>` e Open Graph restano generici — un link su WhatsApp/social esce senza titolo, data né copertina. Inoltre il blocco `Link` "Torna agli eventi" è duplicato verbatim fra ramo d'errore e ramo di successo (cosmetico).
 0. **Task 7** — `garage/[id]/modifica/page.tsx` ha la struttura **identica** alla pagina di modifica dell'evento ma **non** ha ricevuto il fix `22P02`: un id veicolo malformato mostra ancora "Riprova più tardi" con HTTP 200 invece di un 404. Le due pagine gemelle ora divergono.
 0. **Task 5** — il blocco di upload immagine è alla **terza copia** quasi identica (`EventForm`, `VehicleForm`, `AvatarUploader`): `labelClass`/`hintClass`, `MIME_AMMESSI`, `ESTENSIONI`, gli stati `file`/`anteprima`/`errore`/`caricando`, `onFileChange` e il markup del picker. Candidato a un hook `useUploadImmagine(bucket)` + un `<ImagePicker>`; `URL.createObjectURL` non è mai revocato in nessuna delle tre. Inoltre: `comprimiImmagine` restituisce l'**originale** se `createImageBitmap` fallisce o se il WebP non migliora, quindi in quel ramo un file >2 MB viene respinto dal bucket e l'utente vede solo il generico `uploadFailed`, mentre la stringa `coverRules` promette che "viene compressa automaticamente".
 0. **Task 4** — `annullaEvento`/`ripristinaEvento` non distinguono "fatto" da "id inesistente" (un `update` che non colpisce righe non è un errore Supabase: la UI mostra successo); copertina orfana se l'insert fallisce dopo l'upload del client; `coverPath` preso grezzo dal `FormData` senza validazione; `aggiornamento: Record<string, unknown>` disattiva il type-check dei nomi di colonna.
