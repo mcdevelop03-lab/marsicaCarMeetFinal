@@ -1,11 +1,15 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import { getProfile } from "@/lib/auth";
 
-export default function Home() {
-  const t = useTranslations("home");
-  const tn = useTranslations("nav");
+export default async function Home() {
+  const t = await getTranslations("home");
+  const tn = await getTranslations("nav");
+  // La call-to-action "Registrati" ha senso solo per chi non ha un account: a un utente
+  // già loggato non va mostrata (`getProfile` è memoizzato, nessuna query in più).
+  const isAuthenticated = !!(await getProfile());
   return (
     <div className="space-y-16">
       <section className="relative border border-white/10 min-h-[420px] flex items-center overflow-hidden">
@@ -30,17 +34,19 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border border-white/10 relative p-8 md:p-12 text-center overflow-hidden">
-        <div className="absolute inset-0 racing-grid opacity-10 pointer-events-none" />
-        <div className="relative z-10 max-w-xl mx-auto space-y-6">
-          <h2 className="font-display text-3xl md:text-4xl font-black italic tracking-tighter text-white uppercase">
-            {t("ctaTitle")}
-          </h2>
-          <Link href="/registrati">
-            <Button>{t("ctaButton")}</Button>
-          </Link>
-        </div>
-      </section>
+      {!isAuthenticated && (
+        <section className="border border-white/10 relative p-8 md:p-12 text-center overflow-hidden">
+          <div className="absolute inset-0 racing-grid opacity-10 pointer-events-none" />
+          <div className="relative z-10 max-w-xl mx-auto space-y-6">
+            <h2 className="font-display text-3xl md:text-4xl font-black italic tracking-tighter text-white uppercase">
+              {t("ctaTitle")}
+            </h2>
+            <Link href="/registrati">
+              <Button>{t("ctaButton")}</Button>
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
