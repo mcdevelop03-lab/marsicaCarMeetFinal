@@ -213,6 +213,18 @@
     "confirm": "Conferma",
     "cancel": "Annulla",
     "notEmpty": "Non si può eliminare un evento con iscritti o foto: annullalo invece.",
-    "genericError": "Qualcosa è andato storto. Riprova."
+    "genericError": "Qualcosa è andato storto. Riprova.",
+    "requiredHint": "Completa i campi contrassegnati con * e correggi quelli evidenziati in rosso per salvare.",
+    "toastCreato": "Evento creato correttamente.",
+    "toastAggiornato": "Evento aggiornato correttamente.",
+    "toastAnnullato": "Evento annullato.",
+    "toastRipristinato": "Evento ripristinato.",
+    "toastEliminato": "Evento eliminato.",
+    "toastChiudi": "Chiudi",
+    "back": "Torna indietro",
+    "backTitle": "Modifiche non salvate",
+    "backWarning": "Tornando indietro perderai le modifiche che non hai salvato.",
+    "backConfirm": "Esci senza salvare",
+    "backStay": "Resta"
   }
 }

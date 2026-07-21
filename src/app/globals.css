@@ -22,6 +22,10 @@ body {
   color: #ffffff;
   font-family: var(--font-sans);
   overflow-x: hidden;
+  /* App interamente in tema scuro: fa rendere ai controlli nativi (l'icona del
+     calendario di <input type="datetime-local">, gli spinner, le scrollbar) la
+     variante chiara, altrimenti invisibile sul nostro sfondo scuro. */
+  color-scheme: dark;
 }
 
 .font-display {
@@ -35,6 +39,20 @@ body {
   background: rgba(21, 21, 24, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-toast-in {
+  animation: toast-in 0.2s ease-out;
 }
 
 .racing-grid {
