@@ -6,7 +6,7 @@
 
 ## 🔖 Dove siamo
 
-- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Implementazione FINITA: Task 1-9 su 10 completati** (ognuno con review indipendente). **Prossimo passo: review finale whole-branch + una wave di fix, poi il Task 10 (collaudo).**
+- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Implementazione, review finale whole-branch e wave di fix: FATTE.** Resta **solo il Task 10 — collaudo dal vivo**, che chiude la fase. **76/76 test verdi, `tsc`/`lint` puliti.**
 - 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
 - **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** *(in corso)* → **1C-2 RSVP** → **1C-3 Album foto**.
 - **Piano 1C-1 (10 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-15-fase1c1-eventi.md`](./superpowers/plans/2026-07-15-fase1c1-eventi.md) · **Spec:** [`superpowers/specs/2026-07-15-fase1c1-eventi-design.md`](./superpowers/specs/2026-07-15-fase1c1-eventi-design.md)
@@ -14,16 +14,35 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **review finale whole-branch**
+## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **Task 10 (collaudo dal vivo)**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: l'implementazione della 1C-1 è finita, procedi con la review finale whole-branch e la wave di fix."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la 1C-1 è tutta implementata e rivista, facciamo il collaudo dal vivo del Task 10."*
 
-**L'implementazione (Task 1-9) è completa.** Prima del collaudo (Task 10) restano, in quest'ordine:
-1. **Review finale whole-branch** col modello più capace, su tutto il diff dalla base del branch a `HEAD`. Il pacchetto si genera con `scripts/review-package $(git merge-base main HEAD) HEAD`.
-2. **Una sola wave di fix** che raccolga i Minor accumulati nel ledger (`.superpowers/sdd/progress.md`) — vedi anche la lista qui sotto — più tutto ciò che la review finale aggiunge. Un solo subagent con l'elenco completo, non uno per finding.
-3. **Task 10 — collaudo dal vivo** (browser + Mailpit + psql), che chiude la fase.
+**Tutto il codice è scritto e rivisto** (Task 1-9 + review finale whole-branch + wave di fix). Resta **solo il collaudo dal vivo**, che richiede l'ambiente acceso (Docker + `npx supabase start` + `npm run dev` + browser + Mailpit + psql) — vedi "Come rimettere in moto l'ambiente" più sotto. ⚠️ **Il Task 1 ha fatto `db reset`: le utenze locali sono azzerate.** Servono **due account** (registrarli e confermarli da Mailpit) e l'admin va ripromosso rieseguendo la `update` di `supabase/seed.sql`.
 
-> ⚠️ **Non iniziare il Task 10 prima** della review finale e della wave di fix.
+### ✅ Checklist di collaudo del Task 10 (raccolta task per task)
+
+**Percorsi funzionali (admin):** creare un evento (con e senza copertina) → riga in `events`, `cover_path` valorizzato, 1 file nel bucket; modificarlo → i `defaultValue` del form si popolano, lo slug **non cambia** cambiando il titolo, salvare senza toccare la foto la conserva, sostituirla non lascia più di 1 file; annullare → badge `ANNULLATO`, resta fra i Prossimi se futuro; ripristinare; eliminare un evento **vuoto** (riga + file via) e verificare che l'eliminazione di uno **con iscritti/foto** sia rifiutata con `notEmpty`.
+
+**Le trappole che solo il browser può confermare:**
+1. **Il bottone Salva del form si abilita?** `checkValidity()` è ricalcolato su `onInput`: se il cambio di `<Select>` o la scelta dal picker `datetime-local` **non emettono `input`**, il bottone **resta spento a form valido**. È la trappola numero uno del Task 5.
+2. **L'ora è giusta a cavallo del cambio di ora legale?** Crea/modifica un evento delle **01:30 del 29 marzo** e uno del **25 ottobre**: l'ora salvata e rimostrata **non deve spostarsi** (il bug che ha morso nel Task 7). Verifica anche il round-trip col Postgres reale (formato `timestamptz` con/senza frazione).
+3. **L'indicatore del calendario di `datetime-local`** è visibile sul tema scuro? (`Input.tsx` non lo stila.)
+4. **Doppio submit rapido** durante l'upload della copertina.
+
+**Superficie pubblica:** aprire `/eventi` **da sloggato** (finestra anonima) → si vede; **prossimi ordinati crescenti, conclusi decrescenti**; un **annullato passato** deve stare fra i **Conclusi** (non in cima ai Prossimi — era il Critical del Task 8); le `<img>` caricano le cover dal bucket pubblico; `opacity-50` sui conclusi; griglia responsive. Dettaglio `/eventi/[slug]`: slug inesistente → **404**; un evento con **mappa ma senza luogo** mostra comunque il link (fix della wave finale).
+
+**Prove negative (sicurezza):**
+- **POST diretto** alle server action da **non-admin** e da **sloggato** → respinto (redirect + RLS).
+- `/admin/eventi/[id]/modifica` con **id malformato** → **404** (non "riprova più tardi").
+- Un **anonimo** non deve poter leggere `created_by` degli eventi (le pagine pubbliche non lo selezionano; confermare che le RLS lo proteggano davvero).
+- Upload su `event-covers` di file **>2 MB** e **MIME non ammesso** → respinti dal bucket.
+
+**Cache:** dopo che un admin crea/annulla un evento, un **visitatore anonimo** vede la modifica su `/eventi` al reload (la pagina è dinamica → il debito `revalidatePath` non la tocca, ma va **confermato dal vivo**).
+
+**Verifiche standard:** `npm test` (76 verdi), `tsc`/`lint`, e `rm -rf .next && npm run build` **verde** (ma **non** mentre gira `next dev`).
+
+> **A collaudo finito:** correggere i bug emersi (commit dedicati), poi **chiudere la fase** con `superpowers:finishing-a-development-branch` (merge/PR). Solo allora la 1C-1 è completa e si può passare alla **1C-2 (RSVP)** — che ha già due nodi di design noti, vedi "Cosa aspetta le prossime sotto-fasi".
 
 **Brainstorming, spec e piano sono fatti e approvati.** Si esegue col metodo **subagent-driven**: un subagent implementa il task, un secondo lo rivede in modo indipendente, il controller verifica di persona le affermazioni chiave, **poi si chiede l'ok all'utente prima del task successivo**.
 
@@ -42,9 +61,9 @@
 | 6 | Elenco admin + azioni | ✅ `8dd7bd9` |
 | 7 | `/admin/eventi/[id]/modifica` | ✅ `d85f5df` — 57/57 test |
 | 8 | `EventCard` + `/eventi` pubblica | ✅ `c0bbd21` — 65/65 test |
-| 9 | `/eventi/[slug]` dettaglio | ✅ `572dbdc` — 72/72 test |
-| — | **Review finale whole-branch + wave di fix** | ⬅️ **si riparte da qui** |
-| 10 | Collaudo dal vivo e chiusura | — |
+| 9 | `/eventi/[slug]` dettaglio | ✅ `572dbdc` |
+| — | Review finale whole-branch + wave di fix | ✅ `eef9245` — 76/76 test |
+| 10 | **Collaudo dal vivo e chiusura** | ⬅️ **si riparte da qui (serve l'ambiente acceso)** |
 
 Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più capace) + **una sola wave di fix** con tutti i Minor accumulati nel ledger.
 
@@ -52,7 +71,7 @@ Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più
 
 - **Le date dell'evento sono validate a fondo (Task 4).** `eventSchema` respinge, con messaggi distinti: campo vuoto, **formato** diverso da `datetime-local` (`pippo`, secondi extra), **data inesistente nel calendario** (`31 febbraio`, mese 13, ora 25) e **anno fuori da 2000–2100**. Il controllo di calendario è un **round-trip** su `toISOString()`, non una tabella giorni-per-mese: gestisce i bisestili da sé (`2028-02-29` sì, `2026-02-29` e `1900-02-29` no) ed è coperto da test. **Non indebolirlo**: senza, `istanteDaOraItaliana()` o lancia `RangeError` (500) o salva in silenzio una data sbagliata.
 - **Tre cose che solo il collaudo (Task 10) può dire**, segnalate dalla review del Task 5: che il cambio di `<Select>` e la scelta dal picker `datetime-local` emettano l'evento `input` (se non lo fanno, il bottone Salva **resta spento a form valido**, perché `checkValidity()` è ricalcolato su `onInput`); che l'indicatore del calendario di `datetime-local` sia visibile sul tema scuro (`Input.tsx` non lo stila); il doppio submit rapido durante l'upload.
-- **Il progetto ora ha i test.** La Fase 1C-1 ha introdotto **vitest** (`npm test`), usato **solo per la logica pura**: `src/lib/date/fuso.ts`, `src/lib/events/stato.ts`, `src/lib/events/slug.ts`, `src/lib/validation/event.ts`. **72 test, tutti verdi.** Pagine, form e action restano verificati dal vivo. Aggiungere `npm test` alle verifiche di ogni task.
+- **Il progetto ora ha i test.** La Fase 1C-1 ha introdotto **vitest** (`npm test`), usato **solo per la logica pura**: `src/lib/date/fuso.ts`, `src/lib/events/stato.ts`, `src/lib/events/slug.ts`, `src/lib/validation/event.ts`. **76 test, tutti verdi.** Pagine, form e action restano verificati dal vivo. Aggiungere `npm test` alle verifiche di ogni task.
 - **Lo stato dell'evento NON è un campo del DB:** lo calcola `statoEvento()` dalle date, a ogni render. Nella colonna `status` si scrive **solo** `'upcoming'` (= non annullato) o `'canceled'`; `'ongoing'`/`'completed'` non si usano mai (c'è un `comment on column` nel DB che lo dice).
 - ⚠️ **`statoEvento()` ritorna `'annullato'` PRIMA di guardare le date** (l'annullamento vince sempre, e il badge `ANNULLATO` deve restare anche a data passata). Quindi **non usare `statoEvento(e) !== 'concluso'` per dire "è ancora un prossimo raduno"**: un annullato non diventa mai `'concluso'` e resterebbe fra i Prossimi in eterno (era il Critical del Task 8). Per la sola domanda "è finito?" c'è **`eConcluso(e)`** in `src/lib/events/stato.ts`, che ignora l'annullamento e guarda solo la data. `statoEvento` per il badge, `eConcluso` per la partizione.
 - ⚠️ **Ordinare le date per istante, non per stringa:** `starts_at.localeCompare(...)` è **sbagliato** (PostgREST include la frazione di secondo solo quando è ≠ 0, e gli offset possono differire). Usare `new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()`.
