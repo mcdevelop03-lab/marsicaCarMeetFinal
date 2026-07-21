@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { eConcluso, statoEvento } from "./stato";
+import { mezzanotteSuccessiva } from "@/lib/date/fuso";
 import type { EventStatusDb } from "@/types/database";
 
 // Helper locale: costruisce il minimo che `statoEvento` legge.
@@ -83,5 +84,24 @@ describe("eConcluso", () => {
   it("un normale passato è concluso", () => {
     const adesso = new Date("2026-07-20T10:00:00Z");
     expect(eConcluso(ev("2026-01-01T10:00:00Z"), adesso)).toBe(true);
+  });
+});
+
+describe("eConcluso — confine esatto della mezzanotte successiva (senza ends_at)", () => {
+  // Inizio: 12 lug 10:00 italiane (08:00 UTC, CEST). Senza ends_at la fine è la
+  // mezzanotte italiana successiva: la si ricava dalla stessa funzione che usa il
+  // codice, così il test resta corretto anche se cambiasse lo scarto di fuso.
+  const inizio = "2026-07-12T08:00:00Z";
+  const confine = mezzanotteSuccessiva(new Date(inizio));
+
+  it("a mezzanotte successiva esatta il bordo è inclusivo: NON è ancora concluso", () => {
+    expect(eConcluso(ev(inizio), confine)).toBe(false);
+    expect(statoEvento(ev(inizio), confine)).toBe("in-corso");
+  });
+
+  it("un millisecondo dopo la mezzanotte successiva è concluso", () => {
+    const unMillisecondoDopo = new Date(confine.getTime() + 1);
+    expect(eConcluso(ev(inizio), unMillisecondoDopo)).toBe(true);
+    expect(statoEvento(ev(inizio), unMillisecondoDopo)).toBe("concluso");
   });
 });
