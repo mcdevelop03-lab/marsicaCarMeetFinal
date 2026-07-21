@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import Card from "@/components/ui/Card";
+import ConfirmLeaveButton from "@/components/ui/ConfirmLeaveButton";
 import SectionHeading from "@/components/ui/SectionHeading";
 import EventForm from "@/components/features/events/EventForm";
 import { createClient } from "@/lib/supabase/server";
@@ -46,6 +47,14 @@ export default async function ModificaEventoPage({
 
   return (
     <div className="space-y-8">
+      <ConfirmLeaveButton
+        href="/eventi"
+        label={t("back")}
+        title={t("backTitle")}
+        message={t("backWarning")}
+        confirmLabel={t("backConfirm")}
+        cancelLabel={t("backStay")}
+      />
       <SectionHeading>{t("editTitle")}</SectionHeading>
       <Card className="p-6">
         <EventForm action={azione} event={evento} />

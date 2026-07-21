@@ -1,5 +1,6 @@
 "use client";
 import { useActionState, useEffect, useRef, useState, startTransition } from "react";
+import { flushSync } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Camera } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -14,6 +15,17 @@ import { EVENT_TYPES, type Event } from "@/types/database";
 
 const labelClass = "font-mono text-[11px] uppercase tracking-widest text-white/60";
 const hintClass = "block font-mono text-[11px] text-white/40";
+// Marca visiva dei campi obbligatori. `required` sull'input resta la fonte di verità
+// per la validazione e per gli screen reader: l'asterisco è solo un aiuto visivo.
+const requiredMark = (
+  <span className="text-accent-red" aria-hidden="true">
+    {" *"}
+  </span>
+);
+// Estremi assoluti dei campi data, coerenti con ANNO_MINIMO/ANNO_MASSIMO (2000-2100)
+// di `eventSchema`. In creazione il min dell'inizio viene stretto a "adesso" (vedi sotto).
+const MIN_ASSOLUTO = "2000-01-01T00:00";
+const MAX_ASSOLUTO = "2100-12-31T23:59";
 const MIME_AMMESSI = ["image/jpeg", "image/png", "image/webp"];
 const ESTENSIONI: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -47,12 +59,47 @@ export default function EventForm({
   const [errore, setErrore] = useState<string | null>(null);
   const [caricando, setCaricando] = useState(false);
 
+  const isCreazione = !event;
+  // Vincoli "sicuri" sulle date: la fine non può precedere l'inizio (min = valore
+  // corrente dell'inizio); in creazione l'inizio non può essere nel passato (min =
+  // adesso). In MODIFICA non si forza "adesso": un evento già passato dev'essere
+  // comunque modificabile, quindi l'inizio resta libero fino all'estremo assoluto.
+  const [inizioValore, setInizioValore] = useState(
+    event ? perInputDatetime(event.starts_at) : "",
+  );
+  const [minInizio, setMinInizio] = useState(MIN_ASSOLUTO);
+  // "adesso" in ora italiana, con la stessa conversione del resto del form (non l'ora
+  // grezza del browser); impostato solo lato client (in effect), per non divergere
+  // dall'HTML del server. In modifica non si stringe: un evento passato dev'essere
+  // comunque modificabile.
+  const impostaMinInizio = () => {
+    if (isCreazione) setMinInizio(perInputDatetime(new Date().toISOString()));
+  };
+  // Valore client-only (dipende da `new Date()`): va impostato dopo il mount, non nel
+  // render SSR — qui il setState in effect è il pattern corretto, non una svista.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(impostaMinInizio, [isCreazione]);
+
   // Come in ProfileForm/VehicleForm: submit spento finché la validazione nativa non è
-  // soddisfatta. Qui la copertina è facoltativa, quindi non entra nella condizione.
-  const [valid, setValid] = useState(false);
+  // soddisfatta (la copertina è facoltativa e non entra nella condizione). In modifica il
+  // form parte da dati già validi dal DB → bottone attivo subito; in creazione parte
+  // invalido (obbligatori vuoti). Poi ogni input rivaluta con la validazione nativa.
+  const [valid, setValid] = useState(!!event);
   const revalidate = () => setValid(formRef.current?.checkValidity() ?? false);
-  useEffect(revalidate, []);
   const [descLength, setDescLength] = useState((event?.description ?? "").length);
+
+  // Se l'utente incolla un link mappa senza schema (es. "google.it/maps?q=...", tipico
+  // di un copia-incolla dalla barra), gli aggiungo `https://` appena lascia il campo:
+  // senza schema `type="url"` lo considera invalido e bloccherebbe il salvataggio. La
+  // rivalidazione riaccende il bottone Salva. Lo schema resta comunque ristretto a
+  // http/https lato zod (vedi `eventSchema`).
+  function normalizzaMapUrl(e: React.FocusEvent<HTMLInputElement>) {
+    const valore = e.target.value.trim();
+    if (valore && !/^https?:\/\//i.test(valore)) {
+      e.target.value = `https://${valore}`;
+      revalidate();
+    }
+  }
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const scelto = e.target.files?.[0];
@@ -140,11 +187,17 @@ export default function EventForm({
 
       <div className="grid gap-5 md:grid-cols-2">
         <label className="block space-y-1.5">
-          <span className={labelClass}>{t("titleField")}</span>
+          <span className={labelClass}>
+            {t("titleField")}
+            {requiredMark}
+          </span>
           <Input name="title" defaultValue={event?.title ?? ""} required minLength={3} maxLength={80} />
         </label>
         <label className="block space-y-1.5">
-          <span className={labelClass}>{t("type")}</span>
+          <span className={labelClass}>
+            {t("type")}
+            {requiredMark}
+          </span>
           <Select name="type" defaultValue={event?.type ?? "raduno"} required>
             {EVENT_TYPES.map((tipo) => (
               <option key={tipo} value={tipo}>
@@ -155,22 +208,26 @@ export default function EventForm({
         </label>
       </div>
 
-      {/*
-        min/max letterali qui perché EventForm.tsx è l'unico file toccabile in
-        questo fix: la fonte di verità resta ANNO_MINIMO/ANNO_MASSIMO (2000-2100)
-        in `src/lib/validation/event.ts`. Se quei valori cambiano, aggiornare
-        anche questi due input.
-      */}
       <div className="grid gap-5 md:grid-cols-2">
         <label className="block space-y-1.5">
-          <span className={labelClass}>{t("startsAt")}</span>
+          <span className={labelClass}>
+            {t("startsAt")}
+            {requiredMark}
+          </span>
           <Input
             name="starts_at"
             type="datetime-local"
             required
-            min="2000-01-01T00:00"
-            max="2100-12-31T23:59"
+            min={minInizio}
+            max={MAX_ASSOLUTO}
             defaultValue={event ? perInputDatetime(event.starts_at) : ""}
+            onChange={(e) => {
+              // flushSync così il nuovo `min` della fine è già nel DOM quando rivalidiamo:
+              // spostare l'inizio può invalidare una fine già scelta, e il bottone Salva
+              // deve spegnersi subito, non al tasto successivo.
+              flushSync(() => setInizioValore(e.target.value));
+              revalidate();
+            }}
           />
         </label>
         <label className="block space-y-1.5">
@@ -178,8 +235,8 @@ export default function EventForm({
           <Input
             name="ends_at"
             type="datetime-local"
-            min="2000-01-01T00:00"
-            max="2100-12-31T23:59"
+            min={inizioValore || MIN_ASSOLUTO}
+            max={MAX_ASSOLUTO}
             defaultValue={event?.ends_at ? perInputDatetime(event.ends_at) : ""}
           />
           <span className={hintClass}>{t("endsAtHint")}</span>
@@ -193,7 +250,7 @@ export default function EventForm({
         </label>
         <label className="block space-y-1.5">
           <span className={labelClass}>{t("mapUrl")}</span>
-          <Input name="map_url" type="url" defaultValue={event?.map_url ?? ""} />
+          <Input name="map_url" type="url" defaultValue={event?.map_url ?? ""} onBlur={normalizzaMapUrl} />
           <span className={hintClass}>{t("mapUrlHint")}</span>
         </label>
         <label className="block space-y-1.5">
@@ -231,6 +288,8 @@ export default function EventForm({
           {state.error}
         </p>
       )}
+
+      {!valid && <p className="font-mono text-[11px] text-accent-red">{t("requiredHint")}</p>}
 
       <Button type="submit" disabled={busy || !valid}>
         {t("save")}
