@@ -42,7 +42,7 @@ describe("statoIscrizione", () => {
     expect(statoIscrizione(e, 20, 0, true, adesso)).toBe("annullato");
   });
   it("concluso vince su esaurito", () => {
-    // Evento di ieri, senza fine esplicita: concluso. Pieno E concluso -> "concluso".
+    // Evento di due giorni fa, senza fine esplicita: concluso. Pieno E concluso -> "concluso".
     const e = ev("2026-07-10T08:00:00Z");
     expect(statoIscrizione(e, 10, 10, false, adesso)).toBe("concluso");
   });
@@ -57,5 +57,19 @@ describe("statoIscrizione", () => {
   });
   it("capienza illimitata: mai esaurito", () => {
     expect(statoIscrizione(ev(futuro), null, 9999, false, adesso)).toBe("aperto");
+  });
+  it("annullato vince su concluso (evento passato E annullato)", () => {
+    // Passato + annullato + pieno: se annullato non fosse il primo, sarebbe "concluso".
+    expect(statoIscrizione(ev("2026-07-10T08:00:00Z", null, "canceled"), 10, 10, false, adesso)).toBe(
+      "annullato",
+    );
+  });
+  it("concluso vince su gia_iscritto (evento passato, già iscritto)", () => {
+    // Passato + già iscritto: se concluso non venisse prima, sarebbe "gia_iscritto".
+    expect(statoIscrizione(ev("2026-07-10T08:00:00Z"), 20, 5, true, adesso)).toBe("concluso");
+  });
+  it("gia_iscritto vince su esaurito (evento pieno, già iscritto)", () => {
+    // Futuro + pieno + già iscritto: se esaurito venisse prima, sarebbe "esaurito".
+    expect(statoIscrizione(ev(futuro), 10, 10, true, adesso)).toBe("gia_iscritto");
   });
 });
