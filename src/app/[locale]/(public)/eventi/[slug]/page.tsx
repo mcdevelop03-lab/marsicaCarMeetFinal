@@ -7,7 +7,12 @@ import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { statoEvento } from "@/lib/events/stato";
 import { formattaIntervallo } from "@/lib/date/format";
+import { getProfile, getUser } from "@/lib/auth";
+import { statoIscrizione } from "@/lib/rsvp/capienza";
+import RsvpBox from "@/components/features/events/RsvpBox";
+import Partecipanti from "@/components/features/events/Partecipanti";
 import type { Event } from "@/types/database";
+import type { VehiclePick } from "@/app/[locale]/(public)/eventi/[slug]/actions";
 
 // Le colonne che questa pagina legge davvero (render + `statoEvento`). `select("*")`
 // consegnerebbe anche `created_by` (FK a `profiles`) a chiunque: la lettura è pubblica
@@ -15,13 +20,14 @@ import type { Event } from "@/types/database";
 // membri no (`profiles_select_authenticated`) — niente colonne in più di quelle usate,
 // stesso principio della select dell'elenco (`src/app/[locale]/(public)/eventi/page.tsx`).
 const COLONNE_PUBBLICHE =
-  "title, description, location, map_url, starts_at, ends_at, capacity, status, type, cover_url";
+  "id, title, description, location, map_url, starts_at, ends_at, capacity, status, type, cover_url";
 
 // Il minimo che serve al dettaglio: più campi di `EventoPerCard` (mappa, capienza,
 // descrizione), ma sempre un `Pick<Event, ...>`, non `Event` intero — niente doppio
 // cast `as unknown as Event` per far quadrare i tipi con una select parziale.
 type EventoDettaglio = Pick<
   Event,
+  | "id"
   | "title"
   | "description"
   | "location"
@@ -36,6 +42,7 @@ type EventoDettaglio = Pick<
 
 export default async function EventoPage({ params }: { params: Promise<{ slug: string }> }) {
   const t = await getTranslations("events");
+  const tr = await getTranslations("rsvp");
   const { slug } = await params;
 
   const supabase = await createClient();
@@ -69,6 +76,70 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
 
   const evento = data as EventoDettaglio;
   const stato = statoEvento(evento);
+
+  // Conteggio pubblico (anche sloggati): funzione aggregata, non le righe.
+  const { data: conteggi } = await supabase.rpc("iscritti_per_eventi", {
+    p_event_ids: [evento.id],
+  });
+  const iscritti = (conteggi as { event_id: string; iscritti: number }[] | null)?.[0]?.iscritti ?? 0;
+
+  // Identità: gli sloggati vedono solo il conteggio (RLS). I loggati leggono la lista.
+  const user = await getUser();
+  const profile = user ? await getProfile() : null;
+  const isAdmin = profile?.role === "admin";
+
+  type RigaIscrizione = {
+    id: string;
+    user_id: string;
+    created_at: string;
+    profiles: { name: string | null; tag: string | null; town: string | null; socials: Record<string, string> } | null;
+    event_vehicles: { vehicles: VehiclePick | null }[];
+  };
+
+  let iscrizioni: RigaIscrizione[] = [];
+  if (user) {
+    const { data: righe, error: erroreIscrizioni } = await supabase
+      .from("event_registrations")
+      .select(
+        "id, user_id, created_at, profiles(name, tag, town, socials), event_vehicles(vehicles(id, make, model, year))",
+      )
+      .eq("event_id", evento.id)
+      .order("created_at", { ascending: true });
+    if (erroreIscrizioni) {
+      console.error("Evento: lettura iscrizioni non riuscita", erroreIscrizioni);
+    }
+    iscrizioni = (righe ?? []) as unknown as RigaIscrizione[];
+  }
+
+  // La propria iscrizione (se c'è) e le auto associate, per RsvpBox.
+  const miaIscrizione = user ? iscrizioni.find((r) => r.user_id === user.id) : undefined;
+  const autoIscritte: VehiclePick[] = (miaIscrizione?.event_vehicles ?? [])
+    .map((ev) => ev.vehicles)
+    .filter((v): v is VehiclePick => v !== null);
+
+  // Il proprio garage, per la scelta auto in RsvpBox.
+  let garage: VehiclePick[] = [];
+  if (user) {
+    const { data: auto } = await supabase
+      .from("vehicles")
+      .select("id, make, model, year")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false });
+    garage = (auto ?? []) as VehiclePick[];
+  }
+
+  const statoRsvp = statoIscrizione(evento, evento.capacity, iscritti, Boolean(miaIscrizione));
+
+  // Lista "chi partecipa" per i loggati (nomi + auto), riusata anche dal pannello admin.
+  const partecipanti = iscrizioni.map((r) => ({
+    id: r.id,
+    nome: r.profiles?.name ?? r.profiles?.tag ?? "—",
+    tag: r.profiles?.tag ?? null,
+    auto: r.event_vehicles
+      .map((ev) => ev.vehicles)
+      .filter((v): v is VehiclePick => v !== null)
+      .map((v) => `${v.make} ${v.model} (${v.year})`),
+  }));
 
   return (
     <div className="space-y-8">
@@ -125,16 +196,35 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
             )}
           </p>
         )}
-        {evento.capacity !== null && (
-          <p className="flex items-center gap-2 font-mono text-xs text-white/60">
-            <Users size={12} aria-hidden="true" />
-            {t("capacity", { count: evento.capacity })}
-          </p>
-        )}
+        <p className="flex items-center gap-2 font-mono text-xs text-white/60">
+          <Users size={12} aria-hidden="true" />
+          {evento.capacity !== null
+            ? tr("count", { iscritti, capacity: evento.capacity })
+            : tr("countUnlimited", { iscritti })}
+        </p>
         {evento.description && (
           <p className="whitespace-pre-line text-sm text-white/70">{evento.description}</p>
         )}
       </Card>
+
+      <section className="space-y-3">
+        <h2 className="font-mono text-[11px] uppercase tracking-widest text-white/60">
+          {tr("sectionTitle")}
+        </h2>
+        {user ? (
+          <RsvpBox eventId={evento.id} stato={statoRsvp} garage={garage} autoIscritte={autoIscritte} />
+        ) : (
+          <Link
+            href="/login"
+            className="font-mono text-xs text-white/60 underline-offset-2 hover:text-white hover:underline"
+          >
+            {tr("loginToParticipate")}
+          </Link>
+        )}
+      </section>
+
+      {user && !isAdmin && <Partecipanti partecipanti={partecipanti} />}
+      {user && isAdmin && <Partecipanti partecipanti={partecipanti} />}
     </div>
   );
 }
