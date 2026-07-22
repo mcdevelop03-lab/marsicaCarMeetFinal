@@ -1,27 +1,36 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-20**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-22**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
 ## 🔖 Dove siamo
 
-- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Implementazione + review finale + wave di fix + collaudo dal vivo (Task 10): TUTTO FATTO.** Restano solo: **1)** decidere il push/chiusura del branch con l'utente; **2)** due debiti nuovi non bloccanti (sotto). **76/76 test verdi, `tsc`/`lint` puliti.**
-- 🧪 **Collaudo dal vivo (2026-07-21) — superato.** UI provata dall'utente (crea/modifica/annulla/ripristina/elimina + toast + modale + gate admin + copertina + stato/data). Sicurezza verificata dal controller (RLS member/anon/admin, storage 2 MB+MIME, 404 slug). **Migliorie UX emerse dal collaudo committate in 5 commit** (`412f7eb`→`03cbac3`): pannello gestione dentro `/eventi` per l'admin, "torna indietro" con conferma, rifiniture form, toast su tutte le azioni, conferme in modale, fix CTA home. Dettaglio nel ledger [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md).
+- 🟢 **Fase 1C-1 ✅ COMPLETATA** (Eventi). Implementazione + review finale + wave di fix + **collaudo dal vivo superato** (2026-07-21) + migliorie UX dal collaudo → **mergiata e pushata su `main`** (fino a `c461499`), branch `feat/fase1c1-eventi` eliminato. **76/76 test verdi.** Il collaudo ha coperto: UI (crea/modifica/annulla/ripristina/elimina + toast + modale + gate admin + copertina + stato/data) e sicurezza (RLS member/anon/admin, storage 2 MB+MIME, 404 slug). Migliorie committate: pannello gestione dentro `/eventi` per l'admin, "torna indietro" con conferma, rifiniture form, toast su tutte le azioni, conferme in modale, fix CTA home. Ledger: [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md).
 - 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
-- **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** *(in corso)* → **1C-2 RSVP** → **1C-3 Album foto**.
+- **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** ✅ → **1C-2 RSVP** *(prossima)* → **1C-3 Album foto**.
 - **Piano 1C-1 (10 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-15-fase1c1-eventi.md`](./superpowers/plans/2026-07-15-fase1c1-eventi.md) · **Spec:** [`superpowers/specs/2026-07-15-fase1c1-eventi-design.md`](./superpowers/specs/2026-07-15-fase1c1-eventi-design.md)
 - **Piano 1B-2:** [`superpowers/plans/2026-07-13-fase1b2-garage.md`](./superpowers/plans/2026-07-13-fase1b2-garage.md) · **Spec:** [`superpowers/specs/2026-07-13-fase1b2-garage-design.md`](./superpowers/specs/2026-07-13-fase1b2-garage-design.md)
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **chiusura del branch**
+## ▶️ DA COSA RIPARTIRE: **Fase 1C-2 — RSVP (iscrizioni ai raduni)**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la 1C-1 è implementata, rivista e collaudata; decidiamo push e chiusura del branch."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e iniziamo la Fase 1C-2 (RSVP): parti dal brainstorming, tenendo conto dei due nodi RLS già noti."*
 
-**La 1C-1 è completa e collaudata.** Il branch `feat/fase1c1-eventi` è **solo locale**. Prossimo passo con l'utente: **chiudere il branch** (`superpowers:finishing-a-development-branch` → merge su `main` / push), tenendo presente i debiti non bloccanti qui sotto (revalidatePath, storage orfani, `created_by`) da affrontare in micro-fasi dedicate. Poi si passa alla **1C-2 (RSVP)** — che ha già due nodi di design noti (vedi "Cosa aspetta le prossime sotto-fasi").
+La 1C-1 (Eventi) è **chiusa, mergiata e pushata** — vedi sopra. Il prossimo lavoro è la **Fase 1C-2 (RSVP):** far iscrivere i membri ai raduni, con gestione della capienza.
 
-**Storico — checklist del collaudo Task 10 (superata il 2026-07-21):**
+- **Primo passo:** `superpowers:brainstorming` → spec → piano → esecuzione subagent-driven (stesso metodo della 1C-1). **Non c'è ancora né spec né piano** per la 1C-2.
+- ⚠️ **Prima di progettare, affrontare i due nodi RLS già individuati** (cambiano il design) — dettaglio in **"Cosa aspetta le prossime sotto-fasi"** più sotto:
+  1. la **capienza non è mostrabile** con le RLS attuali (un membro vede solo la propria iscrizione);
+  2. la **capienza non è applicabile senza corsa** (due utenti sull'ultimo posto passerebbero entrambi) → va risolto a livello DB.
+- **Da decidere nel brainstorming:** la **lista d'attesa** (`waitlist`) è probabilmente YAGNI (RF-24 dice "RSVP bloccato a esaurimento posti"): confermare.
+- **Debiti non bloccanti** ereditati dalla 1C-1, da fare in micro-fasi dedicate quando conviene (NON dentro la 1C-2): `revalidatePath` (path non combacianti, tocca anche garage/profilo), orfani nello storage, `created_by` leggibile via API. Dettaglio nelle sezioni omonime sotto.
+
+<!-- ─────────── STORICO ─────────── -->
+<!-- Da qui in giù: esiti delle fasi già chiuse e checklist di collaudo passate. Consultazione, non lavoro da fare. -->
+
+### 📓 Storico — checklist del collaudo 1C-1 (superata il 2026-07-21)
 
 **Tutto il codice è scritto e rivisto** (Task 1-9 + review finale whole-branch + wave di fix). Resta **solo il collaudo dal vivo**, che richiede l'ambiente acceso (Docker + `npx supabase start` + `npm run dev` + browser + Mailpit + psql) — vedi "Come rimettere in moto l'ambiente" più sotto. ⚠️ **Il Task 1 ha fatto `db reset`: le utenze locali sono azzerate.** Servono **due account** (registrarli e confermarli da Mailpit) e l'admin va ripromosso rieseguendo la `update` di `supabase/seed.sql`.
 
