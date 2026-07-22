@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import Card from "@/components/ui/Card";
 import { useRouter } from "@/i18n/navigation";
 import { rimuoviIscritto } from "@/app/[locale]/(public)/eventi/[slug]/actions";
+import { formattaDataBreve } from "@/lib/date/format";
 
 type IscrittoAdmin = {
   registrationId: string;
@@ -46,8 +47,6 @@ export default function AdminIscritti({
     });
   }
 
-  const dataIt = (iso: string) => new Date(iso).toLocaleDateString("it-IT");
-
   return (
     <section className="space-y-3 border-t border-white/10 pt-6">
       <h2 className="font-display text-lg font-black italic uppercase tracking-tighter text-white">
@@ -73,7 +72,7 @@ export default function AdminIscritti({
                   </p>
                   <p className="font-mono text-[11px] text-white/50">
                     {i.town && <span>{i.town} · </span>}
-                    {t("registeredOn", { date: dataIt(i.iscrittoIl) })}
+                    {t("registeredOn", { date: formattaDataBreve(i.iscrittoIl) })}
                   </p>
                   {i.auto.length > 0 && (
                     <p className="font-mono text-[11px] text-white/60">{i.auto.join(", ")}</p>
