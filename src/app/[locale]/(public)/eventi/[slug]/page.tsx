@@ -106,6 +106,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
         "id, user_id, created_at, profiles(name, tag, town, socials), event_vehicles(vehicles(id, make, model, year))",
       )
       .eq("event_id", evento.id)
+      .eq("status", "going")
       .order("created_at", { ascending: true });
     if (erroreIscrizioni) {
       console.error("Evento: lettura iscrizioni non riuscita", erroreIscrizioni);

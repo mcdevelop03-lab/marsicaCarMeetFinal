@@ -141,3 +141,21 @@ revoke execute on function public.iscriviti_evento(uuid, uuid[], uuid) from publ
 revoke execute on function public.iscritti_per_eventi(uuid[]) from public;
 grant execute on function public.iscriviti_evento(uuid, uuid[], uuid) to authenticated;
 grant execute on function public.iscritti_per_eventi(uuid[]) to anon, authenticated;
+
+-- 5) event_vehicles INSERT: oltre alla proprietà della REGISTRAZIONE, richiedi anche la
+--    proprietà del VEICOLO. Senza (policy originale in 0002), un membro potrebbe attaccare
+--    alla propria iscrizione l'auto di un ALTRO (tutti i veicoli sono leggibili) e comparirebbe
+--    sotto il suo nome nella lista partecipanti. La funzione `iscriviti_evento` già lo controlla;
+--    questa chiude la via diretta via PostgREST.
+drop policy if exists "event_vehicles_insert" on public.event_vehicles;
+create policy "event_vehicles_insert" on public.event_vehicles
+  for insert with check (
+    exists (
+      select 1 from public.event_registrations r
+      where r.id = registration_id and r.user_id = auth.uid()
+    )
+    and exists (
+      select 1 from public.vehicles v
+      where v.id = vehicle_id and v.owner_id = auth.uid()
+    )
+  );
