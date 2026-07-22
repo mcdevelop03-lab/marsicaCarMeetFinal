@@ -34,7 +34,7 @@ begin
   if v_target is null then
     raise exception 'non autenticato' using errcode = '28000';
   end if;
-  if v_target <> auth.uid() and not public.is_admin() then
+  if v_target is distinct from auth.uid() and not public.is_admin() then
     raise exception 'solo un admin puo iscrivere altri' using errcode = '42501';
   end if;
 
@@ -92,7 +92,8 @@ begin
   if p_vehicle_ids is not null then
     foreach v_vehicle_id in array p_vehicle_ids loop
       insert into public.event_vehicles (registration_id, vehicle_id)
-      values (v_registration_id, v_vehicle_id);
+      values (v_registration_id, v_vehicle_id)
+      on conflict (registration_id, vehicle_id) do nothing;
     end loop;
   end if;
 
@@ -133,7 +134,10 @@ drop policy if exists "event_vehicles_select" on public.event_vehicles;
 create policy "event_vehicles_select" on public.event_vehicles
   for select using (auth.uid() is not null);
 
--- 4) Grant di esecuzione. Senza, PostgREST non espone le funzioni ai ruoli.
---    `iscriviti_evento` solo ai loggati; il conteggio anche agli anonimi.
+-- 4) Grant di esecuzione. Postgres concede EXECUTE a PUBLIC di default a ogni funzione:
+--    va REVOCATO prima, altrimenti il grant esplicito non restringe nulla e `anon`
+--    potrebbe comunque chiamare `iscriviti_evento`.
+revoke execute on function public.iscriviti_evento(uuid, uuid[], uuid) from public;
+revoke execute on function public.iscritti_per_eventi(uuid[]) from public;
 grant execute on function public.iscriviti_evento(uuid, uuid[], uuid) to authenticated;
 grant execute on function public.iscritti_per_eventi(uuid[]) to anon, authenticated;
