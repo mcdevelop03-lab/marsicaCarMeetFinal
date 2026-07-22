@@ -78,9 +78,10 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
   const stato = statoEvento(evento);
 
   // Conteggio pubblico (anche sloggati): funzione aggregata, non le righe.
-  const { data: conteggi } = await supabase.rpc("iscritti_per_eventi", {
+  const { data: conteggi, error: erroreConteggio } = await supabase.rpc("iscritti_per_eventi", {
     p_event_ids: [evento.id],
   });
+  if (erroreConteggio) console.error("Evento: conteggio iscritti non riuscito", erroreConteggio);
   const iscritti = (conteggi as { event_id: string; iscritti: number }[] | null)?.[0]?.iscritti ?? 0;
 
   // Identità: gli sloggati vedono solo il conteggio (RLS). I loggati leggono la lista.
@@ -120,11 +121,12 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
   // Il proprio garage, per la scelta auto in RsvpBox.
   let garage: VehiclePick[] = [];
   if (user) {
-    const { data: auto } = await supabase
+    const { data: auto, error: erroreGarage } = await supabase
       .from("vehicles")
       .select("id, make, model, year")
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false });
+    if (erroreGarage) console.error("Evento: lettura garage non riuscita", erroreGarage);
     garage = (auto ?? []) as VehiclePick[];
   }
 
