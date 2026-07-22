@@ -6,26 +6,32 @@
 
 ## 🔖 Dove siamo
 
+- 🔵 **Fase 1C-2 — RSVP: CODICE COMPLETO E RIVISTO, manca solo il collaudo dal vivo.** Branch **`feat/fase1c2-rsvp`** (⚠️ **solo locale, non pushato**). Tutti i **7 task di codice** implementati con metodo subagent-driven (implementer + review indipendente + fix) + **review finale whole-branch** (opus): **0 Critical**, l'unico Important (insert di auto altrui via PostgREST) **corretto in-branch**. **Verifica offline verde:** `tsc`/`lint`/**91 test**/`next build`. ⚠️ **Restano, e richiedono l'ambiente acceso: applicare la migrazione `0009` + il collaudo del Task 8** (prova di corsa sulla capienza, prove RLS negative, conteggio anon, poteri admin) — vedi la sezione "DA COSA RIPARTIRE" qui sotto. Piano: [`superpowers/plans/2026-07-22-fase1c2-rsvp.md`](./superpowers/plans/2026-07-22-fase1c2-rsvp.md) · Spec: [`superpowers/specs/2026-07-22-fase1c2-rsvp-design.md`](./superpowers/specs/2026-07-22-fase1c2-rsvp-design.md) · Ledger: [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md).
 - 🟢 **Fase 1C-1 ✅ COMPLETATA** (Eventi). Implementazione + review finale + wave di fix + **collaudo dal vivo superato** (2026-07-21) + migliorie UX dal collaudo → **mergiata e pushata su `main`** (fino a `c461499`), branch `feat/fase1c1-eventi` eliminato. **76/76 test verdi.** Il collaudo ha coperto: UI (crea/modifica/annulla/ripristina/elimina + toast + modale + gate admin + copertina + stato/data) e sicurezza (RLS member/anon/admin, storage 2 MB+MIME, 404 slug). Migliorie committate: pannello gestione dentro `/eventi` per l'admin, "torna indietro" con conferma, rifiniture form, toast su tutte le azioni, conferme in modale, fix CTA home. Ledger: [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md).
 - 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
-- **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** ✅ → **1C-2 RSVP** *(prossima)* → **1C-3 Album foto**.
+- **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** ✅ → **1C-2 RSVP** *(codice completo, collaudo live in attesa)* → **1C-3 Album foto**.
 - **Piano 1C-1 (10 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-15-fase1c1-eventi.md`](./superpowers/plans/2026-07-15-fase1c1-eventi.md) · **Spec:** [`superpowers/specs/2026-07-15-fase1c1-eventi-design.md`](./superpowers/specs/2026-07-15-fase1c1-eventi-design.md)
 - **Piano 1B-2:** [`superpowers/plans/2026-07-13-fase1b2-garage.md`](./superpowers/plans/2026-07-13-fase1b2-garage.md) · **Spec:** [`superpowers/specs/2026-07-13-fase1b2-garage-design.md`](./superpowers/specs/2026-07-13-fase1b2-garage-design.md)
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: **Fase 1C-2 — RSVP (iscrizioni ai raduni)**
+## ▶️ DA COSA RIPARTIRE: **Fase 1C-2 — collaudo dal vivo (Task 8) + applicazione migrazione**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e iniziamo la Fase 1C-2 (RSVP): parti dal brainstorming, tenendo conto dei due nodi RLS già noti."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la 1C-2 (RSVP) è implementata e rivista, accendiamo l'ambiente e facciamo il collaudo del Task 8."*
 
-La 1C-1 (Eventi) è **chiusa, mergiata e pushata** — vedi sopra. Il prossimo lavoro è la **Fase 1C-2 (RSVP):** far iscrivere i membri ai raduni, con gestione della capienza.
+Il **codice della 1C-2 è completo e rivisto** (7 task + review finale, vedi sopra). Ora serve l'**ambiente acceso** (Docker + `npx supabase start` + `npm run dev` + browser + Mailpit + psql) per: **1)** applicare la migrazione `0009` (`npx supabase migration up`); **2)** eseguire il collaudo del **Task 8** del piano. Servono **admin + almeno 2 membri** con auto nei garage; un evento futuro con `capacity=2` e uno a capienza vuota (illimitata).
 
-- **Primo passo:** `superpowers:brainstorming` → spec → piano → esecuzione subagent-driven (stesso metodo della 1C-1). **Non c'è ancora né spec né piano** per la 1C-2.
-- ⚠️ **Prima di progettare, affrontare i due nodi RLS già individuati** (cambiano il design) — dettaglio in **"Cosa aspetta le prossime sotto-fasi"** più sotto:
-  1. la **capienza non è mostrabile** con le RLS attuali (un membro vede solo la propria iscrizione);
-  2. la **capienza non è applicabile senza corsa** (due utenti sull'ultimo posto passerebbero entrambi) → va risolto a livello DB.
-- **Da decidere nel brainstorming:** la **lista d'attesa** (`waitlist`) è probabilmente YAGNI (RF-24 dice "RSVP bloccato a esaurimento posti"): confermare.
-- **Debiti non bloccanti** ereditati dalla 1C-1, da fare in micro-fasi dedicate quando conviene (NON dentro la 1C-2): `revalidatePath` (path non combacianti, tocca anche garage/profilo), orfani nello storage, `created_by` leggibile via API. Dettaglio nelle sezioni omonime sotto.
+**Checklist del collaudo (dal piano Task 8 + review finale):**
+1. **Auto-iscrizione** con e **senza** auto → riga in `event_registrations`, righe in `event_vehicles`, il conteggio sale; **disdetta** → riga+auto via (0 orfani), conteggio scende.
+2. 🚨 **La prova di corsa (il nodo 2):** evento `capacity=1`, due sessioni premono "Partecipa" insieme → **una sola** passa, l'altra "Posti esauriti". Controprova DB: 1 sola riga.
+3. **Conteggio** "X su Y" visibile da **finestra anonima**; **lista iscritti** solo da loggato; capienza **illimitata** → "X iscritti", mai esaurito.
+4. **Poteri admin:** rimuovi iscritto; iscrizione manuale (con le auto del membro); iscrizione manuale su evento pieno → "Posti esauriti".
+5. **Prove negative (RLS):** POST diretto a `event_registrations` da membro → **respinto** (capienza non bypassabile); RPC con `p_user_id` altrui da non-admin → errore; RPC con auto altrui → errore; anon non legge le righe (solo l'aggregato); **[dalla review finale]** POST diretto a `event_vehicles` con l'auto di un altro attaccata alla propria iscrizione → ora **respinto** dalla policy `event_vehicles_insert` irrobustita nella `0009` (era il buco chiuso in-branch: verificarlo dal vivo).
+6. **Standard:** `pg_policies` su `event_registrations` non mostra più `registrations_insert_self`/`_update_self_or_admin`/`_select_self_or_admin`; presenti `registrations_select_authenticated` + `registrations_delete_self_or_admin`. `npm test` (91) + `tsc`/`lint` + `next build` già verdi offline.
+
+> **A collaudo finito:** correggere i bug emersi (commit dedicati), poi **chiudere la fase** con `superpowers:finishing-a-development-branch` (merge/PR su `main`). Solo allora la 1C-2 è completa e si passa alla **1C-3 (Album foto)**.
+
+**Debiti/Minor non bloccanti** (triati dalla review finale come follow-up accettabili — NON dentro il collaudo): checkbox non disabilitate durante il pending (RsvpBox/AdminIscritti); `status` superfluo nella select di `iscriviti`; `<Button>` dentro `<Link>` (convenzione già diffusa); race stretta nella re-selezione membro (fail-safe lato server). Più i debiti **ereditati dalla 1C-1** (micro-fasi dedicate): `revalidatePath`, orfani storage, `created_by` leggibile via API.
 
 <!-- ─────────── STORICO ─────────── -->
 <!-- Da qui in giù: esiti delle fasi già chiuse e checklist di collaudo passate. Consultazione, non lavoro da fare. -->
