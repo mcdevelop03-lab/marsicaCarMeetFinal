@@ -11,6 +11,7 @@ import { getProfile, getUser } from "@/lib/auth";
 import { statoIscrizione } from "@/lib/rsvp/capienza";
 import RsvpBox from "@/components/features/events/RsvpBox";
 import Partecipanti from "@/components/features/events/Partecipanti";
+import AdminIscritti from "@/components/features/events/AdminIscritti";
 import type { Event } from "@/types/database";
 import type { VehiclePick } from "@/app/[locale]/(public)/eventi/[slug]/actions";
 
@@ -143,6 +144,20 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
       .map((v) => `${v.make} ${v.model} (${v.year})`),
   }));
 
+  // Stessa lista, con i campi extra (città, social, id iscrizione) per il pannello admin.
+  const iscrittiAdmin = iscrizioni.map((r) => ({
+    registrationId: r.id,
+    nome: r.profiles?.name ?? r.profiles?.tag ?? "—",
+    tag: r.profiles?.tag ?? null,
+    town: r.profiles?.town ?? null,
+    socials: r.profiles?.socials ?? {},
+    iscrittoIl: r.created_at,
+    auto: r.event_vehicles
+      .map((ev) => ev.vehicles)
+      .filter((v): v is VehiclePick => v !== null)
+      .map((v) => `${v.make} ${v.model} (${v.year})`),
+  }));
+
   return (
     <div className="space-y-8">
       <Link
@@ -226,7 +241,7 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
       </section>
 
       {user && !isAdmin && <Partecipanti partecipanti={partecipanti} />}
-      {user && isAdmin && <Partecipanti partecipanti={partecipanti} />}
+      {user && isAdmin && <AdminIscritti eventId={evento.id} iscritti={iscrittiAdmin} />}
     </div>
   );
 }
