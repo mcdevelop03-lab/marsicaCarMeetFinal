@@ -33,6 +33,51 @@ Il **codice della 1C-2 è completo e rivisto** (7 task + review finale, vedi sop
 
 **Debiti/Minor non bloccanti** (triati dalla review finale come follow-up accettabili — NON dentro il collaudo): checkbox non disabilitate durante il pending (RsvpBox/AdminIscritti); `status` superfluo nella select di `iscriviti`; `<Button>` dentro `<Link>` (convenzione già diffusa); race stretta nella re-selezione membro (fail-safe lato server). Più i debiti **ereditati dalla 1C-1** (micro-fasi dedicate): `revalidatePath`, orfani storage, `created_by` leggibile via API.
 
+## 🧩 Fase 1C-2 — stato del codice (branch `feat/fase1c2-rsvp`, solo locale)
+
+**Metodo:** subagent-driven (implementer → reviewer indipendente → fix → verifica di persona del controller), stesso della 1C-1. **Branch parte da `c461499` (= `main`, chiusura 1C-1).**
+
+### I 7 task di codice (tutti completi e rivisti)
+
+| # | Task | Commit(s) | Esito review |
+|---|---|---|---|
+| 1 | Migrazione `0009_rsvp.sql` (funzioni + RLS + grant) | `15d5e3f` + fix `8444ab6` | 2 Critical corretti (vedi sotto) |
+| 2 | Tipi + logica pura `capienza.ts` + vitest | `ec34cb3` + fix `5452ede` | 1 Important (test discriminanti) |
+| 3 | Server action RSVP (self+admin+ricerca) + i18n | `95dbe4f` | ✅ Approved |
+| 4 | `RsvpBox` (partecipa/disdici, scelta auto) | `d1db04b` | ✅ Approved |
+| 5 | Dettaglio evento (conteggio + montaggio + `Partecipanti`) | `911fb16` + fix `c4f81ff` | 2 Important (errori loggati) |
+| 6 | Pannello admin iscritti + rimuovi | `80f88c6` + fix `4546a5c` | 1 Important (fuso data) |
+| 7 | Iscrizione manuale admin | `28585e9` | ✅ Approved |
+| — | **Review finale whole-branch (opus)** + fix | `2052d8d` | 0 Critical, 1 Important corretto |
+| — | STATO-LAVORI (questo file) | `525454c` | — |
+
+**Verifica offline (rifatta a fine branch): `tsc` + `lint` + `next build` + `npm test` (91/91) TUTTI VERDI.** Ledger completo: [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md) (fidarsi del ledger e di `git log`, non della memoria).
+
+### File toccati
+
+- **Nuovi:** `supabase/migrations/0009_rsvp.sql`; `src/lib/rsvp/capienza.ts` (+`.test.ts`); `src/app/[locale]/(public)/eventi/[slug]/actions.ts`; `src/components/features/events/{RsvpBox,Partecipanti,AdminIscritti}.tsx`.
+- **Modificati:** `src/types/database.ts` (tipi `RegistrationStatus`/`EventRegistration`/`RsvpEsito`); `src/app/[locale]/(public)/eventi/[slug]/page.tsx`; `src/messages/it.json` (namespace `rsvp`).
+
+### Architettura (le decisioni prese, non ridiscuterle)
+
+- **Nessuna nuova tabella:** `event_registrations`/`event_vehicles`/`events.capacity` esistevano già. La capienza conta **le persone (1 posto a iscrizione)**, non le auto.
+- **La capienza è race-free per costruzione:** l'**unica** via per occupare un posto è la funzione `SECURITY DEFINER` **`iscriviti_evento`**, che fa `SELECT … FOR UPDATE` sulla riga dell'evento **prima** di contare e inserire → due iscrizioni concorrenti si serializzano. L'**insert diretto in `event_registrations` è stato RIMOSSO dalle RLS** (nessuna policy insert): non è bypassabile via PostgREST. Stessa funzione per il self e per l'admin (`p_user_id`).
+- **Conteggio pubblico** via funzione aggregata `iscritti_per_eventi` (`SECURITY DEFINER STABLE`, grant a `anon`+`authenticated`): espone **solo il numero**, mai le righe → l'anon vede "X su Y posti" senza sapere chi.
+- **Lista partecipanti ai loggati:** SELECT su `event_registrations`/`event_vehicles` **allargata agli autenticati** (nella `0009`).
+- **Disdetta = hard delete** (niente stato `canceled`, niente waitlist: YAGNI). Auto facoltative (0..N); garage vuoto → si può "Partecipare senza auto".
+- **RSVP solo se evento aperto:** il gate "concluso" è in **TS** (`eConcluso`, il fuso vive solo in `src/lib/date/fuso.ts`); la RPC copre solo i casi a rischio-corsa (capienza) + annullato.
+
+### ⚠️ Trappole/fix già affrontati (non reintrodurli)
+
+- 🚨 **`iscriviti_evento` — bypass auth chiuso (fix `8444ab6`):** l'identity check usa **`is distinct from auth.uid()`** (non `<>`: con `auth.uid()` NULL il `<>` dà NULL → l'eccezione non scattava, un anon poteva iscrivere una vittima). E c'è **`revoke execute … from public`** su entrambe le funzioni **prima** dei grant (Postgres concede EXECUTE a PUBLIC di default → senza revoke `anon` poteva chiamare la funzione). **Non toccare questi due punti.**
+- **`event_vehicles_insert` irrobustita (fix `2052d8d`, dalla review finale):** ora richiede **anche** `owner_id = auth.uid()` sul veicolo, non solo la proprietà della registrazione (prima un membro poteva attaccare l'auto di un altro via PostgREST, e sarebbe comparsa sotto il suo nome nella lista). Da **verificare dal vivo** come prova negativa.
+- **Errori Supabase mai confusi col vuoto:** conteggio e query garage in `page.tsx` loggano l'errore (fix `c4f81ff`); la data "iscritto il" usa `formattaDataBreve` (fuso Roma), non `toLocaleDateString` (fix `4546a5c`).
+- **La nested select di `page.tsx` prende `town`/`socials` di proposito:** li usa il pannello admin. Non rimuoverli.
+
+### ⏭️ Cosa manca: SOLO il collaudo dal vivo (Task 8) — vedi la sezione "DA COSA RIPARTIRE" in cima
+
+Applicare `0009` (`npx supabase migration up`) + eseguire la checklist del Task 8 (prova di corsa, prove RLS negative incluso il buco `event_vehicles`, conteggio anon, poteri admin). A collaudo superato → `finishing-a-development-branch` → merge su `main`, poi **1C-3 (Album foto)**.
+
 <!-- ─────────── STORICO ─────────── -->
 <!-- Da qui in giù: esiti delle fasi già chiuse e checklist di collaudo passate. Consultazione, non lavoro da fare. -->
 
