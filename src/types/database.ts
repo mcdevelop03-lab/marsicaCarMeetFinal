@@ -86,3 +86,16 @@ export type Event = {
   created_by: string | null;
   created_at: string;
 };
+
+export type RegistrationStatus = "going" | "waitlist" | "canceled";
+
+export type EventRegistration = {
+  id: string;
+  event_id: string;
+  user_id: string;
+  status: RegistrationStatus;
+  created_at: string;
+};
+
+// Esito della funzione SQL `iscriviti_evento` (migrazione 0009).
+export type RsvpEsito = "ok" | "esaurito" | "annullato" | "gia_iscritto" | "evento_inesistente";

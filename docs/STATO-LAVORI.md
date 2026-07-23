@@ -1,27 +1,84 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-20**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-23**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
 ## 🔖 Dove siamo
 
-- 🔵 **IN CORSO: Fase 1C-1 — Eventi.** Branch **`feat/fase1c1-eventi`** (⚠️ **solo locale, non pushato**). **Implementazione + review finale + wave di fix + collaudo dal vivo (Task 10): TUTTO FATTO.** Restano solo: **1)** decidere il push/chiusura del branch con l'utente; **2)** due debiti nuovi non bloccanti (sotto). **76/76 test verdi, `tsc`/`lint` puliti.**
-- 🧪 **Collaudo dal vivo (2026-07-21) — superato.** UI provata dall'utente (crea/modifica/annulla/ripristina/elimina + toast + modale + gate admin + copertina + stato/data). Sicurezza verificata dal controller (RLS member/anon/admin, storage 2 MB+MIME, 404 slug). **Migliorie UX emerse dal collaudo committate in 5 commit** (`412f7eb`→`03cbac3`): pannello gestione dentro `/eventi` per l'admin, "torna indietro" con conferma, rifiniture form, toast su tutte le azioni, conferme in modale, fix CTA home. Dettaglio nel ledger [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md).
+- 🟢 **Fase 1C-2 ✅ COMPLETATA** (RSVP). Implementazione (7 task subagent-driven) + review finale whole-branch (opus, 0 Critical) + **collaudo dal vivo superato (2026-07-23, 0 bug)** → **mergiata su `main`**, branch `feat/fase1c2-rsvp` eliminato. Il collaudo ha coperto: auto-iscrizione con/senza auto + disdetta (0 orfani), **prova di corsa `capacity=1` (2 RPC concorrenti × 3 round → sempre 1 sola riga)**, conteggio anon "X su Y" + illimitato "X iscritti", lista iscritti solo ai loggati, poteri admin (iscrizione manuale, rimozione, evento pieno → "Posti esauriti"), **5 prove negative RLS** (POST diretto reg → 403, RPC `p_user_id`/auto altrui → 403, anon righe → `[]` ma aggregato OK, **buco `event_vehicles` chiuso** → 403 con controprova 201). Migrazione `0009` applicata. `pg_policies` esatte, **91 test**, `tsc`/`lint`/`next build` verdi. ⚠️ **`main` è solo locale, non pushato.**
+- 🟢 **Fase 1C-1 ✅ COMPLETATA** (Eventi). Implementazione + review finale + wave di fix + **collaudo dal vivo superato** (2026-07-21) + migliorie UX dal collaudo → **mergiata e pushata su `main`** (fino a `c461499`), branch `feat/fase1c1-eventi` eliminato. **76/76 test verdi.** Il collaudo ha coperto: UI (crea/modifica/annulla/ripristina/elimina + toast + modale + gate admin + copertina + stato/data) e sicurezza (RLS member/anon/admin, storage 2 MB+MIME, 404 slug). Migliorie committate: pannello gestione dentro `/eventi` per l'admin, "torna indietro" con conferma, rifiniture form, toast su tutte le azioni, conferme in modale, fix CTA home. Ledger: [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md).
 - 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
-- **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** *(in corso)* → **1C-2 RSVP** → **1C-3 Album foto**.
+- **La Fase 1C è stata divisa in tre sotto-fasi** (come già fatto per la 1B): **1C-1 Eventi** ✅ → **1C-2 RSVP** *(codice completo, collaudo live in attesa)* → **1C-3 Album foto**.
 - **Piano 1C-1 (10 task, con tutto il codice dentro):** [`superpowers/plans/2026-07-15-fase1c1-eventi.md`](./superpowers/plans/2026-07-15-fase1c1-eventi.md) · **Spec:** [`superpowers/specs/2026-07-15-fase1c1-eventi-design.md`](./superpowers/specs/2026-07-15-fase1c1-eventi-design.md)
 - **Piano 1B-2:** [`superpowers/plans/2026-07-13-fase1b2-garage.md`](./superpowers/plans/2026-07-13-fase1b2-garage.md) · **Spec:** [`superpowers/specs/2026-07-13-fase1b2-garage-design.md`](./superpowers/specs/2026-07-13-fase1b2-garage-design.md)
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: Fase 1C-1 — Eventi, **chiusura del branch**
+## ▶️ DA COSA RIPARTIRE: **Fase 1C-3 — Album foto**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la 1C-1 è implementata, rivista e collaudata; decidiamo push e chiusura del branch."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la 1C-2 (RSVP) è chiusa e mergiata. Partiamo con la 1C-3 (Album foto): brainstorming + spec + piano."*
 
-**La 1C-1 è completa e collaudata.** Il branch `feat/fase1c1-eventi` è **solo locale**. Prossimo passo con l'utente: **chiudere il branch** (`superpowers:finishing-a-development-branch` → merge su `main` / push), tenendo presente i debiti non bloccanti qui sotto (revalidatePath, storage orfani, `created_by`) da affrontare in micro-fasi dedicate. Poi si passa alla **1C-2 (RSVP)** — che ha già due nodi di design noti (vedi "Cosa aspetta le prossime sotto-fasi").
+La **1C-2 (RSVP) è completa, collaudata e mergiata su `main`** (vedi "Dove siamo"). La prossima sotto-fase è la **1C-3 — Album foto** (chiude la Fase 1C). **Non c'è ancora spec né piano:** si parte dal **brainstorming** (`superpowers:brainstorming`), poi spec + piano, poi implementazione col metodo subagent-driven.
 
-**Storico — checklist del collaudo Task 10 (superata il 2026-07-21):**
+**Ciò che già si sa sulla 1C-3** (vedi anche "Cosa aspetta le prossime sotto-fasi" più sotto):
+- Il bucket **`event-media`** è **già configurato** dalla `0008` (limiti 2 MB, solo immagini) → ospita **solo foto**; i **video sono link YouTube** (D-171), quindi nessun upload video.
+- Ha senso il path **`{event-id}/`** (le foto sono molte e si caricano su un evento già esistente), a differenza del path piatto delle copertine.
+- La compressione WebP nel browser esistente (`src/lib/images/compress.ts`) copre tutto.
+
+**Debiti/Minor NON bloccanti da 1C-2** (follow-up accettabili, fuori dalla 1C-3): checkbox non disabilitate durante il pending (RsvpBox/AdminIscritti); `status` superfluo nella select di `iscriviti`; `<Button>` dentro `<Link>` (convenzione già diffusa); race stretta nella re-selezione membro (fail-safe lato server). Più i debiti **ereditati dalla 1C-1** (micro-fasi dedicate): `revalidatePath`, orfani storage, `created_by` leggibile via API.
+
+> ℹ️ **Note dal collaudo 1C-2 (2026-07-23):** le credenziali locali erano disallineate (l'admin `mcdevelop03@gmail.com` non aveva più `Marsica2026!`) — reset via admin API. Fixture create per il collaudo: 2° membro `membro2.test@example.com`, 2 auto per membro, 3 eventi futuri (`raduno-capienza-due`, `raduno-illimitato`, `raduno-corsa`). Tutti dati **locali volatili** (spariscono con `db reset`).
+
+## 🧩 Fase 1C-2 — stato del codice (branch `feat/fase1c2-rsvp`, solo locale)
+
+**Metodo:** subagent-driven (implementer → reviewer indipendente → fix → verifica di persona del controller), stesso della 1C-1. **Branch parte da `c461499` (= `main`, chiusura 1C-1).**
+
+### I 7 task di codice (tutti completi e rivisti)
+
+| # | Task | Commit(s) | Esito review |
+|---|---|---|---|
+| 1 | Migrazione `0009_rsvp.sql` (funzioni + RLS + grant) | `15d5e3f` + fix `8444ab6` | 2 Critical corretti (vedi sotto) |
+| 2 | Tipi + logica pura `capienza.ts` + vitest | `ec34cb3` + fix `5452ede` | 1 Important (test discriminanti) |
+| 3 | Server action RSVP (self+admin+ricerca) + i18n | `95dbe4f` | ✅ Approved |
+| 4 | `RsvpBox` (partecipa/disdici, scelta auto) | `d1db04b` | ✅ Approved |
+| 5 | Dettaglio evento (conteggio + montaggio + `Partecipanti`) | `911fb16` + fix `c4f81ff` | 2 Important (errori loggati) |
+| 6 | Pannello admin iscritti + rimuovi | `80f88c6` + fix `4546a5c` | 1 Important (fuso data) |
+| 7 | Iscrizione manuale admin | `28585e9` | ✅ Approved |
+| — | **Review finale whole-branch (opus)** + fix | `2052d8d` | 0 Critical, 1 Important corretto |
+| — | STATO-LAVORI (questo file) | `525454c` | — |
+
+**Verifica offline (rifatta a fine branch): `tsc` + `lint` + `next build` + `npm test` (91/91) TUTTI VERDI.** Ledger completo: [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md) (fidarsi del ledger e di `git log`, non della memoria).
+
+### File toccati
+
+- **Nuovi:** `supabase/migrations/0009_rsvp.sql`; `src/lib/rsvp/capienza.ts` (+`.test.ts`); `src/app/[locale]/(public)/eventi/[slug]/actions.ts`; `src/components/features/events/{RsvpBox,Partecipanti,AdminIscritti}.tsx`.
+- **Modificati:** `src/types/database.ts` (tipi `RegistrationStatus`/`EventRegistration`/`RsvpEsito`); `src/app/[locale]/(public)/eventi/[slug]/page.tsx`; `src/messages/it.json` (namespace `rsvp`).
+
+### Architettura (le decisioni prese, non ridiscuterle)
+
+- **Nessuna nuova tabella:** `event_registrations`/`event_vehicles`/`events.capacity` esistevano già. La capienza conta **le persone (1 posto a iscrizione)**, non le auto.
+- **La capienza è race-free per costruzione:** l'**unica** via per occupare un posto è la funzione `SECURITY DEFINER` **`iscriviti_evento`**, che fa `SELECT … FOR UPDATE` sulla riga dell'evento **prima** di contare e inserire → due iscrizioni concorrenti si serializzano. L'**insert diretto in `event_registrations` è stato RIMOSSO dalle RLS** (nessuna policy insert): non è bypassabile via PostgREST. Stessa funzione per il self e per l'admin (`p_user_id`).
+- **Conteggio pubblico** via funzione aggregata `iscritti_per_eventi` (`SECURITY DEFINER STABLE`, grant a `anon`+`authenticated`): espone **solo il numero**, mai le righe → l'anon vede "X su Y posti" senza sapere chi.
+- **Lista partecipanti ai loggati:** SELECT su `event_registrations`/`event_vehicles` **allargata agli autenticati** (nella `0009`).
+- **Disdetta = hard delete** (niente stato `canceled`, niente waitlist: YAGNI). Auto facoltative (0..N); garage vuoto → si può "Partecipare senza auto".
+- **RSVP solo se evento aperto:** il gate "concluso" è in **TS** (`eConcluso`, il fuso vive solo in `src/lib/date/fuso.ts`); la RPC copre solo i casi a rischio-corsa (capienza) + annullato.
+
+### ⚠️ Trappole/fix già affrontati (non reintrodurli)
+
+- 🚨 **`iscriviti_evento` — bypass auth chiuso (fix `8444ab6`):** l'identity check usa **`is distinct from auth.uid()`** (non `<>`: con `auth.uid()` NULL il `<>` dà NULL → l'eccezione non scattava, un anon poteva iscrivere una vittima). E c'è **`revoke execute … from public`** su entrambe le funzioni **prima** dei grant (Postgres concede EXECUTE a PUBLIC di default → senza revoke `anon` poteva chiamare la funzione). **Non toccare questi due punti.**
+- **`event_vehicles_insert` irrobustita (fix `2052d8d`, dalla review finale):** ora richiede **anche** `owner_id = auth.uid()` sul veicolo, non solo la proprietà della registrazione (prima un membro poteva attaccare l'auto di un altro via PostgREST, e sarebbe comparsa sotto il suo nome nella lista). Da **verificare dal vivo** come prova negativa.
+- **Errori Supabase mai confusi col vuoto:** conteggio e query garage in `page.tsx` loggano l'errore (fix `c4f81ff`); la data "iscritto il" usa `formattaDataBreve` (fuso Roma), non `toLocaleDateString` (fix `4546a5c`).
+- **La nested select di `page.tsx` prende `town`/`socials` di proposito:** li usa il pannello admin. Non rimuoverli.
+
+### ⏭️ Cosa manca: SOLO il collaudo dal vivo (Task 8) — vedi la sezione "DA COSA RIPARTIRE" in cima
+
+Applicare `0009` (`npx supabase migration up`) + eseguire la checklist del Task 8 (prova di corsa, prove RLS negative incluso il buco `event_vehicles`, conteggio anon, poteri admin). A collaudo superato → `finishing-a-development-branch` → merge su `main`, poi **1C-3 (Album foto)**.
+
+<!-- ─────────── STORICO ─────────── -->
+<!-- Da qui in giù: esiti delle fasi già chiuse e checklist di collaudo passate. Consultazione, non lavoro da fare. -->
+
+### 📓 Storico — checklist del collaudo 1C-1 (superata il 2026-07-21)
 
 **Tutto il codice è scritto e rivisto** (Task 1-9 + review finale whole-branch + wave di fix). Resta **solo il collaudo dal vivo**, che richiede l'ambiente acceso (Docker + `npx supabase start` + `npm run dev` + browser + Mailpit + psql) — vedi "Come rimettere in moto l'ambiente" più sotto. ⚠️ **Il Task 1 ha fatto `db reset`: le utenze locali sono azzerate.** Servono **due account** (registrarli e confermarli da Mailpit) e l'admin va ripromosso rieseguendo la `update` di `supabase/seed.sql`.
 
