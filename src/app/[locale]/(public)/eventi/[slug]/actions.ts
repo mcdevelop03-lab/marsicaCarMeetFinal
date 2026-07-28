@@ -307,8 +307,10 @@ export async function impostaDriveUrl(eventId: string, url: string): Promise<Med
   if (!parsed.success) return { error: t("genericError") };
 
   const pulito = parsed.data.url.trim();
-  // Vuoto = rimuovi il link. Se valorizzato, dev'essere un URL valido.
-  if (pulito && !z.string().url().safeParse(pulito).success) {
+  // Vuoto = rimuovi il link. Se valorizzato, dev'essere un URL http/https: il link
+  // finisce in HTML pubblico (<a href>), quindi niente schemi come javascript:/data:.
+  const urlHttp = z.string().url().refine((u) => /^https?:\/\//i.test(u));
+  if (pulito && !urlHttp.safeParse(pulito).success) {
     return { error: t("genericError") };
   }
 
