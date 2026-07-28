@@ -36,3 +36,19 @@ export function serializeConsent(consent: Consent): string {
   const stored: Stored = { v: CONSENT_VERSION, external: consent.external, ts: consent.ts };
   return JSON.stringify(stored);
 }
+
+/**
+ * Legge il consenso dal valore GREZZO del cookie (percent-encoded, o undefined).
+ * Decodifica in modo sicuro: un valore malformato (es. "%" isolato, che farebbe
+ * lanciare decodeURIComponent) diventa null = "non ha scelto", MAI un'eccezione.
+ */
+export function leggiConsentCookie(raw: string | undefined | null): Consent | null {
+  if (!raw) return null;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+  return parseConsent(decoded);
+}

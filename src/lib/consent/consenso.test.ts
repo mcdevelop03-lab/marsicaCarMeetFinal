@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseConsent, serializeConsent, CONSENT_VERSION } from "./consenso";
+import { parseConsent, serializeConsent, leggiConsentCookie, CONSENT_VERSION } from "./consenso";
 
 describe("parseConsent", () => {
   it("valore assente → null", () => {
@@ -49,5 +49,20 @@ describe("serializeConsent", () => {
   it("round-trip conserva external e ts", () => {
     const c = { external: false, ts: 987654 };
     expect(parseConsent(serializeConsent(c))).toEqual(c);
+  });
+});
+
+describe("leggiConsentCookie", () => {
+  it("valore grezzo malformato (percent invalido) → null, non lancia", () => {
+    expect(leggiConsentCookie("%")).toBeNull();
+    expect(leggiConsentCookie("%E0%A4%A")).toBeNull();
+  });
+  it("undefined/vuoto → null", () => {
+    expect(leggiConsentCookie(undefined)).toBeNull();
+    expect(leggiConsentCookie("")).toBeNull();
+  });
+  it("valore percent-encoded valido → Consent", () => {
+    const raw = encodeURIComponent(serializeConsent({ external: true, ts: 5 }));
+    expect(leggiConsentCookie(raw)).toEqual({ external: true, ts: 5 });
   });
 });

@@ -70,7 +70,7 @@ export default function CookieBanner() {
             </Button>
           ) : (
             <>
-              <Button type="button" onClick={acceptAll}>
+              <Button type="button" variant="outline" onClick={acceptAll}>
                 {t("acceptAll")}
               </Button>
               <Button type="button" variant="outline" onClick={rejectAll}>

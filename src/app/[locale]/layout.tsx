@@ -7,7 +7,7 @@ import { routing } from "@/i18n/routing";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { getProfile } from "@/lib/auth";
-import { parseConsent, CONSENT_COOKIE } from "@/lib/consent/consenso";
+import { leggiConsentCookie, CONSENT_COOKIE } from "@/lib/consent/consenso";
 import ConsentProvider from "@/components/features/consent/ConsentProvider";
 import CookieBanner from "@/components/features/consent/CookieBanner";
 import "../globals.css";
@@ -50,8 +50,7 @@ export default async function LocaleLayout({
   const profile = await getProfile();
 
   const cookieStore = await cookies();
-  const rawConsent = cookieStore.get(CONSENT_COOKIE)?.value;
-  const initialConsent = parseConsent(rawConsent ? decodeURIComponent(rawConsent) : null);
+  const initialConsent = leggiConsentCookie(cookieStore.get(CONSENT_COOKIE)?.value);
 
   return (
     <html

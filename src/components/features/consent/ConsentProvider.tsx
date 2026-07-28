@@ -29,9 +29,11 @@ export function useConsent(): ConsentContextValue {
 // Scrive il cookie first-party. encodeURIComponent perché il JSON contiene caratteri
 // ({ } " : ,) non ammessi grezzi in un cookie-value.
 function scriviCookie(consent: Consent) {
+  const secure =
+    typeof location !== "undefined" && location.protocol === "https:" ? "; Secure" : "";
   document.cookie = `${CONSENT_COOKIE}=${encodeURIComponent(
     serializeConsent(consent),
-  )}; path=/; max-age=${CONSENT_MAX_AGE}; SameSite=Lax`;
+  )}; path=/; max-age=${CONSENT_MAX_AGE}; SameSite=Lax${secure}`;
 }
 
 export default function ConsentProvider({
