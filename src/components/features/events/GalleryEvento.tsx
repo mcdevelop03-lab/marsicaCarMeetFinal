@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ExternalLink, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { estraiIdYouTube } from "@/lib/media/youtube";
+import VideoYouTube from "@/components/features/consent/VideoYouTube";
 
 export type GalleryItem = {
   id: string;
@@ -73,26 +73,9 @@ export default function GalleryEvento({
 
       {video.length > 0 && (
         <div className="space-y-4">
-          {video.map((m) => {
-            const id = estraiIdYouTube(m.url);
-            if (!id) return null;
-            return (
-              <div key={m.id} className="space-y-1">
-                <div className="relative w-full overflow-hidden border border-white/10 pt-[56.25%]">
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${id}`}
-                    title={m.caption ?? "video"}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="absolute inset-0 h-full w-full"
-                  />
-                </div>
-                {m.caption && (
-                  <p className="font-mono text-[11px] text-white/50">{m.caption}</p>
-                )}
-              </div>
-            );
-          })}
+          {video.map((m) => (
+            <VideoYouTube key={m.id} url={m.url} caption={m.caption} />
+          ))}
         </div>
       )}
 
