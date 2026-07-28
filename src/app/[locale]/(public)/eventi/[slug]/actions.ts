@@ -6,6 +6,7 @@ import { requireAdmin, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { eConcluso } from "@/lib/events/stato";
 import { ilikePattern, quoteOrValue } from "@/lib/profile/search";
+import { estraiIdYouTube } from "@/lib/media/youtube";
 import type { MemberSummary, RsvpEsito } from "@/types/database";
 
 export type RsvpState = { error?: string; ok?: boolean };
@@ -187,4 +188,187 @@ export async function garageDi(userId: string): Promise<VehiclePick[]> {
     return [];
   }
   return (data ?? []) as VehiclePick[];
+}
+
+export type MediaState = { error?: string; ok?: boolean };
+
+const BUCKET_MEDIA = "event-media";
+
+/**
+ * Carica l'evento e verifica che sia concluso. Le action media servono a caricare
+ * l'album DOPO il raduno (RF-28): il gate "concluso" è in TS (il fuso vive solo in
+ * src/lib/events/stato.ts), non nelle RLS. La difesa vera resta RLS+bucket admin-only.
+ */
+async function gateEventoConcluso(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  eventId: string,
+): Promise<MediaState | null> {
+  const t = await getTranslations("gallery");
+  const { data: evento, error } = await supabase
+    .from("events")
+    .select("starts_at, ends_at, status")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (error) {
+    console.error("media: lettura evento non riuscita", error);
+    return { error: t("genericError") };
+  }
+  if (!evento) return { error: t("genericError") };
+  if (!eConcluso(evento)) return { error: t("notConcluded") };
+  return null; // ok
+}
+
+/** Admin: registra una foto già caricata nel bucket dal client. */
+export async function aggiungiFoto(
+  eventId: string,
+  storagePath: string,
+  url: string,
+): Promise<MediaState> {
+  const t = await getTranslations("gallery");
+  const admin = await requireAdmin();
+
+  const parsed = z
+    .object({ eventId: uuid, storagePath: z.string().min(1).max(300), url: z.string().url() })
+    .safeParse({ eventId, storagePath, url });
+  if (!parsed.success) return { error: t("genericError") };
+
+  // Difesa in profondità: `storagePath` arriva dal client. Le policy dello storage
+  // consentono la scrittura solo all'admin, ma vincoliamo comunque il path all'evento.
+  if (!parsed.data.storagePath.startsWith(`${parsed.data.eventId}/`)) {
+    return { error: t("genericError") };
+  }
+
+  const supabase = await createClient();
+  const gate = await gateEventoConcluso(supabase, parsed.data.eventId);
+  if (gate) return gate;
+
+  const { error } = await supabase.from("event_media").insert({
+    event_id: parsed.data.eventId,
+    uploader_id: admin.id,
+    type: "image",
+    url: parsed.data.url,
+    storage_path: parsed.data.storagePath,
+  });
+  if (error) {
+    console.error("aggiungiFoto: insert non riuscita", error);
+    return { error: t("genericError") };
+  }
+
+  revalidatePath("/[locale]/eventi/[slug]", "page");
+  return { ok: true };
+}
+
+/** Admin: aggiunge un video come link YouTube (nessun upload di file). */
+export async function aggiungiVideo(
+  eventId: string,
+  url: string,
+  caption: string,
+): Promise<MediaState> {
+  const t = await getTranslations("gallery");
+  const admin = await requireAdmin();
+
+  const parsed = z
+    .object({ eventId: uuid, url: z.string().min(1).max(500), caption: z.string().max(200) })
+    .safeParse({ eventId, url, caption });
+  if (!parsed.success) return { error: t("genericError") };
+
+  const id = estraiIdYouTube(parsed.data.url);
+  if (!id) return { error: t("invalidYoutube") };
+  const urlCanonico = `https://www.youtube.com/watch?v=${id}`;
+  const captionPulita = parsed.data.caption.trim();
+
+  const supabase = await createClient();
+  const gate = await gateEventoConcluso(supabase, parsed.data.eventId);
+  if (gate) return gate;
+
+  const { error } = await supabase.from("event_media").insert({
+    event_id: parsed.data.eventId,
+    uploader_id: admin.id,
+    type: "video",
+    url: urlCanonico,
+    storage_path: null,
+    caption: captionPulita || null,
+  });
+  if (error) {
+    console.error("aggiungiVideo: insert non riuscita", error);
+    return { error: t("genericError") };
+  }
+
+  revalidatePath("/[locale]/eventi/[slug]", "page");
+  return { ok: true };
+}
+
+/** Admin: imposta o azzera il link Drive dell'evento (originali in alta risoluzione). */
+export async function impostaDriveUrl(eventId: string, url: string): Promise<MediaState> {
+  const t = await getTranslations("gallery");
+  await requireAdmin();
+
+  const parsed = z.object({ eventId: uuid, url: z.string().max(500) }).safeParse({ eventId, url });
+  if (!parsed.success) return { error: t("genericError") };
+
+  const pulito = parsed.data.url.trim();
+  // Vuoto = rimuovi il link. Se valorizzato, dev'essere un URL http/https: il link
+  // finisce in HTML pubblico (<a href>), quindi niente schemi come javascript:/data:.
+  const urlHttp = z.string().url().refine((u) => /^https?:\/\//i.test(u));
+  if (pulito && !urlHttp.safeParse(pulito).success) {
+    return { error: t("genericError") };
+  }
+
+  const supabase = await createClient();
+  const gate = await gateEventoConcluso(supabase, parsed.data.eventId);
+  if (gate) return gate;
+
+  const { error } = await supabase
+    .from("events")
+    .update({ drive_url: pulito || null })
+    .eq("id", parsed.data.eventId);
+  if (error) {
+    console.error("impostaDriveUrl: update non riuscita", error);
+    return { error: t("genericError") };
+  }
+
+  revalidatePath("/[locale]/eventi/[slug]", "page");
+  return { ok: true };
+}
+
+/** Admin: elimina un media dall'album; per le foto cancella anche il file dal bucket. */
+export async function rimuoviMedia(mediaId: string): Promise<MediaState> {
+  const t = await getTranslations("gallery");
+  await requireAdmin();
+
+  const parsed = uuid.safeParse(mediaId);
+  if (!parsed.success) return { error: t("genericError") };
+
+  const supabase = await createClient();
+
+  // Legge il path prima di cancellare la riga (serve per rimuovere il file).
+  const { data: media, error: letturaError } = await supabase
+    .from("event_media")
+    .select("id, type, storage_path")
+    .eq("id", parsed.data)
+    .maybeSingle();
+  if (letturaError) {
+    console.error("rimuoviMedia: lettura non riuscita", letturaError);
+    return { error: t("genericError") };
+  }
+  if (!media) return { error: t("genericError") };
+
+  // Prima la riga, poi il file: se cancellassimo il file per primo e la delete
+  // fallisse, resterebbe una foto con URL rotto. Un file orfano è brutto ma innocuo,
+  // e viene loggato. (Stesso ordine di eliminaVeicolo.)
+  const { error } = await supabase.from("event_media").delete().eq("id", parsed.data);
+  if (error) {
+    console.error("rimuoviMedia: delete non riuscita", error);
+    return { error: t("genericError") };
+  }
+
+  if (media.type === "image" && media.storage_path) {
+    const { error: removeError } = await supabase.storage
+      .from(BUCKET_MEDIA)
+      .remove([media.storage_path]);
+    if (removeError) console.error("rimuoviMedia: file non rimosso", removeError);
+  }
+
+  revalidatePath("/[locale]/eventi/[slug]", "page");
+  return { ok: true };
 }

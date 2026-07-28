@@ -1,11 +1,12 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-23**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-28**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
 ## 🔖 Dove siamo
 
+- 🟡 **Fase 1C-3 (Album foto) — CODICE COMPLETO E RIVISTO, manca solo il collaudo dal vivo.** Brainstorming + spec + piano fatti e approvati; implementazione subagent-driven (Task 1-5) + **review finale whole-branch (opus, 0 Critical, 0 Important, "Ready to merge: Yes")** + wave di fix (2 minor: vincolo `drive_url` a http/https + rimozione 3 chiavi i18n morte). **Verifiche offline tutte verdi: `tsc`/`lint`/`npm test` (103) + `npm run build`.** Branch **`feat/fase1c3-album`** (solo locale, NON mergiato). ⚠️ **La migrazione `0010` NON è ancora stata applicata al DB locale** (ambiente non acceso durante lo sviluppo) e **il collaudo dal vivo (Task 7) non è ancora fatto** → vedi "DA COSA RIPARTIRE". Spec: [`superpowers/specs/2026-07-28-fase1c3-album-foto-design.md`](./superpowers/specs/2026-07-28-fase1c3-album-foto-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1c3-album-foto.md`](./superpowers/plans/2026-07-28-fase1c3-album-foto.md) · Ledger SDD: [`../.superpowers/sdd/2026-07-28-fase1c3-album-foto/progress.md`](../.superpowers/sdd/2026-07-28-fase1c3-album-foto/progress.md).
 - 🟢 **Fase 1C-2 ✅ COMPLETATA** (RSVP). Implementazione (7 task subagent-driven) + review finale whole-branch (opus, 0 Critical) + **collaudo dal vivo superato (2026-07-23, 0 bug)** → **mergiata su `main`**, branch `feat/fase1c2-rsvp` eliminato. Il collaudo ha coperto: auto-iscrizione con/senza auto + disdetta (0 orfani), **prova di corsa `capacity=1` (2 RPC concorrenti × 3 round → sempre 1 sola riga)**, conteggio anon "X su Y" + illimitato "X iscritti", lista iscritti solo ai loggati, poteri admin (iscrizione manuale, rimozione, evento pieno → "Posti esauriti"), **5 prove negative RLS** (POST diretto reg → 403, RPC `p_user_id`/auto altrui → 403, anon righe → `[]` ma aggregato OK, **buco `event_vehicles` chiuso** → 403 con controprova 201). Migrazione `0009` applicata. `pg_policies` esatte, **91 test**, `tsc`/`lint`/`next build` verdi. ⚠️ **`main` è solo locale, non pushato.**
 - 🟢 **Fase 1C-1 ✅ COMPLETATA** (Eventi). Implementazione + review finale + wave di fix + **collaudo dal vivo superato** (2026-07-21) + migliorie UX dal collaudo → **mergiata e pushata su `main`** (fino a `c461499`), branch `feat/fase1c1-eventi` eliminato. **76/76 test verdi.** Il collaudo ha coperto: UI (crea/modifica/annulla/ripristina/elimina + toast + modale + gate admin + copertina + stato/data) e sicurezza (RLS member/anon/admin, storage 2 MB+MIME, 404 slug). Migliorie committate: pannello gestione dentro `/eventi` per l'admin, "torna indietro" con conferma, rifiniture form, toast su tutte le azioni, conferme in modale, fix CTA home. Ledger: [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md).
 - 🟢 **Fase 1B ✅ COMPLETATA** (1B-1 Profilo + 1B-2 Garage), collaudata, mergiata e **pushata** su `main`.
@@ -15,18 +16,21 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: **Fase 1C-3 — Album foto**
+## ▶️ DA COSA RIPARTIRE: **Fase 1C-3 — Task 7 (collaudo dal vivo + chiusura)**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la 1C-2 (RSVP) è chiusa e mergiata. Partiamo con la 1C-3 (Album foto): brainstorming + spec + piano."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la 1C-3 (Album foto) ha il codice completo e rivisto sul branch `feat/fase1c3-album`. Accendo l'ambiente; fai il collaudo dal vivo (Task 7 del piano) e poi chiudi la fase."*
 
-La **1C-2 (RSVP) è completa, collaudata e mergiata su `main`** (vedi "Dove siamo"). La prossima sotto-fase è la **1C-3 — Album foto** (chiude la Fase 1C). **Non c'è ancora spec né piano:** si parte dal **brainstorming** (`superpowers:brainstorming`), poi spec + piano, poi implementazione col metodo subagent-driven.
+**Tutto il codice della 1C-3 è scritto, rivisto e verde offline** (vedi "Dove siamo"). Manca **solo il Task 7** del piano [`superpowers/plans/2026-07-28-fase1c3-album-foto.md`](./superpowers/plans/2026-07-28-fase1c3-album-foto.md), che **richiede l'ambiente acceso** (Docker + `npx supabase start` + `npm run dev` su **localhost:3000** + Mailpit + psql — vedi "Come rimettere in moto l'ambiente").
 
-**Ciò che già si sa sulla 1C-3** (vedi anche "Cosa aspetta le prossime sotto-fasi" più sotto):
-- Il bucket **`event-media`** è **già configurato** dalla `0008` (limiti 2 MB, solo immagini) → ospita **solo foto**; i **video sono link YouTube** (D-171), quindi nessun upload video.
-- Ha senso il path **`{event-id}/`** (le foto sono molte e si caricano su un evento già esistente), a differenza del path piatto delle copertine.
-- La compressione WebP nel browser esistente (`src/lib/images/compress.ts`) copre tutto.
+**Passi del Task 7 (in ordine):**
+1. **Applicare la migrazione `0010`**: `npx supabase migration up` (aggiunge `event_media.storage_path` + `events.drive_url`). ⚠️ Non ancora applicata.
+2. Serve un **admin** (`mcdevelop03@gmail.com`, ripromuovere con la `update` di `supabase/seed.sql`) e almeno un **evento concluso** (creane uno con `starts_at` nel passato, o forza la data via SQL) — il pannello media compare **solo** su evento concluso + admin.
+3. Eseguire la **checklist di collaudo del Task 7** nel piano: upload batch foto (avanzamento, compressione WebP, `storage_path` valorizzato), video YouTube (`watch?v=`/`youtu.be`/`&t=`, URL non-YouTube respinto), link Drive (bottone compare/sparisce), elimina (foto → riga+file, video → solo riga), lightbox (Esc/frecce), gallery pubblica da sloggato, **prove negative RLS** (insert/upload diretti non-admin → 403, >2 MB/MIME → 413/415, action forzate su evento non concluso → `notConcluded`), regressione 1C-1 (eliminare evento **con media** → `notEmpty`).
+4. **Correggere i bug emersi** (commit dedicati), poi **chiudere** con `superpowers:finishing-a-development-branch` (merge di `feat/fase1c3-album` su `main`, elimina branch). Aggiornare questo file (1C-3 chiusa → **Fase 1C completa**) e cancellare il workspace SDD.
 
-**Debiti/Minor NON bloccanti da 1C-2** (follow-up accettabili, fuori dalla 1C-3): checkbox non disabilitate durante il pending (RsvpBox/AdminIscritti); `status` superfluo nella select di `iscriviti`; `<Button>` dentro `<Link>` (convenzione già diffusa); race stretta nella re-selezione membro (fail-safe lato server). Più i debiti **ereditati dalla 1C-1** (micro-fasi dedicate): `revalidatePath`, orfani storage, `created_by` leggibile via API.
+**Ledger SDD** (mappa di recupero, fidarsi di questo e di `git log`, non della memoria): [`../.superpowers/sdd/2026-07-28-fase1c3-album-foto/progress.md`](../.superpowers/sdd/2026-07-28-fase1c3-album-foto/progress.md).
+
+**Deferred-minor 1C-3 NON bloccanti** (follow-up post-merge, dalla review finale): `Modal onClose` inline (pattern ereditato); hidden `<input type=file>` non `disabled` durante busy (nessun double-submit pratico); `alt=""` sui thumbnail senza caption; lightbox senza `aria-label`/focus-trap/scroll-lock (il `Modal` condiviso invece li ha); due `import type` accorpabili in `page.tsx`; map `mediaAdmin`/`mediaGallery` duplicata; anti-orfano batch non copre il ramo `throw` (accepted debt, da spec). Più i debiti ereditati (micro-fasi dedicate): `revalidatePath`, pulizia orfani storage di sistema, `created_by` leggibile via API.
 
 > ℹ️ **Note dal collaudo 1C-2 (2026-07-23):** le credenziali locali erano disallineate (l'admin `mcdevelop03@gmail.com` non aveva più `Marsica2026!`) — reset via admin API. Fixture create per il collaudo: 2° membro `membro2.test@example.com`, 2 auto per membro, 3 eventi futuri (`raduno-capienza-due`, `raduno-illimitato`, `raduno-corsa`). Tutti dati **locali volatili** (spariscono con `db reset`).
 

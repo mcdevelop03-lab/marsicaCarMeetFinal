@@ -83,6 +83,7 @@ export type Event = {
   map_url: string | null;
   cover_url: string | null;
   cover_path: string | null; // colonna aggiunta dalla migrazione 0008
+  drive_url: string | null; // colonna aggiunta dalla migrazione 0010 (link Drive opzionale)
   created_by: string | null;
   created_at: string;
 };
@@ -99,3 +100,16 @@ export type EventRegistration = {
 
 // Esito della funzione SQL `iscriviti_evento` (migrazione 0009).
 export type RsvpEsito = "ok" | "esaurito" | "annullato" | "gia_iscritto" | "evento_inesistente";
+
+export type MediaType = "image" | "video";
+
+export type EventMedia = {
+  id: string;
+  event_id: string;
+  uploader_id: string | null;
+  type: MediaType;
+  url: string; // foto: URL pubblico del bucket. video: link YouTube.
+  storage_path: string | null; // colonna 0010; il path nel bucket per le foto, NULL per i video
+  caption: string | null;
+  created_at: string;
+};

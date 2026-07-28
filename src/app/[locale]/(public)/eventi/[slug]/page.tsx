@@ -5,14 +5,17 @@ import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { statoEvento } from "@/lib/events/stato";
+import { statoEvento, eConcluso } from "@/lib/events/stato";
 import { formattaIntervallo } from "@/lib/date/format";
 import { getProfile, getUser } from "@/lib/auth";
 import { statoIscrizione } from "@/lib/rsvp/capienza";
 import RsvpBox from "@/components/features/events/RsvpBox";
 import Partecipanti from "@/components/features/events/Partecipanti";
 import AdminIscritti from "@/components/features/events/AdminIscritti";
+import AdminMedia, { type MediaAdminItem } from "@/components/features/events/AdminMedia";
+import GalleryEvento, { type GalleryItem } from "@/components/features/events/GalleryEvento";
 import type { Event } from "@/types/database";
+import type { EventMedia } from "@/types/database";
 import type { VehiclePick } from "@/app/[locale]/(public)/eventi/[slug]/actions";
 
 // Le colonne che questa pagina legge davvero (render + `statoEvento`). `select("*")`
@@ -21,7 +24,7 @@ import type { VehiclePick } from "@/app/[locale]/(public)/eventi/[slug]/actions"
 // membri no (`profiles_select_authenticated`) — niente colonne in più di quelle usate,
 // stesso principio della select dell'elenco (`src/app/[locale]/(public)/eventi/page.tsx`).
 const COLONNE_PUBBLICHE =
-  "id, title, description, location, map_url, starts_at, ends_at, capacity, status, type, cover_url";
+  "id, title, description, location, map_url, starts_at, ends_at, capacity, status, type, cover_url, drive_url";
 
 // Il minimo che serve al dettaglio: più campi di `EventoPerCard` (mappa, capienza,
 // descrizione), ma sempre un `Pick<Event, ...>`, non `Event` intero — niente doppio
@@ -39,6 +42,7 @@ type EventoDettaglio = Pick<
   | "status"
   | "type"
   | "cover_url"
+  | "drive_url"
 >;
 
 export default async function EventoPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -89,6 +93,32 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
   const user = await getUser();
   const profile = user ? await getProfile() : null;
   const isAdmin = profile?.role === "admin";
+
+  const { data: mediaRows, error: erroreMedia } = await supabase
+    .from("event_media")
+    .select("id, type, url, caption, created_at")
+    .eq("event_id", evento.id)
+    .order("created_at", { ascending: false });
+  if (erroreMedia) console.error("Evento: lettura media non riuscita", erroreMedia);
+  const media = (mediaRows ?? []) as Pick<
+    EventMedia,
+    "id" | "type" | "url" | "caption" | "created_at"
+  >[];
+
+  const concluso = eConcluso(evento);
+  const mediaAdmin: MediaAdminItem[] = media.map((m) => ({
+    id: m.id,
+    type: m.type,
+    url: m.url,
+    caption: m.caption,
+  }));
+  const mediaGallery: GalleryItem[] = media.map((m) => ({
+    id: m.id,
+    type: m.type,
+    url: m.url,
+    caption: m.caption,
+  }));
+  const haGallery = mediaGallery.length > 0 || Boolean(evento.drive_url);
 
   type RigaIscrizione = {
     id: string;
@@ -225,6 +255,8 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
         )}
       </Card>
 
+      {haGallery && <GalleryEvento media={mediaGallery} driveUrl={evento.drive_url} />}
+
       <section className="space-y-3">
         <h2 className="font-mono text-[11px] uppercase tracking-widest text-white/60">
           {tr("sectionTitle")}
@@ -243,6 +275,9 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
 
       {user && !isAdmin && <Partecipanti partecipanti={partecipanti} />}
       {user && isAdmin && <AdminIscritti eventId={evento.id} iscritti={iscrittiAdmin} />}
+      {user && isAdmin && concluso && (
+        <AdminMedia eventId={evento.id} media={mediaAdmin} driveUrl={evento.drive_url} />
+      )}
     </div>
   );
 }
