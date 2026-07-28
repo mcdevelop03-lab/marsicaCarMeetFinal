@@ -22,7 +22,10 @@
     "ctaButton": "Registrati"
   },
   "footer": {
-    "copyright": "© 2026 Marsica Car Meet"
+    "copyright": "© 2026 Marsica Car Meet",
+    "privacy": "Privacy",
+    "cookie": "Cookie",
+    "cookiePrefs": "Preferenze cookie"
   },
   "placeholder": {
     "comingSoon": "In arrivo"
@@ -288,5 +291,23 @@
     "close": "Chiudi",
     "prev": "Precedente",
     "next": "Successiva"
+  },
+  "consent": {
+    "bannerTitle": "Rispettiamo la tua privacy",
+    "bannerText": "Usiamo cookie tecnici necessari al funzionamento del sito. I contenuti di terze parti (es. i video di YouTube negli album) vengono caricati solo con il tuo consenso.",
+    "acceptAll": "Accetta tutti",
+    "rejectAll": "Rifiuta non essenziali",
+    "customize": "Personalizza",
+    "savePrefs": "Salva preferenze",
+    "catNecessary": "Necessari",
+    "catNecessaryDesc": "Indispensabili: sessione di accesso, sicurezza anti-bot, memorizzazione di questa preferenza. Sempre attivi.",
+    "alwaysOn": "Sempre attivi",
+    "catExternal": "Contenuti di terze parti",
+    "catExternalDesc": "Permette di caricare i video di YouTube incorporati nelle pagine degli eventi. Senza consenso restano bloccati.",
+    "linkPrivacy": "Privacy Policy",
+    "linkCookie": "Cookie Policy",
+    "videoBlocked": "Video di YouTube bloccato: richiede il consenso ai contenuti di terze parti.",
+    "enableExternal": "Attiva contenuti esterni",
+    "watchOnYoutube": "Guarda su YouTube"
   }
 }
