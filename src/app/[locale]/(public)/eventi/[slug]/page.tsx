@@ -13,6 +13,7 @@ import RsvpBox from "@/components/features/events/RsvpBox";
 import Partecipanti from "@/components/features/events/Partecipanti";
 import AdminIscritti from "@/components/features/events/AdminIscritti";
 import AdminMedia, { type MediaAdminItem } from "@/components/features/events/AdminMedia";
+import GalleryEvento, { type GalleryItem } from "@/components/features/events/GalleryEvento";
 import type { Event } from "@/types/database";
 import type { EventMedia } from "@/types/database";
 import type { VehiclePick } from "@/app/[locale]/(public)/eventi/[slug]/actions";
@@ -111,6 +112,13 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
     url: m.url,
     caption: m.caption,
   }));
+  const mediaGallery: GalleryItem[] = media.map((m) => ({
+    id: m.id,
+    type: m.type,
+    url: m.url,
+    caption: m.caption,
+  }));
+  const haGallery = mediaGallery.length > 0 || Boolean(evento.drive_url);
 
   type RigaIscrizione = {
     id: string;
@@ -246,6 +254,8 @@ export default async function EventoPage({ params }: { params: Promise<{ slug: s
           <p className="whitespace-pre-line text-sm text-white/70">{evento.description}</p>
         )}
       </Card>
+
+      {haGallery && <GalleryEvento media={mediaGallery} driveUrl={evento.drive_url} />}
 
       <section className="space-y-3">
         <h2 className="font-mono text-[11px] uppercase tracking-widest text-white/60">
