@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { Anybody, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { getProfile } from "@/lib/auth";
+import { leggiConsentCookie, CONSENT_COOKIE } from "@/lib/consent/consenso";
+import ConsentProvider from "@/components/features/consent/ConsentProvider";
+import CookieBanner from "@/components/features/consent/CookieBanner";
 import "../globals.css";
 
 const anybody = Anybody({
@@ -45,6 +49,9 @@ export default async function LocaleLayout({
 
   const profile = await getProfile();
 
+  const cookieStore = await cookies();
+  const initialConsent = leggiConsentCookie(cookieStore.get(CONSENT_COOKIE)?.value);
+
   return (
     <html
       lang={locale}
@@ -52,9 +59,12 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider>
-          <Header isAuthenticated={!!profile} avatar={profile?.avatar_url ?? null} />
-          <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-12 py-10">{children}</div>
-          <Footer />
+          <ConsentProvider initialConsent={initialConsent}>
+            <Header isAuthenticated={!!profile} avatar={profile?.avatar_url ?? null} />
+            <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-12 py-10">{children}</div>
+            <Footer />
+            <CookieBanner />
+          </ConsentProvider>
         </NextIntlClientProvider>
       </body>
     </html>

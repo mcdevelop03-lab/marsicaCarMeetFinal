@@ -22,7 +22,10 @@
     "ctaButton": "Registrati"
   },
   "footer": {
-    "copyright": "© 2026 Marsica Car Meet"
+    "copyright": "© 2026 Marsica Car Meet",
+    "privacy": "Privacy",
+    "cookie": "Cookie",
+    "cookiePrefs": "Preferenze cookie"
   },
   "placeholder": {
     "comingSoon": "In arrivo"
@@ -288,5 +291,104 @@
     "close": "Chiudi",
     "prev": "Precedente",
     "next": "Successiva"
+  },
+  "consent": {
+    "bannerTitle": "Rispettiamo la tua privacy",
+    "bannerText": "Usiamo cookie tecnici necessari al funzionamento del sito. I contenuti di terze parti (es. i video di YouTube negli album) vengono caricati solo con il tuo consenso.",
+    "acceptAll": "Accetta tutti",
+    "rejectAll": "Rifiuta non essenziali",
+    "customize": "Personalizza",
+    "savePrefs": "Salva preferenze",
+    "catNecessary": "Necessari",
+    "catNecessaryDesc": "Indispensabili: sessione di accesso, sicurezza anti-bot, memorizzazione di questa preferenza. Sempre attivi.",
+    "alwaysOn": "Sempre attivi",
+    "catExternal": "Contenuti di terze parti",
+    "catExternalDesc": "Permette di caricare i video di YouTube incorporati nelle pagine degli eventi. Senza consenso restano bloccati.",
+    "linkPrivacy": "Privacy Policy",
+    "linkCookie": "Cookie Policy",
+    "videoBlocked": "Video di YouTube bloccato: richiede il consenso ai contenuti di terze parti.",
+    "enableExternal": "Attiva contenuti esterni",
+    "watchOnYoutube": "Guarda su YouTube"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "updated": "Ultimo aggiornamento: luglio 2026",
+    "disclaimer": "Bozza non ancora validata da un legale. I testi definitivi verranno pubblicati in seguito. Il documento descrive onestamente le pratiche attuali del sito.",
+    "sezioni": [
+      {
+        "titolo": "1. Titolare del trattamento",
+        "paragrafi": [
+          "Il titolare del trattamento è Marsica Car Meet [DA COMPILARE: denominazione, sede, email di contatto].",
+          "Per qualsiasi richiesta relativa ai tuoi dati puoi scrivere a [DA COMPILARE: email]."
+        ]
+      },
+      {
+        "titolo": "2. Dati che raccogliamo",
+        "paragrafi": [
+          "Account: indirizzo email (necessario per accesso, conferma e reset password).",
+          "Profilo: nome, tag, biografia, comune, link ai social, foto avatar — pubblicati volontariamente da te e visibili agli altri membri loggati.",
+          "Garage: le auto che aggiungi (marca, modello, anno, foto, dettagli).",
+          "Partecipazioni: la tua iscrizione (RSVP) agli eventi e le auto che associ.",
+          "Media degli eventi: le foto degli album sono caricate dall'amministratore e sono pubbliche."
+        ]
+      },
+      {
+        "titolo": "3. Finalità e basi giuridiche",
+        "paragrafi": [
+          "Erogazione del servizio (gestione account, profilo, garage, eventi): esecuzione del rapporto con l'utente.",
+          "Sicurezza (protezione anti-bot, prevenzione abusi): legittimo interesse.",
+          "Caricamento di contenuti di terze parti (video YouTube incorporati): solo previo tuo consenso, revocabile in ogni momento."
+        ]
+      },
+      {
+        "titolo": "4. Terze parti e destinatari",
+        "paragrafi": [
+          "Supabase: hosting del database, autenticazione e archiviazione file.",
+          "Google: accesso opzionale con account Google (OAuth), avviato solo se scegli questa modalità.",
+          "Cloudflare: protezione anti-bot (Turnstile) e hosting del sito.",
+          "YouTube (Google): riproduzione dei video incorporati, caricati solo con il tuo consenso.",
+          "Google Drive: alcuni eventi possono avere un link a un archivio Drive con le foto originali. Quell'archivio è esterno al nostro sito e non è governato dai nostri controlli: la rimozione di una foto dal sito non la rimuove da Drive, che va gestito separatamente."
+        ]
+      },
+      {
+        "titolo": "5. Conservazione e sicurezza",
+        "paragrafi": [
+          "I dati sono protetti da controllo d'accesso a livello di database (RLS), autenticazione, cifratura in transito (TLS) e cifratura del disco lato piattaforma.",
+          "Non applichiamo cifratura a livello di singola colonna: i dati raccolti oggi sono pubblicati volontariamente in una community e non rientrano tra le categorie particolari; la password non è mai in chiaro (è conservata come hash irreversibile dal provider di autenticazione).",
+          "Se in futuro raccoglieremo dati realmente sensibili, valuteremo misure aggiuntive o eviteremo di raccoglierli."
+        ]
+      },
+      {
+        "titolo": "6. I tuoi diritti",
+        "paragrafi": [
+          "Puoi chiedere accesso, rettifica o cancellazione dei tuoi dati.",
+          "La cancellazione self-service dell'account sarà disponibile in una fase successiva; nel frattempo puoi richiederla scrivendo a [DA COMPILARE: email].",
+          "Hai diritto di proporre reclamo al Garante per la protezione dei dati personali."
+        ]
+      },
+      {
+        "titolo": "7. Trasferimenti extra-UE",
+        "paragrafi": [
+          "Alcuni fornitori (es. Supabase, Google, Cloudflare) potrebbero trattare dati al di fuori dell'UE con garanzie adeguate. [DA VERIFICARE: region e garanzie specifiche una volta configurato l'ambiente di produzione.]"
+        ]
+      }
+    ]
+  },
+  "cookiePolicy": {
+    "title": "Cookie Policy",
+    "updated": "Ultimo aggiornamento: luglio 2026",
+    "disclaimer": "Bozza non ancora validata da un legale. I testi definitivi verranno pubblicati in seguito.",
+    "intro": "I cookie sono piccoli file salvati sul tuo dispositivo. Usiamo solo cookie tecnici necessari e, previo consenso, contenuti di terze parti.",
+    "necessaryTitle": "Cookie necessari (sempre attivi)",
+    "necessaryRows": [
+      "Sessione di accesso (Supabase): mantiene attiva la tua sessione dopo il login.",
+      "Preferenza consenso (mcm_consent): ricorda la tua scelta sui cookie, per circa 1 anno.",
+      "Sicurezza anti-bot (Cloudflare Turnstile): protegge i moduli di accesso e registrazione."
+    ],
+    "externalTitle": "Contenuti di terze parti (solo con consenso)",
+    "externalText": "I video di YouTube incorporati negli album degli eventi vengono caricati solo se acconsenti. Finché non acconsenti, al loro posto vedi un segnaposto e nessun cookie di YouTube viene impostato.",
+    "noAnalytics": "Non usiamo cookie analitici né di marketing.",
+    "manageTitle": "Gestire il consenso",
+    "manageText": "Puoi cambiare idea in ogni momento dal link \"Preferenze cookie\" in fondo a ogni pagina: riapre il pannello e ti permette di attivare o revocare i contenuti di terze parti."
   }
 }
