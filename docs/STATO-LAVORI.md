@@ -1,12 +1,14 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-28**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-29**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
 ## 🔖 Dove siamo
 
-- 🟡 **Fase 1D (GDPR base) — CODICE COMPLETO E RIVISTO, manca la re-review del fix wave + collaudo + merge.** Brainstorming + spec + piano fatti e approvati; implementazione subagent-driven (Task 1-5, tutti rivisti con esito pulito) + **review finale whole-branch (opus): "Ready to merge: With fixes"** → **fix wave applicata (commit `531adc7`)** che ha chiuso 2 Important: **(1)** decode del cookie reso sicuro (`leggiConsentCookie()` con try/catch: un `mcm_consent` malformato non deve crashare il root layout → 500 sito) + 3 test; **(2)** "Accetta tutti" reso `variant=outline` = **pari a "Rifiuta"** (vincolo GDPR); + minor cookie `Secure` su https. **115 test verdi**, `tsc`/`lint` verdi. Branch **`feat/fase1d-gdpr`** (solo locale, NON mergiato). ⚠️ **Build MAI eseguita** (dev server attivo tutta la fase) e ⚠️ **manca la re-review mirata del fix wave**. Spec: [`superpowers/specs/2026-07-28-fase1d-gdpr-design.md`](./superpowers/specs/2026-07-28-fase1d-gdpr-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1d-gdpr.md`](./superpowers/plans/2026-07-28-fase1d-gdpr.md) · Ledger SDD: [`../.superpowers/sdd/2026-07-28-fase1d-gdpr/progress.md`](../.superpowers/sdd/2026-07-28-fase1d-gdpr/progress.md). **Cosa fa:** cookie banner con gestione consensi che **blocca gli embed YouTube** fino al consenso (`VideoYouTube` gate), due categorie (Necessari + Contenuti di terze parti), pagine `/privacy` e `/cookie` (bozza IT + disclaimer), footer con "Preferenze cookie". Consenso in cookie first-party `mcm_consent` letto lato server (no flash). **Nessun DB, nessuna migrazione.** → vedi "DA COSA RIPARTIRE".
+- 🎉 **FASE 1 (MVP) COMPLETA** — 1A ✅ · 1B ✅ · 1C ✅ · 1D ✅. Tutto mergiato su `main`. ⚠️ **`main` è solo locale, non pushato** (41 commit avanti a `origin/main`).
+- 🟢 **Fase 1D ✅ COMPLETATA** (GDPR base) — **chiude la Fase 1.** Implementazione subagent-driven (Task 1-5, tutti rivisti con esito pulito) + **review finale whole-branch (opus): "Ready to merge: With fixes"** → **fix wave `531adc7`** (2 Important) → **re-review del fix wave: entrambi ADDRESSED, 0 nuove rotture** → **collaudo dal vivo superato (2026-07-29, 0 bug)** → **mergiata su `main`** (merge `173d864`), branch `feat/fase1d-gdpr` eliminato. **Nessun DB, nessuna migrazione.** **Cosa fa:** cookie banner con gestione consensi che **blocca gli embed YouTube** fino al consenso (`VideoYouTube` gate), due categorie (Necessari + Contenuti di terze parti), pagine `/privacy` e `/cookie` (bozza IT + disclaimer), footer con "Preferenze cookie". Consenso in cookie first-party `mcm_consent` letto lato server (no flash). **115 test**, `tsc`/`lint`/**build pulita** verdi. Spec: [`superpowers/specs/2026-07-28-fase1d-gdpr-design.md`](./superpowers/specs/2026-07-28-fase1d-gdpr-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1d-gdpr.md`](./superpowers/plans/2026-07-28-fase1d-gdpr.md).
+  - **Il collaudo ha coperto:** banner presente senza cookie e Accetta/Rifiuta/Personalizza che scrivono `mcm_consent` corretto; **parità GDPR verificata sugli stili computati** (Accetta e Rifiuta identici, Personalizza ghost); **no flash** (con consenso salvato il banner **non è nel markup SSR**); **prova dell'Important #1 dal vivo** (`mcm_consent` = `%`, `%E0%A4%A`, JSON rotto, versione 999 → **HTTP 200 col banner, mai 500**); **gate YouTube** a consenso negato → **0 iframe nel DOM e 0 richieste** a youtube-nocookie/ytimg nel Network, poi "Attiva contenuti esterni" monta l'iframe e il video carica davvero; con **2 video** un solo clic li sblocca **entrambi** (contesto condiviso); "Guarda su YouTube" → `youtube.com/watch` con `target=_blank` + `rel="noopener noreferrer"`; **revoca dal footer** → iframe smontati con **marcatore JS ancora vivo = nessun reload**; `/privacy` e `/cookie` **da anonimo** (richiesta senza alcun cookie) → 200, `<title>` corretto, disclaimer in cima, e la cookie policy elenca onestamente `mcm_consent`/sessione Supabase/Turnstile.
 - 🟢 **Fase 1C-3 ✅ COMPLETATA** (Album foto) — **chiude la Fase 1C.** Implementazione subagent-driven (5 task) + **review finale whole-branch (opus, 0 Critical, 0 Important, "Ready to merge: Yes")** + wave di fix (2 minor) + **collaudo dal vivo superato (2026-07-28, 0 bug)** → **mergiata su `main`** (merge `bb09b87`), branch `feat/fase1c3-album` eliminato. Migrazione `0010` applicata. Album media per-evento (foto WebP nel bucket + video **link YouTube** incorporati + link **Drive** opzionale), caricato **solo dall'admin a raduno concluso**, pubblico. Il collaudo ha coperto: gate concluso (UI + **server**, con client stantio su evento reso futuro → insert bloccato), **upload batch** (foto3-grande 4.1MB → 186KB WebP, sotto i 2MB del bucket, `storage_path` per-evento), lightbox (Esc/frecce), video (URL canonico da `youtu.be?t=`, embed `youtube-nocookie` che carica, non-YouTube respinto), link Drive (`javascript:` respinto dal vincolo http/https, https ok, svuotamento), elimina (video → solo riga; foto → riga+file, **0 orfani**), gallery pubblica **da sloggato**, **prove negative** (anon insert → 401, membro insert → 403, upload storage → 400 RLS, >2MB → 413, MIME → 415, **notEmpty** su evento con media). **103 test**, `tsc`/`lint`/`build` verdi. Spec: [`superpowers/specs/2026-07-28-fase1c3-album-foto-design.md`](./superpowers/specs/2026-07-28-fase1c3-album-foto-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1c3-album-foto.md`](./superpowers/plans/2026-07-28-fase1c3-album-foto.md). ⚠️ **`main` è solo locale, non pushato.**
 - 🟢 **Fase 1C-2 ✅ COMPLETATA** (RSVP). Implementazione (7 task subagent-driven) + review finale whole-branch (opus, 0 Critical) + **collaudo dal vivo superato (2026-07-23, 0 bug)** → **mergiata su `main`**, branch `feat/fase1c2-rsvp` eliminato. Il collaudo ha coperto: auto-iscrizione con/senza auto + disdetta (0 orfani), **prova di corsa `capacity=1` (2 RPC concorrenti × 3 round → sempre 1 sola riga)**, conteggio anon "X su Y" + illimitato "X iscritti", lista iscritti solo ai loggati, poteri admin (iscrizione manuale, rimozione, evento pieno → "Posti esauriti"), **5 prove negative RLS** (POST diretto reg → 403, RPC `p_user_id`/auto altrui → 403, anon righe → `[]` ma aggregato OK, **buco `event_vehicles` chiuso** → 403 con controprova 201). Migrazione `0009` applicata. `pg_policies` esatte, **91 test**, `tsc`/`lint`/`next build` verdi. ⚠️ **`main` è solo locale, non pushato.**
 - 🟢 **Fase 1C-1 ✅ COMPLETATA** (Eventi). Implementazione + review finale + wave di fix + **collaudo dal vivo superato** (2026-07-21) + migliorie UX dal collaudo → **mergiata e pushata su `main`** (fino a `c461499`), branch `feat/fase1c1-eventi` eliminato. **76/76 test verdi.** Il collaudo ha coperto: UI (crea/modifica/annulla/ripristina/elimina + toast + modale + gate admin + copertina + stato/data) e sicurezza (RLS member/anon/admin, storage 2 MB+MIME, 404 slug). Migliorie committate: pannello gestione dentro `/eventi` per l'admin, "torna indietro" con conferma, rifiniture form, toast su tutte le azioni, conferme in modale, fix CTA home. Ledger: [`../.superpowers/sdd/progress.md`](../.superpowers/sdd/progress.md).
@@ -17,30 +19,32 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: **Fase 1D — finire (re-review fix wave + build + collaudo + merge)**
+## ▶️ DA COSA RIPARTIRE: **la Fase 1 è chiusa — si sceglie il prossimo macro-step**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la 1D (GDPR) ha il codice completo e rivisto sul branch `feat/fase1d-gdpr`, con la fix wave `531adc7` già applicata. Manca la re-review del fix wave, la build pulita, il collaudo dal vivo e il merge."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la Fase 1 (MVP) è completa e tutto è mergiato su `main`. Decidiamo il prossimo passo."*
 
-**Tutto il codice della 1D è scritto, rivisto e con la fix wave applicata** (vedi "Dove siamo"). Manca il finale (metodo subagent-driven, ledger: [`../.superpowers/sdd/2026-07-28-fase1d-gdpr/progress.md`](../.superpowers/sdd/2026-07-28-fase1d-gdpr/progress.md)):
+Non c'è lavoro a metà: nessun branch di fase aperto, nessun workspace SDD attivo, `main` verde (115 test, `tsc`, `lint`, build pulita). Le tre strade possibili, in ordine di valore:
 
-1. **Re-review mirata del fix wave** — rigenerare il review-package `FIX_BASE 6d9c594 → HEAD 531adc7` e dispatch della re-review (verifica che i 2 Important siano ADDRESSED, niente nuove rotture). Se ok → Task 6 completo.
-2. **Build pulita** — `rm -rf .next && npm run build` verde. ⚠️ **Richiede il dev server SPENTO** (durante la fase era attivo su :3000, PID 52176 — la build non è mai stata eseguita su questo branch). Killare il dev server prima.
-3. **Collaudo dal vivo (lato utente)** — ambiente acceso, un evento concluso **con un video** (es. `prova-primo-evento`). Checklist nel piano (Task 7): banner accetta/rifiuta/personalizza + persistenza (no flash); gate YouTube (placeholder → "Attiva contenuti esterni" carica e sblocca, "Guarda su YouTube" nuova scheda; **con consenso negato NESSUNA richiesta a youtube-nocookie.com** nel Network); revoca da footer "Preferenze cookie" → video tornano placeholder senza reload; `/privacy` e `/cookie` da sloggato con disclaimer.
-4. **Chiudere** con `superpowers:finishing-a-development-branch` (merge `feat/fase1d-gdpr` → `main`, elimina branch). Aggiornare questo file (**Fase 1D chiusa → Fase 1 / MVP COMPLETA**) e cancellare il workspace SDD.
+1. **Configurazione cloud/deploy** — è ciò che trasforma l'MVP in un sito vero: progetto **Supabase cloud** (migrazioni 0001–0010 da applicare), **Google OAuth + Turnstile reali**, deploy su **Cloudflare Pages**. Guida di partenza in [`SETUP.md`](./SETUP.md) §6. Richiede decisioni tue (account, domini, chiavi) → conviene un brainstorming prima.
+2. **Fase 2** — news/blog, mappa interattiva dei raduni, gestione utenti admin, cancellazione account (promessa nella privacy policy della 1D). Vedi `docs/ROADMAP.md`.
+3. **Micro-fase debiti** — saldare i follow-up accumulati (elencati qui sotto), in particolare `revalidatePath` e la **pulizia orfani storage**, che sono di sistema e toccano più fasi.
 
-**Deferred-minor 1D NON bloccanti (follow-up post-merge):** banner senza `role`/`aria-live`/focus management; il banner riaperto dal footer non ha una X di chiusura (si chiude solo riscegliendo); `title="video"` dell'iframe non passa da i18n; `Stored` type/array-guard cosmetici.
+**Deferred-minor 1D NON bloccanti (follow-up):** banner senza `role`/`aria-live`/focus management; il banner riaperto dal footer non ha una X di chiusura (si chiude solo riscegliendo); `title="video"` dell'iframe non passa da i18n; `Stored` type/array-guard cosmetici. **Contenuti da completare:** i `[DA COMPILARE]` nelle policy (denominazione, sede, email del Titolare) e la validazione legale dei testi — oggi entrambe le pagine dichiarano onestamente di essere una bozza.
 
-**Dopo la 1D la Fase 1 (MVP) è completa.** Prossimo macro-step = **Fase 2** (news/blog, mappa interattiva raduni, gestione utenti admin, cancellazione account) — vedi `docs/ROADMAP.md`. Più la **configurazione cloud/deploy** (Supabase cloud, Google OAuth + Turnstile reali, Cloudflare Pages) per andare in produzione.
-
-> ℹ️ **Note ambiente (2026-07-28):** Docker + Supabase locale accesi; dev server su **localhost:3000**. Admin `mcdevelop03@gmail.com` / `Marsica2026!`; membro `membro2.test@example.com` / `Membro2026!`. Evento concluso con media: `prova-primo-evento`. Dati di test **locali volatili** (spariscono con `db reset`).
+> ℹ️ **Note ambiente (2026-07-29):** Docker + Supabase locale accesi; dev server su **localhost:3000**. Admin `mcdevelop03@gmail.com` / `Marsica2026!`; membro `membro2.test@example.com` / `Membro2026!`. Evento concluso con media: `prova-primo-evento` (2 foto + 1 video). Dati di test **locali volatili** (spariscono con `db reset`).
 
 **Debiti/follow-up NON bloccanti ereditati (micro-fasi dedicate):**
 - Da 1C-3: `Modal onClose` inline; hidden `<input type=file>` non `disabled`; `alt=""` thumbnail; lightbox senza `aria-label`/focus/scroll-lock; due `import type` accorpabili; map `mediaAdmin`/`mediaGallery` duplicata; anti-orfano batch non copre il ramo `throw`.
 - Di sistema: `revalidatePath` (path non combacianti), **pulizia orfani storage di sistema**, `created_by` degli eventi leggibile da anon via PostgREST.
 
-## 🧩 Fase 1C-2 — stato del codice (branch `feat/fase1c2-rsvp`, solo locale)
+<!-- ─────────── STORICO ─────────── -->
+<!-- Da qui in giù: esiti delle fasi già chiuse, decisioni di design da non ridiscutere e checklist di collaudo passate. Consultazione, non lavoro da fare. -->
 
-**Metodo:** subagent-driven (implementer → reviewer indipendente → fix → verifica di persona del controller), stesso della 1C-1. **Branch parte da `c461499` (= `main`, chiusura 1C-1).**
+## 📓 Storico — Fase 1C-2 (RSVP), architettura e trappole
+
+> ⚠️ **Sezione storica.** La 1C-2 è **chiusa e mergiata**: il branch `feat/fase1c2-rsvp` non esiste più. Resta qui per le decisioni di architettura e le trappole da non reintrodurre.
+
+**Metodo:** subagent-driven (implementer → reviewer indipendente → fix → verifica di persona del controller), stesso della 1C-1. **Branch partiva da `c461499` (= `main`, chiusura 1C-1).**
 
 ### I 7 task di codice (tutti completi e rivisti)
 
@@ -79,12 +83,7 @@
 - **Errori Supabase mai confusi col vuoto:** conteggio e query garage in `page.tsx` loggano l'errore (fix `c4f81ff`); la data "iscritto il" usa `formattaDataBreve` (fuso Roma), non `toLocaleDateString` (fix `4546a5c`).
 - **La nested select di `page.tsx` prende `town`/`socials` di proposito:** li usa il pannello admin. Non rimuoverli.
 
-### ⏭️ Cosa manca: SOLO il collaudo dal vivo (Task 8) — vedi la sezione "DA COSA RIPARTIRE" in cima
-
-Applicare `0009` (`npx supabase migration up`) + eseguire la checklist del Task 8 (prova di corsa, prove RLS negative incluso il buco `event_vehicles`, conteggio anon, poteri admin). A collaudo superato → `finishing-a-development-branch` → merge su `main`, poi **1C-3 (Album foto)**.
-
-<!-- ─────────── STORICO ─────────── -->
-<!-- Da qui in giù: esiti delle fasi già chiuse e checklist di collaudo passate. Consultazione, non lavoro da fare. -->
+### ✅ Collaudo 1C-2: superato il 2026-07-23 (0 bug), migrazione `0009` applicata, fase mergiata
 
 ### 📓 Storico — checklist del collaudo 1C-1 (superata il 2026-07-21)
 
@@ -133,7 +132,7 @@ Applicare `0009` (`npx supabase migration up`) + eseguire la checklist del Task 
 | 8 | `EventCard` + `/eventi` pubblica | ✅ `c0bbd21` — 65/65 test |
 | 9 | `/eventi/[slug]` dettaglio | ✅ `572dbdc` |
 | — | Review finale whole-branch + wave di fix | ✅ `eef9245` — 76/76 test |
-| 10 | **Collaudo dal vivo e chiusura** | ⬅️ **si riparte da qui (serve l'ambiente acceso)** |
+| 10 | **Collaudo dal vivo e chiusura** | ✅ superato il 2026-07-21 (7 bug corretti) |
 
 Dopo il Task 9 e prima del Task 10: **review finale whole-branch** (modello più capace) + **una sola wave di fix** con tutti i Minor accumulati nel ledger.
 
