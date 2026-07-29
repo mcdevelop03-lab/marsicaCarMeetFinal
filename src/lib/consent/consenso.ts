@@ -1,7 +1,8 @@
-// Consenso ai cookie/contenuti di terze parti. Logica pura (nessun I/O): opera sul
-// JSON DECODIFICATO del cookie; l'encode/decode di trasporto (encodeURIComponent lato
-// client, decodeURIComponent lato server) sta ai due call-site. È l'unico pezzo con
-// logica non banale della fase 1D → coperto da test (vitest).
+// Consenso ai cookie/contenuti di terze parti. Logica pura (nessun I/O). Due livelli:
+// parseConsent() opera sul JSON GIÀ DECODIFICATO, leggiConsentCookie() parte dal valore
+// grezzo del cookie e fa il decode in modo sicuro (è quella che usa il layout lato
+// server). L'encode di trasporto (encodeURIComponent) resta al call-site che scrive il
+// cookie. È l'unico pezzo con logica non banale della fase 1D → coperto da test (vitest).
 
 export type Consent = { external: boolean; ts: number };
 
