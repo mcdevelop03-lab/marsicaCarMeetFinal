@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { login, signInWithGoogle } from "../auth/actions";
 import { verifyMfa } from "../auth/actions-mfa";
+import { googleAuthAbilitato } from "@/lib/auth/provider";
 
 export default async function LoginPage({
   searchParams,
@@ -41,9 +42,11 @@ export default async function LoginPage({
         submitLabel={t("submitLogin")}
         footer={
           <>
-            <form action={signInWithGoogle}>
-              <Button variant="outline" type="submit" className="w-full">{t("google")}</Button>
-            </form>
+            {googleAuthAbilitato() && (
+              <form action={signInWithGoogle}>
+                <Button variant="outline" type="submit" className="w-full">{t("google")}</Button>
+              </form>
+            )}
             <div className="text-xs font-mono text-white/40 space-y-1">
               <p>
                 <Link href="/reset-password" className="text-accent-red">{t("forgotPassword")}</Link>

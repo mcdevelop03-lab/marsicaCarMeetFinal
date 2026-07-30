@@ -7,6 +7,7 @@ import TurnstileWidget from "@/components/features/auth/TurnstileWidget";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { signup, signInWithGoogle } from "../auth/actions";
+import { googleAuthAbilitato } from "@/lib/auth/provider";
 
 export default async function RegistratiPage() {
   const t = await getTranslations("auth");
@@ -18,9 +19,11 @@ export default async function RegistratiPage() {
         submitLabel={t("submitSignup")}
         footer={
           <>
-            <form action={signInWithGoogle}>
-              <Button variant="outline" type="submit" className="w-full">{t("google")}</Button>
-            </form>
+            {googleAuthAbilitato() && (
+              <form action={signInWithGoogle}>
+                <Button variant="outline" type="submit" className="w-full">{t("google")}</Button>
+              </form>
+            )}
             <p className="text-xs font-mono text-white/40">
               {t("hasAccount")}{" "}
               <Link href="/login" className="text-accent-red">
