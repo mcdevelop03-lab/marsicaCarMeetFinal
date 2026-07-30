@@ -1,10 +1,15 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-29**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-30**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
 ## 🔖 Dove siamo
+
+- 🟡 **FASE 1E — STAGING CLOUD: in corso** sul branch **`feat/fase1e-staging-cloud`** (pushato su origin). **C'è un cliente che deve provare e approvare il sito**: è il motivo per cui esiste questa fase. Spec: [`superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md`](./superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md) · Piano: [`superpowers/plans/2026-07-30-fase1e-staging-cloud.md`](./superpowers/plans/2026-07-30-fase1e-staging-cloud.md) · Ledger: [`../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md`](../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md).
+  - ⚠️ **SPEC E PIANO SONO PARZIALMENTE OBSOLETI: dicono Cloudflare Workers, ma si è passati a Netlify.** Il ledger è la fonte di verità aggiornata. Riallineare spec e piano è un task ancora da fare.
+  - ✅ **Fatto:** `main` + branch **pushati su GitHub** (i 42 commit della Fase 1 non vivono più su un solo disco) · **progetto Supabase cloud** creato con le migrazioni `0001`–`0010` applicate e verificate · **sito Netlify deployato** · **`noindex` + bottone Google dietro flag** (commit `e4fa307`, 119 test, review indipendente con 0 rilievi).
+  - ⏸️ **Dove ci si è fermati:** il sito Netlify è impostato su **Private**, quindi ogni pagina risponde 401 col login di Netlify e **la verifica funzionale non è ancora stata fatta**. Primo passo alla ripresa: mettere **Production visibility → Public**.
 
 - 🎉 **FASE 1 (MVP) COMPLETA** — 1A ✅ · 1B ✅ · 1C ✅ · 1D ✅. Tutto mergiato su `main`. ⚠️ **`main` è solo locale, non pushato** (41 commit avanti a `origin/main`).
 - 🟢 **Fase 1D ✅ COMPLETATA** (GDPR base) — **chiude la Fase 1.** Implementazione subagent-driven (Task 1-5, tutti rivisti con esito pulito) + **review finale whole-branch (opus): "Ready to merge: With fixes"** → **fix wave `531adc7`** (2 Important) → **re-review del fix wave: entrambi ADDRESSED, 0 nuove rotture** → **collaudo dal vivo superato (2026-07-29, 0 bug)** → **mergiata su `main`** (merge `173d864`), branch `feat/fase1d-gdpr` eliminato. **Nessun DB, nessuna migrazione.** **Cosa fa:** cookie banner con gestione consensi che **blocca gli embed YouTube** fino al consenso (`VideoYouTube` gate), due categorie (Necessari + Contenuti di terze parti), pagine `/privacy` e `/cookie` (bozza IT + disclaimer), footer con "Preferenze cookie". Consenso in cookie first-party `mcm_consent` letto lato server (no flash). **115 test**, `tsc`/`lint`/**build pulita** verdi. Spec: [`superpowers/specs/2026-07-28-fase1d-gdpr-design.md`](./superpowers/specs/2026-07-28-fase1d-gdpr-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1d-gdpr.md`](./superpowers/plans/2026-07-28-fase1d-gdpr.md).
@@ -19,15 +24,49 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: **la Fase 1 è chiusa — si sceglie il prossimo macro-step**
+## ▶️ DA COSA RIPARTIRE: **Fase 1E, verifica dello staging**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la Fase 1 (MVP) è completa e tutto è mergiato su `main`. Decidiamo il prossimo passo."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e il ledger della Fase 1E: il sito è su Netlify ma è Private. Rendiamolo Public e verifichiamolo."*
 
-Non c'è lavoro a metà: nessun branch di fase aperto, nessun workspace SDD attivo, `main` verde (115 test, `tsc`, `lint`, build pulita). Le tre strade possibili, in ordine di valore:
+### Il primo passo, in ordine
 
-1. **Configurazione cloud/deploy** — è ciò che trasforma l'MVP in un sito vero: progetto **Supabase cloud** (migrazioni 0001–0010 da applicare), **Google OAuth + Turnstile reali**, deploy su **Cloudflare Pages**. Guida di partenza in [`SETUP.md`](./SETUP.md) §6. Richiede decisioni tue (account, domini, chiavi) → conviene un brainstorming prima.
+1. **Metti il sito Netlify su Public.** Dashboard Netlify → progetto `polite-moxie-8dc031` → **Project configuration → Project visibility** → **Production visibility: Public** (lasciare **Deploy Preview: Private**). Finché è Private ogni rotta risponde **401** con `<title>Login Redirect</title>`: **non è un guasto dell'app**, è il controllo accessi di Netlify davanti. La protezione con password non esiste sul piano gratuito, quindi la privatezza è affidata a `noindex` + URL non divulgato (decisione D-6 della spec).
+2. **Verifica funzionale** su `https://polite-moxie-8dc031.netlify.app`: `/` deve reindirizzare a `/it` (**prova che il middleware gira**, il pezzo su cui Cloudflare è fallita); `/it`, `/it/eventi`, `/it/login`, `/it/privacy` devono rispondere 200; `/robots.txt` deve negare tutto; le richieste dati devono andare a `ubvhdliqnkfknhlczcnj.supabase.co`.
+3. **Task 4 — Turnstile reale.** ⚠️ **Senza, login e registrazione sono morti sul cloud**: [`src/lib/turnstile.ts:2`](../src/lib/turnstile.ts) fa `if (!token) return false`, e il widget si disegna solo se la site key esiste. Serve un widget Turnstile sull'account Cloudflare (che **non** è più usato per l'hosting, solo per questo) con hostname `polite-moxie-8dc031.netlify.app` e `localhost`. Poi le due chiavi vanno messe fra le variabili d'ambiente di Netlify e in `.env.local`.
+4. **Task 3 — collaudo auth/dati con utenti veri** (registrazione + conferma email, promozione admin via SQL, prove RLS, upload coi limiti dei bucket).
+5. **Task 7 — contenuti demo.** È ciò che il cliente guarda per primo: 2-3 eventi (uno futuro con capienza e RSVP aperto, uno concluso con album foto e un video YouTube), 2-3 membri con auto in garage e profilo completo.
+6. **Task 8 — collaudo mirato + riallineamento della documentazione**, incluso **riscrivere spec e piano da Cloudflare a Netlify** e le caselle 1C/1D di `ROADMAP.md`, oggi ancora vuote pur essendo fatte.
+
+### Coordinate dello staging (nessun segreto qui dentro)
+
+| Cosa | Valore |
+|---|---|
+| Sito Netlify | `polite-moxie-8dc031` · `https://polite-moxie-8dc031.netlify.app` |
+| Team Netlify | `MatteoCaricolaDevelop` (account GitHub `mcdevelop03-lab`) |
+| Branch di produzione | **`feat/fase1e-staging-cloud`** (non `main`) — è lì che sta `netlify.toml` |
+| Supabase URL | `https://ubvhdliqnkfknhlczcnj.supabase.co` |
+| Supabase Reference ID | `ubvhdliqnkfknhlczcnj` |
+| Chiave Supabase | formato nuovo `sb_publishable_...` (pubblica per progettazione) |
+| Email admin | `mcdevelop03@gmail.com` |
+| Email membro | `matteo050903@gmail.com` (autorizzata dall'utente il 2026-07-30) |
+
+### ⚠️ Trappole scoperte oggi — non ripercorrerle
+
+- 🚨 **Cloudflare Workers è un vicolo cieco per questo progetto.** `@opennextjs/cloudflare` **rifiuta** il middleware Node di Next 16: `proxy.ts` gira sempre su runtime Node e i Workers girano su `workerd`. Errore: *"Node.js middleware is not currently supported"*. È l'issue Cloudflare `workers-sdk#13755`. Aggiornare Next non risolve. **Non riprovare questa strada** finché l'adapter non dichiara il supporto.
+- 🚨 **Vercel è escluso per scelta dell'utente:** il piano Hobby gratuito **vieta l'uso commerciale** nei termini, e il sito è per un cliente. Netlify invece **permette esplicitamente l'uso commerciale** sul piano gratuito: è per questo che è stato scelto.
+- 🚨 **La build Netlify non gira in locale su questa macchina.** `netlify build --offline` fallisce nel bundling Deno dell'edge function del middleware (*"Could not load edge function"*). **Ipotesi: il progetto vive dentro `OneDrive\Desktop`**, che blocca e virtualizza i file. Su Linux (CI Netlify) **passa senza problemi**. Non perdere tempo a debuggarlo in locale: si verifica pushando.
+- ⚠️ **Il nome della variabile della chiave Supabase non combacia.** Il dashboard Supabase la chiama `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, ma il codice legge **`NEXT_PUBLIC_SUPABASE_ANON_KEY`**. Il valore nuovo funziona (verificato sul campo), ma va messo **sotto il nostro nome**. Sbagliarlo produce un guasto **silenzioso**: il sito compila e si apre, semplicemente non parla col database.
+- ⚠️ **Le `NEXT_PUBLIC_*` sono incorporate nel bundle alla BUILD**, non lette a runtime. Cambiarle su Netlify richiede un **nuovo deploy**, non basta salvarle.
+- ⚠️ **`db push` NON applica `supabase/seed.sql`.** Sul cloud l'admin va promosso a mano con la `update` del seed, dopo che si è registrato.
+- ⚠️ **Sul cloud le email `@example.com` non funzionano più.** In locale le intercettava Mailpit; sul cloud la conferma deve arrivare a una casella vera. E il limite è **2 email di auth all'ora** (servizio email di default di Supabase, scelta D-4).
+- ⚠️ **`SUPABASE_SERVICE_ROLE_KEY` non è usata in `src/`** e **non va configurata da nessuna parte**: bypassa tutte le RLS.
+- ⚠️ **Il progetto Supabase gratuito si mette in pausa dopo 7 giorni di inattività.** Se il cliente riapre il link dopo dieci giorni trova il sito morto (si riattiva dal dashboard in un minuto). Decisione su come gestirlo ancora da prendere.
+
+### Le altre strade, quando la 1E sarà chiusa
+
+1. **Go-live pubblico** — dominio del club, contenuti legali reali (i `[DA COMPILARE]` con i dati del Titolare, da chiedere al cliente), SMTP vero, Google OAuth, rimozione di `src/app/robots.ts`.
 2. **Fase 2** — news/blog, mappa interattiva dei raduni, gestione utenti admin, cancellazione account (promessa nella privacy policy della 1D). Vedi `docs/ROADMAP.md`.
-3. **Micro-fase debiti** — saldare i follow-up accumulati (elencati qui sotto), in particolare `revalidatePath` e la **pulizia orfani storage**, che sono di sistema e toccano più fasi.
+3. **Micro-fase debiti** — `revalidatePath` e la **pulizia orfani storage**, che sono di sistema e toccano più fasi.
 
 **Deferred-minor 1D NON bloccanti (follow-up):** banner senza `role`/`aria-live`/focus management; il banner riaperto dal footer non ha una X di chiusura (si chiude solo riscegliendo); `title="video"` dell'iframe non passa da i18n; `Stored` type/array-guard cosmetici. **Contenuti da completare:** i `[DA COMPILARE]` nelle policy (denominazione, sede, email del Titolare) e la validazione legale dei testi — oggi entrambe le pagine dichiarano onestamente di essere una bozza.
 
