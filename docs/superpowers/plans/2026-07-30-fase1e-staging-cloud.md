@@ -73,19 +73,25 @@ più. Nessun'altra deviazione dalla spec.
 
 ---
 
-## ⛔ Punto da confermare con l'utente PRIMA del Task 3
+## ✅ Email degli account di prova — confermate dall'utente il 2026-07-30
 
 Sul cloud le email di conferma vanno a caselle **reali**: in locale le intercettava Mailpit,
 quindi `membro.test@example.com` funzionava. Sul cloud **non funziona più**.
 
-Servono due indirizzi raggiungibili. Proposta, che **non crea nessun account nuovo**:
+Indirizzi **autorizzati dall'utente**, da usare per tutta la fase:
 
-- admin → `mcdevelop03@gmail.com` (già l'admin di progetto, già in `supabase/seed.sql`)
-- membro → `mcdevelop03+membro@gmail.com` (alias Gmail col `+`: arriva nella stessa inbox)
+| Ruolo | Email |
+|---|---|
+| admin | `mcdevelop03@gmail.com` (già in `supabase/seed.sql`) |
+| membro | `matteo050903@gmail.com` |
 
-**Questo va confermato dall'utente prima di iniziare il Task 3** (policy: chiedere sempre
-conferma prima di usare qualsiasi email). Se rifiutata, l'utente indica due indirizzi
-alternativi e il piano prosegue identico sostituendoli.
+⚠️ **Non usare nessun altro indirizzo** senza chiedere. In particolare mai
+`aidev3@goproject.it` (l'email dell'account).
+
+Nota per il Task 8 Step 3 (terzo account per la prova di conferma email sul dominio nuovo):
+**non** inventare un indirizzo. Usare un alias col `+` di uno dei due autorizzati — per
+esempio `matteo050903+prova@gmail.com`, che arriva nella stessa inbox — o chiedere
+all'utente.
 
 ---
 
@@ -459,10 +465,9 @@ si fa a mano nel Task 3.
 Fase 1). Quindi **ogni** guasto che emerge è per forza configurazione cloud. Dopo il deploy,
 ogni nuovo guasto sarà per forza l'adapter. Bisezione pulita (D-7).
 
-⛔ **Prima di iniziare: far confermare all'utente gli indirizzi email** (vedi il blocco
-"Punto da confermare" più sopra). Il resto del task li assume come:
+**Indirizzi email** (già confermati dall'utente, vedi il blocco più sopra):
 - admin → `mcdevelop03@gmail.com`
-- membro → `mcdevelop03+membro@gmail.com`
+- membro → `matteo050903@gmail.com`
 
 **Files:** solo `.env.local` (non tracciato) e due file di appoggio non tracciati.
 
