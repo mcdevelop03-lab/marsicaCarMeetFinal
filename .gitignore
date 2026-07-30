@@ -44,3 +44,6 @@ next-env.d.ts
 # Mockup Vite archiviato (riferimento, non parte del build)
 /_mockup-reference/
 /apptmp/
+
+# netlify
+/.netlify/
