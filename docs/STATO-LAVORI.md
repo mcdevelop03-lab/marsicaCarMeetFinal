@@ -60,6 +60,35 @@
 
 **Falso allarme già chiarito:** l'host Supabase **non** compare nei chunk JS della pagina di login, ed è corretto — il client browser è importato solo da `AvatarUploader`/`VehicleForm`/`EventForm`/`AdminMedia` (pagine autenticate); login e registrazione passano da server action e parlano con Supabase dal server. Non riaprire questa indagine.
 
+### 🔧 Provare l'interfaccia in locale contro il database CLOUD
+
+La ricetta che il 2026-08-03 ha smascherato **tre** difetti che `tsc`, `lint`, 119 test e build
+dichiaravano a posto. Non serve Docker né Supabase locale: si passano le variabili **inline**,
+così `.env.local` (che punta al locale) **non va toccato**.
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://ubvhdliqnkfknhlczcnj.supabase.co" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<publishable key, dal dashboard o dalle variabili Netlify>" \
+npm run dev
+```
+
+Next dà la precedenza alle variabili già presenti nell'ambiente rispetto a `.env.local`.
+Le chiavi Turnstile restano quelle **di test** di `.env.local`, che validano sempre: in locale
+va bene. Ciclo di prova da secondi invece che da minuti di deploy.
+
+⚠️ **A fine prova spegni il server**, altrimenti resta appeso sulla 3000 e il tentativo dopo
+parte sulla 3001 senza che te ne accorga:
+`Get-NetTCPConnection -LocalPort 3000 -State Listen | % { Stop-Process -Id $_.OwningProcess -Force }`
+
+### ⚠️ Il ledger di fase NON è su GitHub
+
+`.superpowers/sdd/.gitignore` contiene `*`: il registro dettagliato
+([`../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md`](../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md))
+**vive solo su questo disco**. Questo file invece è in git. Conseguenza pratica: **tutto ciò
+che serve a lavorare deve stare qui dentro**; nel ledger resta il ragionamento esteso, prezioso
+ma non indispensabile. Se un giorno si cambia macchina o il disco si guasta, il ledger si perde
+senza preavviso.
+
 ### Coordinate dello staging (nessun segreto qui dentro)
 
 | Cosa | Valore |
