@@ -3,6 +3,7 @@ import { useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Camera, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import OverlayAttesa from "@/components/ui/OverlayAttesa";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
@@ -161,6 +162,17 @@ export default function AdminMedia({
           multiple
           onChange={onFilesChange}
           className="hidden"
+        />
+        {/* Durante un upload batch il velo mostra il contatore invece di un testo fisso:
+            coprendo lo schermo nasconderebbe quello sotto al bottone, e sapere "3 di 12"
+            è ciò che rende l'attesa sopportabile. */}
+        <OverlayAttesa
+          attivo={busy}
+          messaggio={
+            caricamento
+              ? t("uploading", { done: caricamento.done, total: caricamento.total })
+              : t("attesaUpload")
+          }
         />
         <Button
           type="button"

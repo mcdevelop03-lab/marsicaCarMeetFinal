@@ -103,7 +103,9 @@
     "handlePlaceholder": "Solo il nome utente, senza @",
     "save": "Salva",
     "saved": "Profilo aggiornato.",
-    "genericError": "Qualcosa è andato storto. Riprova."
+    "genericError": "Qualcosa è andato storto. Riprova.",
+    "attesaSalvataggio": "Salvataggio profilo in corso…",
+    "attesaAvatar": "Caricamento foto profilo in corso…"
   },
   "members": {
     "title": "Membri",
@@ -167,7 +169,9 @@
     "fuel_gpl": "GPL",
     "fuel_metano": "Metano",
     "fuel_ibrida": "Ibrida",
-    "fuel_elettrica": "Elettrica"
+    "fuel_elettrica": "Elettrica",
+    "attesaCreazione": "Salvataggio auto in corso…",
+    "attesaSalvataggio": "Salvataggio auto in corso…"
   },
   "events": {
     "title": "Eventi",
@@ -232,7 +236,9 @@
     "backTitle": "Modifiche non salvate",
     "backWarning": "Tornando indietro perderai le modifiche che non hai salvato.",
     "backConfirm": "Esci senza salvare",
-    "backStay": "Resta"
+    "backStay": "Resta",
+    "attesaCreazione": "Creazione evento in corso…",
+    "attesaSalvataggio": "Salvataggio evento in corso…"
   },
   "rsvp": {
     "sectionTitle": "Partecipazione",
@@ -294,7 +300,8 @@
     "empty": "Nessuna foto o video ancora.",
     "close": "Chiudi",
     "prev": "Precedente",
-    "next": "Successiva"
+    "next": "Successiva",
+    "attesaUpload": "Caricamento in corso…"
   },
   "consent": {
     "bannerTitle": "Rispettiamo la tua privacy",

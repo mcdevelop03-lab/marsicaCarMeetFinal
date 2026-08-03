@@ -3,6 +3,7 @@ import { useActionState, useEffect, useRef, useState, startTransition } from "re
 import { useTranslations } from "next-intl";
 import { Camera } from "lucide-react";
 import Button from "@/components/ui/Button";
+import OverlayAttesa from "@/components/ui/OverlayAttesa";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
@@ -215,6 +216,7 @@ export default function VehicleForm({
       {errore && <p className="font-mono text-xs text-accent-red">{errore}</p>}
       {state.error && <p className="font-mono text-xs text-accent-red">{state.error}</p>}
 
+      <OverlayAttesa attivo={busy} messaggio={vehicle ? t("attesaSalvataggio") : t("attesaCreazione")} />
       <Button type="submit" pending={busy} disabled={!valid}>
         {t("save")}
       </Button>

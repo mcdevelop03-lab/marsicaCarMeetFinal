@@ -55,6 +55,20 @@ body {
   animation: toast-in 0.2s ease-out;
 }
 
+/* Velo di attesa (OverlayAttesa): resta trasparente per 350 ms e compare solo se
+   l'operazione dura davvero. Sotto quella soglia non si vede nulla e il segnale resta la
+   rotella dentro il bottone: un velo che lampeggia dà più fastidio del silenzio.
+   Il ritardo sta qui e non in un setTimeout: niente stato, niente timer da ripulire. */
+@keyframes velo-attesa-in {
+  to {
+    opacity: 1;
+  }
+}
+.velo-attesa {
+  opacity: 0;
+  animation: velo-attesa-in 0.15s ease-out 0.35s forwards;
+}
+
 .racing-grid {
   background-size: 40px 40px;
   background-image:
