@@ -15,8 +15,11 @@ import Skeleton from "@/components/ui/Skeleton";
  * Il confine deve stare **nella rotta di destinazione**. Se aggiungi una rotta, aggiungile
  * il suo `loading.tsx` o quella pagina tornerà a caricare in silenzio.
  *
- * La forma è volutamente generica (un titolo e una griglia di schede): copre pagine molto
- * diverse fra loro e non deve promettere un impaginato che poi non arriva.
+ * ⚠️ **Da usare SOLO sulle rotte che sono davvero griglie di schede:** home, `/eventi`,
+ * `/garage`, `/membri`. Un primo tentativo lo metteva ovunque, e in collaudo l'utente ha
+ * notato subito il difetto: tre schede che lampeggiano prima di una pagina di testo o di
+ * un form sono una bugia grafica — lo scheletro deve somigliare a ciò che arriva. Per
+ * tutte le altre rotte c'è `PageSpinner`.
  */
 export default async function PageSkeleton() {
   const t = await getTranslations("common");

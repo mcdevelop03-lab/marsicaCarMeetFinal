@@ -1,1 +1,1 @@
-export { default } from "@/components/ui/PageSkeleton";
+export { default } from "@/components/ui/PageSpinner";

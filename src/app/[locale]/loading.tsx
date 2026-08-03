@@ -1,4 +1,4 @@
-// Confine di sospensione per il PRIMO caricamento di una pagina (quando si arriva da
-// fuori o si ricarica). Per i cambi pagina lato client NON basta: vedi la spiegazione
-// in PageSkeleton, i confini che contano sono quelli dentro le singole rotte.
-export { default } from "@/components/ui/PageSkeleton";
+// Confine per il PRIMO caricamento (arrivo da fuori o ricarica). Neutro di proposito:
+// da qui non si sa quale pagina arriverà. Per i cambi pagina lato client contano i
+// loading.tsx dentro le singole rotte — vedi la spiegazione in PageSkeleton.
+export { default } from "@/components/ui/PageSpinner";
