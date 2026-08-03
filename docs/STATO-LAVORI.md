@@ -1,6 +1,6 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-30**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-08-03**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
@@ -9,7 +9,8 @@
 - 🟡 **FASE 1E — STAGING CLOUD: in corso** sul branch **`feat/fase1e-staging-cloud`** (pushato su origin). **C'è un cliente che deve provare e approvare il sito**: è il motivo per cui esiste questa fase. Spec: [`superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md`](./superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md) · Piano: [`superpowers/plans/2026-07-30-fase1e-staging-cloud.md`](./superpowers/plans/2026-07-30-fase1e-staging-cloud.md) · Ledger: [`../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md`](../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md).
   - ⚠️ **SPEC E PIANO SONO PARZIALMENTE OBSOLETI: dicono Cloudflare Workers, ma si è passati a Netlify.** Il ledger è la fonte di verità aggiornata. Riallineare spec e piano è un task ancora da fare.
   - ✅ **Fatto:** `main` + branch **pushati su GitHub** (i 42 commit della Fase 1 non vivono più su un solo disco) · **progetto Supabase cloud** creato con le migrazioni `0001`–`0010` applicate e verificate · **sito Netlify deployato** · **`noindex` + bottone Google dietro flag** (commit `e4fa307`, 119 test, review indipendente con 0 rilievi).
-  - ⏸️ **Dove ci si è fermati:** il sito Netlify è impostato su **Private**, quindi ogni pagina risponde 401 col login di Netlify e **la verifica funzionale non è ancora stata fatta**. Primo passo alla ripresa: mettere **Production visibility → Public**.
+  - ✅ **Sito su Public e verifica funzionale superata (2026-08-03):** `/` → `/it` **307** (il middleware Node gira davvero su Netlify), `/it`+`/it/eventi`+`/it/login`+`/it/privacy`+`/it/cookie` **200**, `/it/membri` → login (guardia auth viva), `/robots.txt` nega tutto, cookie banner 1D nel markup SSR, Supabase cloud vivo (non in pausa).
+  - ⏸️ **Dove ci si è fermati:** **Task 4 — Turnstile.** Misurato dal vivo: la pagina di login servita da Netlify **non contiene `challenges.cloudflare.com`**, il widget non c'è perché la site key non è fra le variabili Netlify → **login e registrazione sono morti sullo staging**. È il blocco che ferma tutto il resto (Task 3 e 7 hanno bisogno di utenti veri).
 
 - 🎉 **FASE 1 (MVP) COMPLETA** — 1A ✅ · 1B ✅ · 1C ✅ · 1D ✅. Tutto mergiato su `main`. ⚠️ **`main` è solo locale, non pushato** (41 commit avanti a `origin/main`).
 - 🟢 **Fase 1D ✅ COMPLETATA** (GDPR base) — **chiude la Fase 1.** Implementazione subagent-driven (Task 1-5, tutti rivisti con esito pulito) + **review finale whole-branch (opus): "Ready to merge: With fixes"** → **fix wave `531adc7`** (2 Important) → **re-review del fix wave: entrambi ADDRESSED, 0 nuove rotture** → **collaudo dal vivo superato (2026-07-29, 0 bug)** → **mergiata su `main`** (merge `173d864`), branch `feat/fase1d-gdpr` eliminato. **Nessun DB, nessuna migrazione.** **Cosa fa:** cookie banner con gestione consensi che **blocca gli embed YouTube** fino al consenso (`VideoYouTube` gate), due categorie (Necessari + Contenuti di terze parti), pagine `/privacy` e `/cookie` (bozza IT + disclaimer), footer con "Preferenze cookie". Consenso in cookie first-party `mcm_consent` letto lato server (no flash). **115 test**, `tsc`/`lint`/**build pulita** verdi. Spec: [`superpowers/specs/2026-07-28-fase1d-gdpr-design.md`](./superpowers/specs/2026-07-28-fase1d-gdpr-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1d-gdpr.md`](./superpowers/plans/2026-07-28-fase1d-gdpr.md).
@@ -24,18 +25,22 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: **Fase 1E, verifica dello staging**
+## ▶️ DA COSA RIPARTIRE: **Fase 1E, Task 4 — Turnstile reale**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e il ledger della Fase 1E: il sito è su Netlify ma è Private. Rendiamolo Public e verifichiamolo."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e il ledger della Fase 1E: lo staging è online e verificato, manca Turnstile. Facciamo il Task 4."*
 
 ### Il primo passo, in ordine
 
-1. **Metti il sito Netlify su Public.** Dashboard Netlify → progetto `polite-moxie-8dc031` → **Project configuration → Project visibility** → **Production visibility: Public** (lasciare **Deploy Preview: Private**). Finché è Private ogni rotta risponde **401** con `<title>Login Redirect</title>`: **non è un guasto dell'app**, è il controllo accessi di Netlify davanti. La protezione con password non esiste sul piano gratuito, quindi la privatezza è affidata a `noindex` + URL non divulgato (decisione D-6 della spec).
-2. **Verifica funzionale** su `https://polite-moxie-8dc031.netlify.app`: `/` deve reindirizzare a `/it` (**prova che il middleware gira**, il pezzo su cui Cloudflare è fallita); `/it`, `/it/eventi`, `/it/login`, `/it/privacy` devono rispondere 200; `/robots.txt` deve negare tutto; le richieste dati devono andare a `ubvhdliqnkfknhlczcnj.supabase.co`.
-3. **Task 4 — Turnstile reale.** ⚠️ **Senza, login e registrazione sono morti sul cloud**: [`src/lib/turnstile.ts:2`](../src/lib/turnstile.ts) fa `if (!token) return false`, e il widget si disegna solo se la site key esiste. Serve un widget Turnstile sull'account Cloudflare (che **non** è più usato per l'hosting, solo per questo) con hostname `polite-moxie-8dc031.netlify.app` e `localhost`. Poi le due chiavi vanno messe fra le variabili d'ambiente di Netlify e in `.env.local`.
-4. **Task 3 — collaudo auth/dati con utenti veri** (registrazione + conferma email, promozione admin via SQL, prove RLS, upload coi limiti dei bucket).
-5. **Task 7 — contenuti demo.** È ciò che il cliente guarda per primo: 2-3 eventi (uno futuro con capienza e RSVP aperto, uno concluso con album foto e un video YouTube), 2-3 membri con auto in garage e profilo completo.
-6. **Task 8 — collaudo mirato + riallineamento della documentazione**, incluso **riscrivere spec e piano da Cloudflare a Netlify** e le caselle 1C/1D di `ROADMAP.md`, oggi ancora vuote pur essendo fatte.
+1. **Task 4 — Turnstile reale.** 🚨 **È il blocco: senza, login e registrazione sono morti sul cloud** — [`src/lib/turnstile.ts:2`](../src/lib/turnstile.ts) fa `if (!token) return false`, e il widget si disegna solo se la site key esiste (verificato: oggi la pagina di login su Netlify non contiene `challenges.cloudflare.com`). Serve un widget Turnstile sull'account Cloudflare (che **non** è più usato per l'hosting, solo per questo) con hostname `polite-moxie-8dc031.netlify.app` **e** `localhost`. Poi: site key + secret fra le **variabili d'ambiente di Netlify** e in `.env.local`. ⚠️ La site key è `NEXT_PUBLIC_*` → **serve un nuovo deploy**, salvarla non basta. ⚠️ In `.env.local` oggi ci sono le **test key** di Cloudflare (validano sempre): tenerle in locale, **non** metterle sul cloud.
+2. **Task 3 — collaudo auth/dati con utenti veri** (registrazione + conferma email, promozione admin via SQL — `db push` non esegue `seed.sql` —, prove RLS, upload coi limiti dei bucket).
+3. **Task 7 — contenuti demo.** È ciò che il cliente guarda per primo: 2-3 eventi (uno futuro con capienza e RSVP aperto, uno concluso con album foto e un video YouTube), 2-3 membri con auto in garage e profilo completo.
+4. **Task 8 — collaudo mirato + riallineamento della documentazione**, incluso **riscrivere spec e piano da Cloudflare a Netlify** e le caselle 1C/1D di `ROADMAP.md`, oggi ancora vuote pur essendo fatte.
+
+### ✅ Già fatto il 2026-08-03 (non rifarlo)
+
+Sito Netlify su **Public** + **verifica funzionale dall'esterno superata**: `/` → `/it` **307** (prova che il middleware Node gira, il pezzo su cui Cloudflare è fallita); `/it`, `/it/eventi`, `/it/login`, `/it/privacy`, `/it/cookie` **200**; `/it/membri` → `/it/login` (guardia `(auth)` viva sul cloud); `/robots.txt` = `Disallow: /`; cookie banner 1D nel markup SSR; `/it/eventi` rende lo **stato vuoto**, non un errore; Supabase cloud risponde (non in pausa). Dettaglio nel ledger.
+
+**Falso allarme già chiarito:** l'host Supabase **non** compare nei chunk JS della pagina di login, ed è corretto — il client browser è importato solo da `AvatarUploader`/`VehicleForm`/`EventForm`/`AdminMedia` (pagine autenticate); login e registrazione passano da server action e parlano con Supabase dal server. Non riaprire questa indagine.
 
 ### Coordinate dello staging (nessun segreto qui dentro)
 
