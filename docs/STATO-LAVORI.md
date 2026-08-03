@@ -11,7 +11,8 @@
   - ✅ **Fatto:** `main` + branch **pushati su GitHub** (i 42 commit della Fase 1 non vivono più su un solo disco) · **progetto Supabase cloud** creato con le migrazioni `0001`–`0010` applicate e verificate · **sito Netlify deployato** · **`noindex` + bottone Google dietro flag** (commit `e4fa307`, 119 test, review indipendente con 0 rilievi).
   - ✅ **Sito su Public e verifica funzionale superata (2026-08-03):** `/` → `/it` **307** (il middleware Node gira davvero su Netlify), `/it`+`/it/eventi`+`/it/login`+`/it/privacy`+`/it/cookie` **200**, `/it/membri` → login (guardia auth viva), `/robots.txt` nega tutto, cookie banner 1D nel markup SSR, Supabase cloud vivo (non in pausa).
   - ✅ **Task 4 (Turnstile) completo e verificato (2026-08-03):** widget creato, variabili su Netlify, redeploy fatto. Il widget emette un token da 773 caratteri e un login con password errata risponde **"Credenziali non valide"** (non "Verifica anti-bot non superata") → la secret verifica davvero e **il server Netlify parla con Supabase cloud**. Login e registrazione sono vivi.
-  - ⏸️ **Dove ci si è fermati:** **Task 3 — collaudo auth/dati con utenti veri.** Sul cloud non esiste ancora nessun account: vanno registrati admin e membro con email vere, l'admin va promosso a mano via SQL, e poi si rifanno le prove RLS/upload.
+  - ✅ **Task 3 (collaudo auth/dati) completo (2026-08-03):** admin e membro registrati e confermati sul cloud, admin promosso via SQL e confermato anche dalla UI; **tutte le prove negative da anonimo superate** (scritture RLS respinte, profili invisibili, upload respinti sui 4 bucket).
+  - ⏸️ **Dove ci si è fermati:** **Task 7 — contenuti demo.** Il sito è online, funzionante e **vuoto**: è la prima cosa che vedrà il cliente.
 
 - 🎉 **FASE 1 (MVP) COMPLETA** — 1A ✅ · 1B ✅ · 1C ✅ · 1D ✅. Tutto mergiato su `main`. ⚠️ **`main` è solo locale, non pushato** (41 commit avanti a `origin/main`).
 - 🟢 **Fase 1D ✅ COMPLETATA** (GDPR base) — **chiude la Fase 1.** Implementazione subagent-driven (Task 1-5, tutti rivisti con esito pulito) + **review finale whole-branch (opus): "Ready to merge: With fixes"** → **fix wave `531adc7`** (2 Important) → **re-review del fix wave: entrambi ADDRESSED, 0 nuove rotture** → **collaudo dal vivo superato (2026-07-29, 0 bug)** → **mergiata su `main`** (merge `173d864`), branch `feat/fase1d-gdpr` eliminato. **Nessun DB, nessuna migrazione.** **Cosa fa:** cookie banner con gestione consensi che **blocca gli embed YouTube** fino al consenso (`VideoYouTube` gate), due categorie (Necessari + Contenuti di terze parti), pagine `/privacy` e `/cookie` (bozza IT + disclaimer), footer con "Preferenze cookie". Consenso in cookie first-party `mcm_consent` letto lato server (no flash). **115 test**, `tsc`/`lint`/**build pulita** verdi. Spec: [`superpowers/specs/2026-07-28-fase1d-gdpr-design.md`](./superpowers/specs/2026-07-28-fase1d-gdpr-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1d-gdpr.md`](./superpowers/plans/2026-07-28-fase1d-gdpr.md).
@@ -26,23 +27,26 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: **Fase 1E, Task 3 — collaudo auth/dati sul cloud**
+## ▶️ DA COSA RIPARTIRE: **Fase 1E, Task 7 — contenuti demo**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e il ledger della Fase 1E: staging online, Turnstile a posto. Facciamo il Task 3."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e il ledger della Fase 1E: lo staging funziona ed è vuoto. Facciamo il Task 7."*
 
 ### Il primo passo, in ordine
 
-1. **Task 3 — collaudo auth/dati con utenti veri.** Sul cloud **non esiste ancora nessun account**. Serve: registrazione dell'admin `mcdevelop03@gmail.com` + conferma email (⚠️ casella **vera**: `@example.com` non funziona più, e il limite è **2 email di auth all'ora**), poi **promozione admin a mano via SQL** rieseguendo la `update` di `supabase/seed.sql` (⚠️ `db push` **non** esegue il seed), registrazione del membro `matteo050903@gmail.com`, e infine le prove RLS + upload coi limiti dei bucket.
-2. **Task 7 — contenuti demo.** È ciò che il cliente guarda per primo: 2-3 eventi (uno futuro con capienza e RSVP aperto, uno concluso con album foto e un video YouTube), 2-3 membri con auto in garage e profilo completo.
-3. **Task 8 — collaudo mirato + riallineamento della documentazione**, incluso **riscrivere spec e piano da Cloudflare a Netlify** e le caselle 1C/1D di `ROADMAP.md`, oggi ancora vuote pur essendo fatte.
+1. **Task 7 — contenuti demo.** È ciò che il cliente guarda per primo, e oggi il sito è **vuoto**: 2-3 eventi (uno futuro con capienza e RSVP aperto, uno concluso con album foto e un video YouTube), 2-3 membri con auto in garage e profilo completo. Si carica **dalla UI da admin**, non via SQL (così si collauda il percorso vero).
+2. **Task 8 — collaudo mirato + riallineamento della documentazione**, incluso **riscrivere spec e piano da Cloudflare a Netlify** e le caselle 1C/1D di `ROADMAP.md`, oggi ancora vuote pur essendo fatte.
 
 ### ✅ Già fatto il 2026-08-03 (non rifarlo)
 
-**Sito su Public + verifica funzionale superata:** `/` → `/it` **307** (prova che il middleware Node gira, il pezzo su cui Cloudflare è fallita); `/it`, `/it/eventi`, `/it/login`, `/it/privacy`, `/it/cookie` **200**; `/it/membri` → `/it/login` (guardia `(auth)` viva sul cloud); `/robots.txt` = `Disallow: /`; cookie banner 1D nel markup SSR; `/it/eventi` rende lo **stato vuoto**, non un errore.
+**Sito su Public + verifica funzionale superata:** `/` → `/it` **307** (prova che il middleware Node gira, il pezzo su cui Cloudflare è fallita); `/it`, `/it/eventi`, `/it/login`, `/it/privacy`, `/it/cookie` **200**; `/it/membri` → `/it/login` (guardia `(auth)` viva sul cloud); `/robots.txt` = `Disallow: /`; cookie banner 1D nel markup SSR.
 
 **Task 4 (Turnstile) chiuso e verificato:** widget `marsica-car-meet-staging`, variabili su Netlify, redeploy fatto. Il widget emette un **token da 773 caratteri** (site key e hostname validi) e un login con password errata risponde **"Credenziali non valide"** invece di "Verifica anti-bot non superata" → la secret verifica davvero il token, e di conseguenza **il server Netlify parla con Supabase cloud**.
 
-⚠️ **Rumore di console da non scambiare per un guasto:** l'iframe di challenge Cloudflare logga righe `%c%d font-size:0;...` come *error*. È suo debug interno, non un errore dell'app.
+**Task 3 (collaudo auth/dati) chiuso:** URL di redirect configurate su Supabase **prima** di registrarsi (altrimenti il link di conferma punta a `localhost` e si brucia una delle 2 email/ora); admin `mcdevelop03@gmail.com` e membro `matteo050903@gmail.com` registrati e confermati; admin promosso via SQL e verificato **anche dalla UI**. Prove negative da anonimo **tutte superate**: `POST` su `events`/`profiles`/`event_registrations` → 401 `42501`; `profiles`/`vehicles`/`event_registrations` in lettura → `[]`; upload sui 4 bucket → 403; `storage list` → `[]`; `iscritti_per_eventi` → 200.
+
+⚠️ **Due cose da non scambiare per guasti:**
+- L'iframe di challenge Cloudflare logga righe `%c%d font-size:0;...` come *error* in console. È suo debug interno.
+- L'**SQL Editor di Supabase dice "Success. No rows returned" anche quando la `update` non ha toccato niente**: non è una conferma. Verificare sempre con una `select`.
 
 **Falso allarme già chiarito:** l'host Supabase **non** compare nei chunk JS della pagina di login, ed è corretto — il client browser è importato solo da `AvatarUploader`/`VehicleForm`/`EventForm`/`AdminMedia` (pagine autenticate); login e registrazione passano da server action e parlano con Supabase dal server. Non riaprire questa indagine.
 
@@ -128,7 +132,8 @@
 
 ### ⚠️ Trappole/fix già affrontati (non reintrodurli)
 
-- 🚨 **`iscriviti_evento` — bypass auth chiuso (fix `8444ab6`):** l'identity check usa **`is distinct from auth.uid()`** (non `<>`: con `auth.uid()` NULL il `<>` dà NULL → l'eccezione non scattava, un anon poteva iscrivere una vittima). E c'è **`revoke execute … from public`** su entrambe le funzioni **prima** dei grant (Postgres concede EXECUTE a PUBLIC di default → senza revoke `anon` poteva chiamare la funzione). **Non toccare questi due punti.**
+- 🚨 **`iscriviti_evento` — bypass auth chiuso (fix `8444ab6`):** l'identity check usa **`is distinct from auth.uid()`** (non `<>`: con `auth.uid()` NULL il `<>` dà NULL → l'eccezione non scattava, un anon poteva iscrivere una vittima). **Non toccare questo punto: è l'unica barriera reale.**
+  - ⚠️ **Correzione misurata sul cloud il 2026-08-03.** Questa nota diceva anche che il `revoke execute … from public` della `0009` impedisce ad `anon` di chiamare la funzione. **È falso.** Una chiamata anonima **esegue il corpo** e viene respinta dall'eccezione interna (`28000 "non autenticato"`), non da un `42501 permission denied`; `proacl` mostra `anon=X/postgres`. La revoca a `PUBLIC` **non rimuove i grant che i singoli ruoli hanno in proprio** (qui arrivano dai default privileges sulle funzioni). Quindi **non indebolire il controllo interno pensando che la revoca faccia da rete**: non la fa. Follow-up non bloccante: aggiungere un `revoke execute … from anon` esplicito.
 - **`event_vehicles_insert` irrobustita (fix `2052d8d`, dalla review finale):** ora richiede **anche** `owner_id = auth.uid()` sul veicolo, non solo la proprietà della registrazione (prima un membro poteva attaccare l'auto di un altro via PostgREST, e sarebbe comparsa sotto il suo nome nella lista). Da **verificare dal vivo** come prova negativa.
 - **Errori Supabase mai confusi col vuoto:** conteggio e query garage in `page.tsx` loggano l'errore (fix `c4f81ff`); la data "iscritto il" usa `formattaDataBreve` (fuso Roma), non `toLocaleDateString` (fix `4546a5c`).
 - **La nested select di `page.tsx` prende `town`/`socials` di proposito:** li usa il pannello admin. Non rimuoverli.
