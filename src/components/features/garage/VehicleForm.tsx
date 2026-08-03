@@ -215,7 +215,7 @@ export default function VehicleForm({
       {errore && <p className="font-mono text-xs text-accent-red">{errore}</p>}
       {state.error && <p className="font-mono text-xs text-accent-red">{state.error}</p>}
 
-      <Button type="submit" disabled={busy || !valid}>
+      <Button type="submit" pending={busy} disabled={!valid}>
         {t("save")}
       </Button>
     </form>

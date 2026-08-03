@@ -165,7 +165,7 @@ export default function AdminMedia({
         <Button
           type="button"
           variant="outline"
-          disabled={busy}
+          pending={busy}
           onClick={() => inputFileRef.current?.click()}
           className="flex items-center gap-2"
         >
@@ -196,7 +196,7 @@ export default function AdminMedia({
           placeholder={t("videoCaption")}
           maxLength={200}
         />
-        <Button type="button" onClick={aggiungiVideoClick} disabled={busy || !videoUrl.trim()}>
+        <Button type="button" onClick={aggiungiVideoClick} pending={busy} disabled={!videoUrl.trim()}>
           {t("add")}
         </Button>
       </div>
@@ -210,7 +210,7 @@ export default function AdminMedia({
           placeholder={t("driveUrl")}
           maxLength={500}
         />
-        <Button type="button" variant="outline" onClick={salvaDrive} disabled={busy}>
+        <Button type="button" variant="outline" onClick={salvaDrive} pending={busy}>
           {t("driveSave")}
         </Button>
       </div>
@@ -257,7 +257,7 @@ export default function AdminMedia({
             <Button type="button" variant="outline" onClick={() => setDaEliminare(null)} disabled={busy}>
               {t("cancel")}
             </Button>
-            <Button type="button" onClick={() => eseguiEliminazione(daEliminare)} disabled={busy}>
+            <Button type="button" onClick={() => eseguiEliminazione(daEliminare)} pending={busy}>
               {t("confirm")}
             </Button>
           </div>

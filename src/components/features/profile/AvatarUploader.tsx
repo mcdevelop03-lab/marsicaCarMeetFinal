@@ -85,7 +85,7 @@ export default function AvatarUploader({
         <Button
           type="button"
           variant="outline"
-          disabled={busy}
+          pending={busy}
           onClick={() => inputRef.current?.click()}
           className="flex items-center gap-2"
         >

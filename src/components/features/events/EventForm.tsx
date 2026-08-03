@@ -291,7 +291,7 @@ export default function EventForm({
 
       {!valid && <p className="font-mono text-[11px] text-accent-red">{t("requiredHint")}</p>}
 
-      <Button type="submit" disabled={busy || !valid}>
+      <Button type="submit" pending={busy} disabled={!valid}>
         {t("save")}
       </Button>
     </form>

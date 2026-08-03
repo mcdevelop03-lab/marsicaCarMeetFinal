@@ -167,7 +167,7 @@ export default function AdminIscritti({
             <Button
               type="button"
               onClick={() => eseguiRimozione(daRimuovere.registrationId)}
-              disabled={pending}
+              pending={pending}
             >
               {t("confirm")}
             </Button>
@@ -197,7 +197,7 @@ export default function AdminIscritti({
                 placeholder={t("searchMember")}
                 className="flex-1 border border-white/10 bg-surface-dim px-3 py-2 font-mono text-xs text-white placeholder:text-white/30"
               />
-              <Button type="button" variant="outline" onClick={cerca} disabled={pending}>
+              <Button type="button" variant="outline" onClick={cerca} pending={pending}>
                 {t("search")}
               </Button>
             </div>
@@ -247,7 +247,7 @@ export default function AdminIscritti({
               <Button type="button" variant="outline" onClick={() => setMembro(null)} disabled={pending}>
                 {t("cancel")}
               </Button>
-              <Button type="button" onClick={eseguiIscrizioneManuale} disabled={pending}>
+              <Button type="button" onClick={eseguiIscrizioneManuale} pending={pending}>
                 {t("enroll")}
               </Button>
             </div>

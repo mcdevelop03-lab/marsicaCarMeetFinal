@@ -99,7 +99,7 @@ export default function ProfileForm({
       {state.error && <p className="font-mono text-xs text-accent-red">{state.error}</p>}
       {state.success && <p className="font-mono text-xs text-accent-orange">{state.success}</p>}
 
-      <Button type="submit" disabled={pending || !valid}>
+      <Button type="submit" pending={pending} disabled={!valid}>
         {t("save")}
       </Button>
     </form>
