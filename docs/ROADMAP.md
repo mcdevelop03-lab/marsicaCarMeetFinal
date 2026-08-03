@@ -1,6 +1,6 @@
 # ROADMAP — Marsica Car Meet
 
-> Documento vivo. Ultima modifica: 2026-07-15.
+> Documento vivo. Ultima modifica: 2026-08-03.
 > Sequenza pensata per uno sviluppatore singolo: ogni fase produce qualcosa di usabile.
 > Scelte di scope in [`DECISIONS.md`](./DECISIONS.md).
 
@@ -31,10 +31,10 @@ Obiettivo: primo prodotto realmente utile alla community. Suddivisa in sotto-pro
 - [x] **[1A]** Auth: registrazione + **conferma email**, login/logout, reset, **2FA TOTP**, guardie AAL2. *(Google OAuth + Turnstile reali: solo codice, config cloud rimandata.)*
 - [x] **[1B-1]** Profilo membro: visualizzazione e modifica (nome, tag, bio, paese, social), upload avatar. *(2026-07-12)*
 - [x] **[1B-2]** Garage: CRUD auto con upload foto (campi obbligatori/opzionali). *(2026-07-15 — con compressione WebP nel browser, migrazione `0007`)*
-- [ ] **[1C]** Eventi: elenco e dettaglio pubblici (con link mappa esterna); tipi raduno/giro/sociale.
-- [ ] **[1C]** Admin: creazione/gestione eventi + **album foto dell'evento** (video = link YouTube, D-171).
-- [ ] **[1C]** RSVP con capienza + associazione auto all'evento.
-- [ ] **[1D]** GDPR base: cookie banner + pagine privacy/cookie (struttura).
+- [x] **[1C-1]** Eventi: elenco e dettaglio pubblici (con link mappa esterna); tipi raduno/giro/sociale. *(2026-07-21 — migrazione `0008`)*
+- [x] **[1C-3]** Admin: creazione/gestione eventi + **album foto dell'evento** (video = link YouTube, D-171). *(2026-07-28 — migrazione `0010`)*
+- [x] **[1C-2]** RSVP con capienza + associazione auto all'evento. *(2026-07-23 — migrazione `0009`, capienza race-free via `iscriviti_evento`)*
+- [x] **[1D]** GDPR base: cookie banner + pagine privacy/cookie (struttura). *(2026-07-29 — gate sugli embed YouTube, nessuna migrazione)*
 - [x] **[1A]** Guardie di accesso (aree membro/admin).
 - **Esito:** membri si registrano, gestiscono auto e partecipano ai raduni creati dall'Admin;
   l'Admin pubblica gli album foto dei raduni conclusi.
@@ -43,6 +43,7 @@ Obiettivo: primo prodotto realmente utile alla community. Suddivisa in sotto-pro
 
 Obiettivo: raccontare il club e facilitare la scoperta.
 
+- [ ] **Onboarding post-registrazione** (proposta dell'utente, 2026-08-03). Oggi dopo la conferma email si atterra su `/it/dashboard` ([`auth/callback/route.ts`](../src/app/[locale]/(public)/auth/callback/route.ts)) e nessuno invita l'utente a completare il profilo o ad aggiungere un'auto — su un sito di motori è proprio il dato che serve. **Direzione consigliata:** atterraggio su `/it/profilo` + **riquadro di benvenuto in cima alla pagina** (non modale) che sparisce quando il profilo è completo, con CTA "Completa il profilo" e "Aggiungi la tua auto". ⚠️ **Pop-up sconsigliato:** c'è già il banner cookie come overlay (due sovrapposti sono sgradevoli), sui telefoni i modali sono ostili, e il progetto ha un pattern di sezioni **inline** con cui un modale stona. **Richiede brainstorming + spec + piano**: è una funzionalità, non una rifinitura. La sola riga che cambia l'atterraggio da `/dashboard` a `/profilo` si può anticipare, ma da sola non è l'onboarding.
 - [ ] News/blog: CMS admin, elenco e dettaglio articoli.
 - [ ] Pagina **Gallery** aggregata (raccoglie gli album degli eventi) — opzionale.
 - [ ] **Mappa interattiva** dei raduni (Leaflet + OpenStreetMap) con georeferenziazione eventi.

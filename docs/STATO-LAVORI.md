@@ -34,7 +34,9 @@
 ### Il primo passo, in ordine
 
 1. **Task 7 — contenuti demo.** È ciò che il cliente guarda per primo, e oggi il sito è **vuoto**: 2-3 eventi (uno futuro con capienza e RSVP aperto, uno concluso con album foto e un video YouTube), 2-3 membri con auto in garage e profilo completo. Si carica **dalla UI da admin**, non via SQL (così si collauda il percorso vero).
-2. **Task 8 — collaudo mirato + riallineamento della documentazione**, incluso **riscrivere spec e piano da Cloudflare a Netlify** e le caselle 1C/1D di `ROADMAP.md`, oggi ancora vuote pur essendo fatte.
+2. **Task 9 — email di conferma presentabile** *(nuovo, deciso col cliente in mente il 2026-08-03)*. Oggi è il template inglese di serie di Supabase: il cliente **si registrerà davvero** e quella mail la vede. Da fare: template HTML in **italiano + logo** (Supabase → *Authentication → Email Templates*), con l'immagine servita dal sito stesso. ⚠️ **Il template vive nel dashboard, non nel repo:** salvarne copia in `supabase/email-templates/` o fra un mese nessuno saprà qual è la versione buona. ⚠️ L'URL del logo va rifatto al go-live (cambia il dominio). **Non ottenibile ora:** il footer *"powered by Supabase / Opt out"* e il limite di 2 email/ora vengono dal servizio email condiviso e spariscono **solo con un SMTP vero** — già in lista go-live.
+3. **Task 10 — feedback di navigazione** *(nuovo, 2026-08-03)*. Segnalato dall'utente: cambiare pagina è lento e **non c'è nessuno spinner**, quindi si finisce per cliccare più volte. Causa accertata: **nel progetto non esiste un solo `loading.tsx`** (verificato con `find`) e tutte le pagine sono dinamiche perché leggono i cookie di sessione → al clic il browser resta fermo sulla pagina vecchia finché il server non risponde. Rimedi su due livelli: **`loading.tsx` per segmento** (transizione istantanea con scheletro) e **`useLinkStatus`** per il pending sul singolo link — esiste in Next 16, verificato in `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/use-link-status.md`. Valutare anche lo stato disabilitato sui bottoni che scatenano navigazione. ⚠️ **Aspettativa onesta:** una parte della lentezza è il **cold start del piano gratuito Netlify**; il `loading.tsx` non la elimina, smette solo di far sembrare il sito rotto.
+4. **Task 8 — collaudo mirato + riallineamento della documentazione**, incluso **riscrivere spec e piano da Cloudflare a Netlify**. *(Le caselle 1C/1D di `ROADMAP.md` sono già state chiuse il 2026-08-03.)*
 
 ### ✅ Già fatto il 2026-08-03 (non rifarlo)
 
@@ -76,6 +78,12 @@
 - ⚠️ **Sul cloud le email `@example.com` non funzionano più.** In locale le intercettava Mailpit; sul cloud la conferma deve arrivare a una casella vera. E il limite è **2 email di auth all'ora** (servizio email di default di Supabase, scelta D-4).
 - ⚠️ **`SUPABASE_SERVICE_ROLE_KEY` non è usata in `src/`** e **non va configurata da nessuna parte**: bypassa tutte le RLS.
 - ⚠️ **Il progetto Supabase gratuito si mette in pausa dopo 7 giorni di inattività.** Se il cliente riapre il link dopo dieci giorni trova il sito morto (si riattiva dal dashboard in un minuto). Decisione su come gestirlo ancora da prendere.
+
+### 💡 Osservazioni dell'utente dal collaudo del 2026-08-03
+
+Tre segnalazioni guardando lo staging. Le prime due sono diventate **Task 9 e 10 della 1E** (sopra); la terza è rimandata di proposito.
+
+- **Onboarding post-registrazione → rimandato alla Fase 2** (scheda completa in [`ROADMAP.md`](./ROADMAP.md)). L'utente proponeva un pop-up sul profilo; **sconsigliato**: c'è già il banner cookie come overlay, sui telefoni i modali sono ostili e il progetto usa sezioni **inline**. Direzione consigliata: atterraggio su `/it/profilo` (oggi è `/it/dashboard`, in [`auth/callback/route.ts`](../src/app/[locale]/(public)/auth/callback/route.ts)) + riquadro di benvenuto non modale che sparisce a profilo completo. **Non è una rifinitura: serve brainstorming + spec + piano.**
 
 ### Le altre strade, quando la 1E sarà chiusa
 
