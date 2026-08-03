@@ -52,6 +52,8 @@ Sito Netlify su **Public** + **verifica funzionale dall'esterno superata**: `/` 
 | Supabase URL | `https://ubvhdliqnkfknhlczcnj.supabase.co` |
 | Supabase Reference ID | `ubvhdliqnkfknhlczcnj` |
 | Chiave Supabase | formato nuovo `sb_publishable_...` (pubblica per progettazione) |
+| Turnstile widget | `marsica-car-meet-staging` (account Cloudflare `mcdevelop03@gmail.com`) · hostname `polite-moxie-8dc031.netlify.app` + `localhost` · mode `Managed` |
+| Turnstile **site key** | `0x4AAAAAAEFGzaPemdBugJn1` (pubblica per progettazione: finisce nel bundle del browser) |
 | Email admin | `mcdevelop03@gmail.com` |
 | Email membro | `matteo050903@gmail.com` (autorizzata dall'utente il 2026-07-30) |
 
