@@ -13,7 +13,7 @@
   - ✅ **Task 4 (Turnstile) completo e verificato (2026-08-03):** widget creato, variabili su Netlify, redeploy fatto. Il widget emette un token da 773 caratteri e un login con password errata risponde **"Credenziali non valide"** (non "Verifica anti-bot non superata") → la secret verifica davvero e **il server Netlify parla con Supabase cloud**. Login e registrazione sono vivi.
   - ✅ **Task 3 (collaudo auth/dati) completo (2026-08-03):** admin e membro registrati e confermati sul cloud, admin promosso via SQL e confermato anche dalla UI; **tutte le prove negative da anonimo superate** (scritture RLS respinte, profili invisibili, upload respinti sui 4 bucket).
   - ✅ **Task 7 (contenuti demo) completo (2026-08-03):** 3 eventi (2 futuri + 1 concluso con album di 2 foto e 1 video YouTube), profili con avatar per admin e membro, 3 auto in garage, **2 iscrizioni** al raduno di settembre. Caricato tutto **dalla UI**, quindi vale anche da collaudo: fuso corretto (10:00 italiane con server in UTC), compressione WebP, slug immutabile dopo il cambio data, gate GDPR verificato con un video vero (0 iframe e 0 richieste a YouTube senza consenso, `youtube-nocookie` dopo), e `profiles`/`vehicles` invisibili all'anonimo **anche da pieni**.
-  - ✅ **Task 11 e 10 completi e verificati dal vivo (2026-08-03):** home con i prossimi raduni in vetrina (`68dad51`); feedback di caricamento in tre riprese — `loading.tsx` (`5cfbb16`), **fix del confine** (`1efdebd`, prima non compariva **mai**: 4,2 s di silenzio, ora **6-14 ms**), **schede solo dove ci sono schede + spinner altrove** (`4796938`), **stato "sto lavorando" sui bottoni** (`cf34331`).
+  - ✅ **Task 11 e 10 completi e verificati dal vivo (2026-08-03):** home con i prossimi raduni in vetrina (`68dad51`); feedback di caricamento in **quattro riprese**, tutte nate da rilievi dell'utente in collaudo — `loading.tsx` (`5cfbb16`), **fix del confine** (`1efdebd`, prima non compariva **mai**: 4,2 s di silenzio, ora **6-14 ms**), **schede solo dove ci sono schede + spinner altrove** (`4796938`), **stato "sto lavorando" sui bottoni** (`cf34331`), **velo di attesa a comparsa ritardata** sulle operazioni lente (`acc4633`).
     - ⚠️ **Lezione da ricordare:** in tutti e tre i casi `tsc`, `lint`, 119 test e build erano **verdi mentre il comportamento era sbagliato**. Il verde dice che compila, non che funziona: le modifiche di UX vanno provate su un dev server puntato al **Supabase cloud** prima del push.
   - ⏸️ **Dove ci si è fermati:** **Task 9** — i due template email sono scritti (`633dff2`) ma vanno **incollati a mano nel dashboard** Supabase. Poi il Task 8 chiude la fase.
 
@@ -30,14 +30,17 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: **Fase 1E, Task 7 — contenuti demo**
+## ▶️ DA COSA RIPARTIRE: **Fase 1E, Task 9 (email) e poi Task 8 — chiusura**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e il ledger della Fase 1E: lo staging funziona ed è vuoto. Facciamo il Task 7."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e il ledger della Fase 1E: manca solo incollare i template email e fare il Task 8."*
+
+> **Lo staging è vivo, pieno e verificato.** Sito: `https://polite-moxie-8dc031.netlify.app` · branch allineato a `origin` · ultimo deploy verificato online (la classe `.velo-attesa` e il suo keyframe sono nel CSS pubblicato). **Restano due soli task**, e il primo è quasi tutto lavoro da dashboard.
 
 ### Il primo passo, in ordine
 
 1. **Task 9, la parte che resta a mano.** Incollare i due file di `supabase/email-templates/` nel dashboard Supabase (*Authentication → Emails* → **Confirm signup** e **Reset password**) e cambiare gli oggetti in italiano. Poi una prova vera, **aperta da telefono** — è lì che si vedono i disastri di impaginazione, non nell'anteprima del dashboard.
-2. **Task 8 — collaudo mirato + riallineamento della documentazione**, incluso **riscrivere spec e piano da Cloudflare a Netlify**. *(Le caselle 1C/1D di `ROADMAP.md` sono già state chiuse il 2026-08-03.)*
+2. **Task 8 — collaudo mirato + riallineamento della documentazione**, incluso **riscrivere spec e piano da Cloudflare a Netlify**. *(Le caselle 1C/1D di `ROADMAP.md` sono già state chiuse il 2026-08-03.)* Nel collaudo vanno guardate **dal vivo, da loggato**, le cose introdotte oggi che non ho potuto provare senza le password: il **velo di attesa** su creazione evento con foto grossa (deve comparire) e su salvataggio profilo (probabilmente **non** deve comparire, è veloce), e la **rotella nei bottoni** delle azioni admin e dell'RSVP.
+3. **Poi la fase è chiusa:** merge del branch e decisione su come mostrare il sito al cliente.
 
 ### ✅ Già fatto il 2026-08-03 (non rifarlo)
 
@@ -50,6 +53,10 @@
 ⚠️ **Due cose da non scambiare per guasti:**
 - L'iframe di challenge Cloudflare logga righe `%c%d font-size:0;...` come *error* in console. È suo debug interno.
 - L'**SQL Editor di Supabase dice "Success. No rows returned" anche quando la `update` non ha toccato niente**: non è una conferma. Verificare sempre con una `select`.
+
+**Task 7 (contenuti demo) chiuso:** 3 eventi (Alba Fucens 13 set con capienza 40 e **2 iscritti**, Altopiano delle Rocche 4 ott senza capienza né ora di fine, Castello Piccolomini 11 lug **concluso** con 2 foto e 1 video), profili con avatar per admin e membro, 3 auto. Caricato **dalla UI**, quindi vale anche da collaudo. ⚠️ **Trappola di percorso:** in creazione non si può datare un evento nel passato, in **modifica** sì → l'evento concluso è stato creato con data futura e poi spostato indietro.
+
+**Task 11 e 10 (home e feedback di caricamento) chiusi**, dettaglio nel ledger. In sintesi: la home mostra i prossimi raduni; ogni rotta ha il suo `loading.tsx`; schede dove ci sono schede e spinner altrove; i bottoni hanno lo stato "sto lavorando"; le operazioni lente coprono lo schermo con un velo dopo 350 ms.
 
 **Falso allarme già chiarito:** l'host Supabase **non** compare nei chunk JS della pagina di login, ed è corretto — il client browser è importato solo da `AvatarUploader`/`VehicleForm`/`EventForm`/`AdminMedia` (pagine autenticate); login e registrazione passano da server action e parlano con Supabase dal server. Non riaprire questa indagine.
 
