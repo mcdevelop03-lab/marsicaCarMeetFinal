@@ -15,6 +15,9 @@
     "login": "Accedi",
     "logout": "Logout"
   },
+  "common": {
+    "caricamento": "Caricamento…"
+  },
   "home": {
     "heroTitle": "LA MARSICA CORRE INSIEME",
     "heroSubtitle": "Scopri i raduni, mostra la tua auto e vivi la passione dei motori in Marsica.",
