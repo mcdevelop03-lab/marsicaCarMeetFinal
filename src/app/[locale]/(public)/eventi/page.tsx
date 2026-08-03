@@ -1,23 +1,12 @@
 import { getTranslations } from "next-intl/server";
 import SectionHeading from "@/components/ui/SectionHeading";
-import EventCard, { type EventoPerCard } from "@/components/features/events/EventCard";
+import EventCard from "@/components/features/events/EventCard";
 import EventiGestione from "@/components/features/events/EventiGestione";
 import FlashToast from "@/components/features/events/FlashToast";
 import { getProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { eConcluso } from "@/lib/events/stato";
-import type { Event } from "@/types/database";
-
-// Le colonne che servono davvero a `EventCard` e a `statoEvento`/`eConcluso`. `select("*")`
-// consegnerebbe anche `created_by` (FK a `profiles`) a chiunque: la lettura è pubblica
-// (`events_select_public` vale pure per gli sloggati, D-146), ma l'identità dei membri no
-// (`profiles_select_authenticated`) — niente colonne in più di quelle usate.
-const COLONNE_PUBBLICHE =
-  "id, slug, title, location, starts_at, ends_at, status, type, cover_url";
-
-// `id` serve solo alla `key` di React qui in pagina; il resto sono gli stessi campi che
-// `EventCard` dichiara di usare davvero (vedi `EventoPerCard` lì) — non `Event` intero.
-type EventoPubblico = EventoPerCard & Pick<Event, "id">;
+import { COLONNE_PUBBLICHE, type EventoPubblico } from "@/lib/events/pubblici";
 
 export default async function EventiPage({
   searchParams,
