@@ -18,19 +18,19 @@ della spesa e **niente lì dentro va comprato ora**.
 Dove un piano a pagamento risolve un problema vero, questo file indica anche **come affrontare
 lo stesso problema a costo zero**. Nella maggior parte dei casi si può.
 
-## ⚠️ Come leggere le cifre di questo file
+## ✅ Stato delle cifre
 
-**Nessun prezzo qui dentro è stato verificato sul sito del fornitore il giorno in cui scrivo.**
-Vengono dalla mia conoscenza dei listini, che ha qualche mese: servono a darti l'**ordine di
-grandezza** per ragionare, non a firmare un contratto.
+**I listini sono stati verificati il 2026-08-04** sui siti dei fornitori (Supabase, Netlify,
+Resend). Le voci verificate non hanno il simbolo ⚠️; quelle ancora stimate — dominio,
+validazione legale, servizi non ancora scelti — ce l'hanno.
 
-🚨 **Prima di attivare qualunque servizio a pagamento, controlla il listino aggiornato.** I
-fornitori cloud cambiano i piani spesso, e più di una volta hanno cambiato proprio le condizioni
-che ci interessano (Vercel ha vietato l'uso commerciale sul piano gratuito, Supabase ha
-modificato cosa si può personalizzare in quello free). I link sono in fondo.
+🚨 **I listini cambiano, e su questo progetto è già successo due volte in corso d'opera:** Vercel
+ha vietato l'uso commerciale sul piano gratuito, e Supabase ha bloccato la personalizzazione dei
+template email sul free. **Netlify ha cambiato modello a settembre 2025 e di nuovo ad aprile
+2026**, passando ai "credits". Ricontrolla prima di attivare qualcosa; i link sono in fondo.
 
-Le cifre sono **IVA esclusa** dove non diversamente indicato, e in **euro o dollari** a seconda
-del fornitore: quasi tutti fatturano in dollari, quindi il costo reale dipende anche dal cambio.
+Le cifre sono **IVA esclusa** e quasi tutte in **dollari**: il costo reale dipende anche dal
+cambio.
 
 ---
 
@@ -88,29 +88,95 @@ template email. È annotato in `SETUP.md`.
 
 ## A.2 — Hosting del sito (Netlify) 🟢 **gratis può bastare**
 
+*Verificato il 2026-08-04.* ⚠️ **Netlify ha cambiato modello due volte** (settembre 2025 e aprile
+2026): i piani nuovi vanno a **"credits"** invece che a limiti separati.
+
 | Piano | Costo | Cosa dà |
 |---|---|---|
-| **Starter** (attuale) | **0** | 100 GB di banda/mese, 300 minuti di build/mese ⚠️, uso commerciale permesso, dominio personalizzato e HTTPS inclusi |
-| Pro | **~19 $/mese per membro** ⚠️ | Più banda e build, protezione con password, supporto |
+| **Free** (attuale) | **0** | **300 credits/mese**, equivalenti a ~100 GB di banda, 300 minuti di build, 125.000 invocazioni di function e 1 milione di edge function. Dominio personalizzato e HTTPS inclusi |
+| **Personal** | **9 $/mese** | Più credits; superamento banda ~20 credits/GB |
 
-**Il gratuito basta all'avvio.** Per un sito di club, 100 GB di banda al mese sono tantissimi: le
-foto sono compresse in WebP e servite da Supabase Storage, quindi non pesano nemmeno su questa
-voce. I 300 minuti di build si consumano solo quando si pubblica codice nuovo.
+**Il gratuito basta, e con margine.** Le foto **non passano da qui**: stanno su Supabase Storage e
+pesano sul suo egress (A.3), non sulla banda Netlify. Da Netlify passano solo pagine e
+JavaScript, che sono leggeri. I minuti di build si consumano solo quando si pubblica codice nuovo.
 
-**Cosa accetti restando gratis:** nessun supporto, e se un giorno servisse mettere il sito dietro
-password (per una revisione privata) quella funzione è **solo a pagamento** — l'abbiamo già
-incontrata durante lo staging.
+🚨 **Una cosa da sapere, però, ed è severa:** se un sito supera i limiti del piano Free,
+**viene sospeso per il resto del mese solare**. Non rallentato: sospeso. Netlify manda avvisi al
+50%, 75%, 90% e 100% — **vanno letti**, non archiviati.
 
-## A.3 — Database e login (Supabase) 🟡 **gratis funziona, ma senza rete di sicurezza**
+⚠️ **Da controllare sul nostro account:** questo sito è nato a luglio 2026, quindi dovrebbe essere
+già sul modello a credits. Vale la pena aprire una volta la sezione consumi del dashboard per
+vedere a che ritmo si consumano davvero.
 
-| Piano | Costo | Cosa cambia |
+**Cosa accetti restando gratis:** nessun supporto, e la **protezione con password** degli ambienti
+di prova resta a pagamento — l'abbiamo già incontrata durante lo staging, quando avremmo voluto
+dare al cliente un link protetto.
+
+## A.3 — Database e login (Supabase) 🟡 **gratis funziona, ma un limite va tenuto d'occhio**
+
+*Numeri verificati sul listino il 2026-08-04.*
+
+| | **Free** (attuale) | **Pro** — 25 $/mese |
 |---|---|---|
-| **Free** (attuale) | **0** | Database e storage limitati ⚠️, **nessun backup**, progetto **in pausa dopo 7 giorni di inattività** |
-| Pro | **~25 $/mese** ⚠️ | Backup giornalieri, niente pausa, risorse molto più ampie |
+| Database | **500 MB** | 8 GB, poi 0,125 $/GB |
+| Foto (storage) | **1 GB** | 100 GB, poi 0,0213 $/GB |
+| 🚨 **Traffico in uscita (egress)** | **5 GB/mese** | 250 GB, poi 0,09 $/GB |
+| Utenti attivi al mese | 50.000 | 100.000 |
+| Pausa per inattività | dopo **1 settimana** | **mai** |
+| Backup | **nessuno** | 7 giorni |
+| Storico dei log | **1 ora** | 7 giorni |
 
-**La pausa a 7 giorni non è il problema che sembra, una volta pubblici.** Scatta per
-*inattività*: un sito vivo, con visitatori, non si ferma mai. Era un problema sullo **staging**,
-dove passavano giorni senza che nessuno lo aprisse.
+🚨 **Sul piano free i limiti sono FISSI: non esiste il pagamento a consumo.** Non si rischia una
+bolletta a sorpresa — si rischia che **il servizio si fermi**. È una differenza importante: il
+danno non è economico, è il sito che smette di funzionare.
+
+### 🔢 Il numero che conta davvero: **5 GB di traffico al mese**
+
+**Non è lo spazio a essere stretto, è il traffico.** Sono due cose diverse e vengono confuse
+sempre: lo spazio lo consumi **una volta** quando carichi una foto; il traffico lo consumi **ogni
+volta che qualcuno la guarda**.
+
+Facendo i conti con le misure reali di questo progetto — una foto compressa pesa **150-190 KB**,
+misurato in collaudo (4,1 MB → 186 KB; 6,75 MB → 158 KB) — ecco **quanto spazio c'è prima del
+limite**, usando 175 KB come media:
+
+| Limite | Quanto ci sta | Verdetto |
+|---|---|---|
+| **Spazio foto (1 GB)** | circa **5.800 foto** ≈ 190 album da 30 | 🟢 **lontanissimo** |
+| **Database (500 MB)** | decine di migliaia di eventi, iscrizioni e profili (sono solo testo) | 🟢 **irrilevante** |
+| **Traffico (5 GB/mese)** | ~**975** album da 30 foto guardati per intero, **oppure** ~**4.900** aperture di `/eventi` con 6 copertine, **oppure** ~**9.700** aperture della home | 🟡 **è questo il collo di bottiglia** |
+
+**Quindi la risposta alla domanda "quando servirà il Pro?" è: non per lo spazio — semmai per il
+traffico.** E il traffico non dipende da quanto carichi, ma da **quanto il sito viene guardato**.
+
+**Cosa significa in pratica:** per un club locale, con qualche centinaio di visite al mese, 5 GB
+bastano. Il momento di rischio è **un album di un raduno riuscito che gira sui social**: qualche
+centinaio di persone che aprono la stessa galleria possono consumare il mese in pochi giorni.
+
+⚠️ **Un fattore che gioca a favore e che non ho quantificato:** le foto stanno dietro una CDN e i
+browser le tengono in cache, quindi chi torna sul sito non le riscarica. I conti qui sopra sono
+quindi **prudenti** — il consumo reale sarà più basso. Di quanto, non lo so senza misurarlo.
+
+### ✅ E si allarga gratis: **mancano le miniature**
+
+🔎 **Trovato guardando il codice:** [`compress.ts:7`](../src/lib/images/compress.ts) genera **una
+sola misura**, 1600 px sul lato lungo. Non esistono miniature. Vuol dire che la **griglia**
+dell'album, le **copertine** degli eventi e gli **avatar** scaricano ogni volta l'immagine
+**intera** da 175 KB, anche quando sul display occupa 300 px.
+
+**Generando anche una miniatura al momento del caricamento** (stessa funzione, un secondo passaggio
+a ~400 px, indicativamente 20-30 KB) il traffico delle griglie **calerebbe di circa 6-8 volte**.
+Quelle ~4.900 aperture di `/eventi` diventerebbero **decine di migliaia**.
+
+**È lavoro di sviluppo, non una spesa**, e vale più del piano Pro: allontana il limite di quasi un
+ordine di grandezza a **costo zero**. Se un giorno il traffico diventasse un problema, **questa è
+la prima cosa da fare, non l'abbonamento.**
+
+### La pausa a 7 giorni
+
+Non è il problema che sembra, una volta pubblici: scatta per *inattività*, e un sito vivo con
+visitatori non si ferma mai. Era un problema sullo **staging**, dove passavano giorni senza che
+nessuno lo aprisse — ed è ancora il caso finché è solo il cliente a guardarlo ogni tanto.
 
 **Il problema vero del piano free è un altro: non ci sono backup.** Se qualcosa cancella i dati —
 un errore, una migrazione sbagliata, un guaio del fornitore — **non c'è modo di tornare
@@ -145,12 +211,18 @@ Parte B, dove è **materiale per il futuro, non una spesa da fare ora**.
 
 ## A.4 — Email di autenticazione (SMTP) 🟡 **gratis, ma solo col dominio**
 
+*Resend verificato il 2026-08-04.*
+
 | Opzione | Costo | Limiti |
 |---|---|---|
 | **Servizio Supabase incluso** (attuale) | **0** | 🚨 **2 email/ora**, template **inglesi bloccati**, footer "powered by Supabase" |
-| **Resend**, piano gratuito | **0** ⚠️ | Richiede il **dominio verificato**; qualche migliaio di email al mese ⚠️ |
-| Altri provider (Brevo, Mailgun, SendGrid…) | **0** su piani base ⚠️ | Condizioni diverse, da confrontare |
-| Piani a pagamento | **da ~20 $/mese** ⚠️ | Solo se i volumi crescono molto — improbabile per un club |
+| **Resend**, piano gratuito | **0** | **3.000 email/mese**, max **100 al giorno**, **1 dominio** verificabile |
+| Resend Pro | 20 $/mese (50.000 email) | Molto oltre il necessario |
+| Altri provider (Brevo, Mailgun…) | 0 su piani base ⚠️ | Da confrontare se Resend non convince |
+
+**3.000 email al mese e 100 al giorno sono abbondanti**: sono email di *autenticazione*, cioè una
+per registrazione e una per reset password. Cento al giorno vorrebbe dire cento nuovi soci in un
+giorno solo.
 
 **Perché serve davvero, e non è una rifinitura.** Con il servizio incluso di Supabase oggi
 succedono tre cose insieme, che hanno **la stessa causa** e si risolvono **tutte con lo stesso
@@ -168,8 +240,10 @@ intervento**:
 **Costo reale: zero**, con un piano gratuito di un provider email + il dominio della voce A.1.
 L'unica spesa è il tempo di configurarlo.
 
-⚠️ **Ma va fatto DOPO il dominio, non prima.** Senza un dominio verificato, **Resend in modalità
-test spedisce solo al titolare dell'account**: sarebbe inutile. Le due voci sono legate.
+⚠️ **Ma va fatto DOPO il dominio, non prima.** Il piano gratuito verifica **1 dominio**, e senza
+un dominio verificato i provider email limitano pesantemente i destinatari — in genere si può
+spedire solo a sé stessi, il che qui sarebbe inutile. La pagina del listino non lo dettaglia, ma
+è la regola comune del settore: **le due voci sono legate e vanno in quest'ordine.**
 
 ## A.5 — Anti-bot, OAuth, codice 🟢 **gratis, e restano gratis**
 
@@ -241,20 +315,30 @@ cresce, e a quel punto vorrà dire che il sito è usato davvero.
 
 **Se dovessi fare una cosa sola dopo il go-live, farei queste due, e non spenderei niente.**
 
-## B.2 — Supabase Pro — **~25 $/mese** ⚠️ · 🔕 *non ora, e forse mai*
+## B.2 — Supabase Pro — **25 $/mese** · 🔕 *non ora*
 
-**Cosa dà:** backup automatici giornalieri, niente pausa per inattività, risorse più ampie.
+**Cosa dà:** 8 GB di database, 100 GB di foto, **250 GB di traffico**, backup di 7 giorni, niente
+pausa.
 
-**Perché NON serve adesso**, punto per punto:
-- **I backup** si fanno gratis (B.1a). Era l'unico argomento forte.
-- **La pausa a 7 giorni** non riguarda un sito pubblico con visitatori: scatta per *inattività*.
-- **I limiti di spazio** del piano free sono lontani — le foto sono compresse in WebP e i bucket
-  hanno un tetto di 2 MB a file.
+**Perché NON serve adesso**, con i numeri verificati:
+- **I backup** si fanno gratis col dump da CLI (B.1a). Era l'unico argomento davvero forte.
+- **La pausa a 7 giorni** non riguarda un sito pubblico con visitatori.
+- **Lo spazio non è il problema**: 1 GB sono ~5.800 foto, cioè ~190 album da 30. Lontanissimo.
+- **Il traffico è l'unica cosa da guardare**, e prima di pagare c'è **una mossa gratuita che vale
+  6-8 volte tanto**: generare le miniature (vedi A.3).
 
-**Quando riparlarne davvero:** se il backup manuale diventa un peso che nessuno fa più, se lo
-spazio si avvicina davvero al limite, o se il club cresce al punto che un fermo di qualche ora
-sarebbe un problema serio. **Non prima**, e a quel punto sarà una decisione con dei numeri
-davanti invece che un'ipotesi.
+### 🎯 La soglia concreta, così non è più un'ipotesi
+
+**Riparlarne quando il consumo di traffico supera stabilmente il 75% dei 5 GB** — cioè ~3,7 GB al
+mese per due mesi di fila. Si legge nel dashboard Supabase, alla voce dei consumi.
+
+**E anche allora, nell'ordine:** ⑴ prima le **miniature**, che costano zero e spostano il limite
+di quasi un ordine di grandezza; ⑵ solo se il traffico continua a crescere **dopo** quella
+modifica, il Pro diventa la scelta giusta — e a quel punto vorrà dire che il sito è usato
+davvero, il che è una bella notizia.
+
+**Da non fare:** attivarlo "per stare tranquilli". Sono 300 $ l'anno per risolvere un problema
+che oggi non esiste e che, quando esisterà, si affronta prima gratis.
 
 ## B.3 — Statistiche di visita — **0 → ~10 €/mese** ⚠️
 
@@ -279,19 +363,20 @@ costano pochi euro al mese (casella vera con Google Workspace o simili).
 Utile soprattutto perché nella privacy policy va indicato **un indirizzo di contatto del
 Titolare**, e un indirizzo personale lì dentro fa una figura diversa.
 
-## B.5 — Netlify Pro — **~19 $/mese per membro** ⚠️
+## B.5 — Netlify Personal — **9 $/mese**
 
-**Cosa risolve:** più banda e minuti di build, protezione con password degli ambienti di prova,
-supporto.
+**Cosa risolve:** più credits (banda, build, function) e la protezione con password degli
+ambienti di prova.
 
-**Quando ha senso:** francamente, **non presto**. I limiti del piano gratuito sono lontanissimi
-per un sito di club. Da riconsiderare solo se il sito cresce molto o se serve far rivedere al
-cliente delle anteprime private.
+**Quando ha senso:** **non presto.** Le foto non passano da Netlify, quindi la banda qui resta
+bassa. L'unico motivo plausibile è volere link privati protetti da password per far rivedere
+qualcosa al cliente — comodità, non necessità. 🚨 Tenere però d'occhio gli avvisi di consumo: sul
+piano Free il superamento **sospende il sito** fino a fine mese.
 
-## B.6 — Piano email a pagamento — **da ~20 $/mese** ⚠️
+## B.6 — Resend Pro — **20 $/mese** (50.000 email)
 
-Serve solo se le registrazioni superano i volumi del piano gratuito del provider scelto. Per un
-club della Marsica è uno scenario **improbabile**: qualche migliaio di email al mese sono tante.
+Serve solo superando **3.000 email/mese o 100 al giorno** del piano gratuito. Per un club della
+Marsica è uno scenario **molto improbabile**: sono email di autenticazione, una per iscrizione.
 
 ## B.7 — Spese che NON sono di infrastruttura
 
@@ -315,10 +400,20 @@ La spesa che invece va messa in conto sul serio è **la validazione legale delle
 cookie**, perché il sito raccoglie dati di persone vere e quel documento oggi è dichiaratamente
 una bozza. È una tantum, e va decisa col cliente perché il Titolare è lui.
 
-**Nessuna spesa ricorrente è necessaria**, e questo vale anche dopo il go-live. Il solo rischio
-serio del piano gratuito — l'assenza di backup — **si chiude gratis** con un dump periodico da
-CLI. **Supabase Pro resta un'ipotesi per il futuro**, da riaprire solo con dei numeri davanti
-(spazio vicino al limite, o backup manuali che nessuno fa più), non al lancio.
+**Nessuna spesa ricorrente è necessaria**, e questo vale anche dopo il go-live.
+
+**Sulla domanda "quando servirà Supabase Pro?", ora la risposta è precisa: non per lo spazio.**
+Lo spazio foto (1 GB) regge circa **5.800 foto**, cioè ~190 album da 30: è lontanissimo. L'unico
+limite che si può toccare davvero è il **traffico in uscita, 5 GB al mese** — che non dipende da
+quanto carichi, ma da **quanto il sito viene guardato**.
+
+**E prima di pagare c'è una mossa gratuita che vale di più:** oggi il progetto genera **una sola
+misura** delle immagini (1600 px), quindi anche le griglie e gli avatar scaricano il file intero.
+Aggiungere le **miniature** ridurrebbe il traffico di **6-8 volte** — molto più di quanto serva.
+È sviluppo, non spesa.
+
+**Soglia da tenere d'occhio:** consumo di traffico stabilmente sopra il **75% dei 5 GB** per due
+mesi. Prima le miniature, e solo se non basta, il Pro.
 
 ⚠️ **Un'ultima cosa da tenere a mente:** i piani gratuiti sono gratuiti **finché il fornitore
 decide che lo siano**. È già successo che cambino le condizioni proprio su ciò che ci serviva —
@@ -330,14 +425,26 @@ mantenere da soli.
 
 ## 🔗 Da verificare prima di attivare qualunque cosa
 
-| Cosa | Dove |
-|---|---|
-| Listino Supabase | https://supabase.com/pricing |
-| Listino Netlify | https://www.netlify.com/pricing/ |
-| Listino Resend | https://resend.com/pricing |
-| Prezzi dominio `.it` | confrontare più registrar |
-| Termini d'uso commerciale | **rileggere sempre**: è la clausola che ha già escluso Vercel |
+| Cosa | Dove | Verificato |
+|---|---|---|
+| Listino Supabase | https://supabase.com/pricing | ✅ 2026-08-04 |
+| Listino Netlify | https://www.netlify.com/pricing/ | ✅ 2026-08-04 |
+| Listino Resend | https://resend.com/pricing | ✅ 2026-08-04 |
+| Prezzi dominio `.it` | confrontare più registrar | ⚠️ stimato |
+| Validazione legale | professionista o consulente del club | ⚠️ stimato |
+| Termini d'uso commerciale | **rileggere sempre**: è la clausola che ha già escluso Vercel | — |
 
-**Controllare in particolare:** che l'uso commerciale resti permesso sul piano gratuito scelto,
-quante email al mese include davvero il piano email, e se il registrar del dominio include la
-privacy WHOIS o la fa pagare a parte.
+**Controllare in particolare:** che l'uso commerciale resti permesso sul piano gratuito scelto, e
+se il registrar del dominio include la privacy WHOIS o la fa pagare a parte.
+
+## 📈 Cosa guardare, e ogni quanto
+
+| Cosa | Dove | Soglia d'allarme |
+|---|---|---|
+| **Traffico Supabase** | dashboard Supabase, sezione consumi | **oltre 3,7 GB/mese** (75% di 5 GB) → prima le miniature |
+| Spazio foto Supabase | idem | oltre 750 MB (75% di 1 GB) |
+| **Consumi Netlify** | dashboard Netlify | leggere gli avvisi al 50/75/90%: al 100% **il sito viene sospeso** |
+| Email inviate | dashboard del provider | oltre 75 al giorno (su 100) |
+
+**Una volta al mese basta.** Il rischio non è la bolletta — sui piani gratuiti non c'è addebito a
+consumo — **è il servizio che si ferma**.

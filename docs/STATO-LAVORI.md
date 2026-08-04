@@ -71,10 +71,21 @@ obbligatoria è **il dominio (~10-20 €/anno)**, tutto il resto parte legittima
 spesa vera da mettere in conto è la **validazione legale** delle pagine privacy/cookie.
 
 💰 **Vincolo dichiarato dall'utente, scritto in cima a quel file: il budget è limitato e le spese
-ricorrenti vanno evitate in fase iniziale** — in particolare **~25 $/mese non sono sostenibili
-adesso**. Quindi **nessun piano a pagamento**: l'unico rischio serio del piano gratuito Supabase è
-l'assenza di backup, e **si chiude gratis** con `supabase db dump` periodico da CLI (⚠️ il dump
-contiene dati personali: non va committato nel repo).
+ricorrenti vanno evitate in fase iniziale** — in particolare **25 $/mese non sono sostenibili
+adesso**. Quindi **nessun piano a pagamento**: l'assenza di backup sul piano free **si chiude
+gratis** con `supabase db dump` periodico da CLI (⚠️ il dump contiene dati personali: non va
+committato nel repo).
+
+📊 **Listini verificati il 2026-08-04.** Il limite del piano gratuito Supabase che si può toccare
+davvero **non è lo spazio** (1 GB = ~5.800 foto, lontanissimo) **ma il traffico in uscita: 5 GB al
+mese**, che dipende da quanto il sito viene *guardato*, non da quanto si carica. ⚠️ **Netlify Free
+sospende il sito** per il resto del mese se si superano i limiti: gli avvisi di consumo vanno letti.
+
+🔎 **Rilievo emerso dai conti, e vale più di un abbonamento:** [`compress.ts:7`](../src/lib/images/compress.ts)
+genera **una sola misura** (1600 px), quindi griglie, copertine e avatar scaricano ogni volta
+l'immagine intera (~175 KB). **Generare anche una miniatura ridurrebbe il traffico di 6-8 volte**,
+a costo zero. Se un giorno il traffico diventasse un problema, **è la prima cosa da fare, prima
+del piano Pro.**
 
 ⚠️ **Le cifre in quel file non sono verificate sui listini**: sono ordini di grandezza per
 ragionare, da ricontrollare prima di attivare qualunque cosa.
@@ -186,6 +197,7 @@ Tre segnalazioni guardando lo staging. Le prime due sono diventate **Task 9 e 10
 
 **Debiti/follow-up NON bloccanti ereditati (micro-fasi dedicate):**
 - Da 1E (collaudo 2026-08-04): **rotte protette a 200 invece di 307** (effetto del `loading.tsx` per rotta — nessuna fuga di dati, redirect vivo nel browser); **cookie di sessione Supabase senza `Secure`** (default della libreria, oggi coperto da HSTS — **da chiudere al go-live**).
+- Dai conti sui costi (2026-08-04): **mancano le miniature delle immagini** — `comprimiImmagine` genera una sola misura (1600 px), quindi griglie e avatar scaricano il file intero. Non è un bug: è la leva che allontana di 6-8 volte l'unico limite gratuito che si può toccare (il traffico Supabase). Da fare **prima** di valutare qualunque piano a pagamento.
 - Da 1C-3: `Modal onClose` inline; hidden `<input type=file>` non `disabled`; `alt=""` thumbnail; lightbox senza `aria-label`/focus/scroll-lock; due `import type` accorpabili; map `mediaAdmin`/`mediaGallery` duplicata; anti-orfano batch non copre il ramo `throw`.
 - Di sistema: `revalidatePath` (path non combacianti), **pulizia orfani storage di sistema**, `created_by` degli eventi leggibile da anon via PostgREST.
 
