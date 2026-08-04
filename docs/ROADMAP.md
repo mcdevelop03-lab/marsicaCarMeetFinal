@@ -39,7 +39,7 @@ Obiettivo: primo prodotto realmente utile alla community. Suddivisa in sotto-pro
 - **Esito:** membri si registrano, gestiscono auto e partecipano ai raduni creati dall'Admin;
   l'Admin pubblica gli album foto dei raduni conclusi.
 
-## Fase 1E — Staging cloud — 🟡 IN CHIUSURA
+## Fase 1E — Staging cloud — ✅ COMPLETATA (2026-08-04)
 
 Obiettivo: **rendere il sito raggiungibile dal cliente**, che deve provarlo e approvarlo prima
 del go-live. Nessuna funzionalità nuova: è infrastruttura, più le rifiniture emerse guardandolo.
@@ -54,7 +54,7 @@ del go-live. Nessuna funzionalità nuova: è infrastruttura, più le rifiniture 
 - [x] **Feedback di caricamento**: scheletro/spinner a ogni cambio pagina, stato "sto lavorando" sui bottoni, velo di attesa sulle operazioni lente.
 - [x] ~~Email di autenticazione in italiano~~ → **spostata al go-live (2026-08-04).** I template sono scritti e pronti, ma **non applicabili**: col servizio di posta gratuito Supabase impone quelli di serie, e per cambiarli serve un **SMTP nostro**. Stessa causa del footer "powered by Supabase" e del limite di 2 email/ora: cadono tutti insieme, quindi si fa una volta sola col dominio vero.
 - [x] **Collaudo finale mirato** — superato il 2026-08-04 sullo staging vero, 0 bug bloccanti, contenuti demo ripristinati. Due debiti annotati (rotte protette a 200 invece di 307; cookie di sessione senza `Secure`, coperto da HSTS).
-- [ ] Chiusura del branch e merge.
+- [x] **Merge su `main`** (`e0a20c1`) e push su GitHub. 🚨 Resta da **spostare il branch di produzione Netlify su `main`**: finché non è fatto, lo staging non riceve i lavori futuri e nulla lo segnala.
 - **Esito atteso:** un URL che il cliente apre quando vuole lui, con dati veri dentro.
 
 ⚠️ **Da dire al cliente:** chi si registra sullo staging riceve l'**email di conferma inglese

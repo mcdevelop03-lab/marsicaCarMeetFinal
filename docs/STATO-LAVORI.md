@@ -6,7 +6,8 @@
 
 ## 🔖 Dove siamo
 
-- 🟡 **FASE 1E — STAGING CLOUD: in corso** sul branch **`feat/fase1e-staging-cloud`** (pushato su origin). **C'è un cliente che deve provare e approvare il sito**: è il motivo per cui esiste questa fase. Spec: [`superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md`](./superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md) · Piano: [`superpowers/plans/2026-07-30-fase1e-staging-cloud.md`](./superpowers/plans/2026-07-30-fase1e-staging-cloud.md) · Ledger: [`../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md`](../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md).
+- 🎉 **FASE 1E — STAGING CLOUD: COMPLETATA e MERGIATA** su `main` (merge `e0a20c1`, 2026-08-04), **`main` pushato su origin**. **C'è un cliente che deve provare e approvare il sito**: è il motivo per cui esiste questa fase.
+  - 🚨 **UNICA COSA RIMASTA, da fare sul dashboard Netlify: spostare il branch di produzione da `feat/fase1e-staging-cloud` a `main`.** Finché non è fatto, lo staging che il cliente guarda si aggiorna da un branch che nessuno toccherà più — e il guasto è **muto**: il sito continua a funzionare, semplicemente non riceve più niente. **Il branch NON è stato eliminato apposta**, per non spegnere lo staging: si elimina dopo lo spostamento. Spec: [`superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md`](./superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md) · Piano: [`superpowers/plans/2026-07-30-fase1e-staging-cloud.md`](./superpowers/plans/2026-07-30-fase1e-staging-cloud.md) · Ledger: [`../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md`](../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md).
   - ✅ **Spec e piano RIALLINEATI a Netlify (2026-08-04, `3e5c225`)** — non sono più obsoleti: si possono leggere. La storia Cloudflare è conservata **come motivo per cui quella strada non si ritenta**, non come istruzioni (quelle sono state rimosse). Riscritte anche `SETUP.md` §6 + la nuova §6-bis sul deploy, e `ROADMAP.md`, dove la Fase 1E non compariva affatto (`aabfb4a`).
     - Trovato strada facendo: `provider.ts` e `.env.local.example` avevano commenti che nominavano *"lo staging workers.dev"* — un hosting mai usato, finito nel codice perché il piano diceva così. Corretti. E `SETUP.md` **consigliava di mettere in `.env.local` la `SUPABASE_SERVICE_ROLE_KEY`**, cioè la chiave che bypassa tutte le RLS: tolta.
   - ✅ **Fatto:** `main` + branch **pushati su GitHub** (i 42 commit della Fase 1 non vivono più su un solo disco) · **progetto Supabase cloud** creato con le migrazioni `0001`–`0010` applicate e verificate · **sito Netlify deployato** · **`noindex` + bottone Google dietro flag** (commit `e4fa307`, 119 test, review indipendente con 0 rilievi).
@@ -18,7 +19,7 @@
     - ⚠️ **Lezione da ricordare:** in tutti e tre i casi `tsc`, `lint`, 119 test e build erano **verdi mentre il comportamento era sbagliato**. Il verde dice che compila, non che funziona: le modifiche di UX vanno provate su un dev server puntato al **Supabase cloud** prima del push.
   - ⏸️ **Dove ci si è fermati (2026-08-04):** restano **solo cose che richiedono te**. (1) **Task 9:** i due template email sono scritti (`633dff2`) ma vanno **incollati a mano nel dashboard** Supabase. (2) **Task 8, collaudo dal vivo:** serve una sessione loggata, quindi le password. La parte documentale del Task 8 è **fatta**.
 
-- 🎉 **FASE 1 (MVP) COMPLETA** — 1A ✅ · 1B ✅ · 1C ✅ · 1D ✅. Tutto mergiato su `main`. ⚠️ **`main` è solo locale, non pushato** (41 commit avanti a `origin/main`).
+- 🎉 **FASE 1 (MVP) COMPLETA** — 1A ✅ · 1B ✅ · 1C ✅ · 1D ✅. Tutto mergiato su `main`. ✅ **`main` è pushato su GitHub** dalla Fase 1E (l'avvertenza "solo locale" che si legge nelle righe storiche qui sotto **non vale più**).
 - 🟢 **Fase 1D ✅ COMPLETATA** (GDPR base) — **chiude la Fase 1.** Implementazione subagent-driven (Task 1-5, tutti rivisti con esito pulito) + **review finale whole-branch (opus): "Ready to merge: With fixes"** → **fix wave `531adc7`** (2 Important) → **re-review del fix wave: entrambi ADDRESSED, 0 nuove rotture** → **collaudo dal vivo superato (2026-07-29, 0 bug)** → **mergiata su `main`** (merge `173d864`), branch `feat/fase1d-gdpr` eliminato. **Nessun DB, nessuna migrazione.** **Cosa fa:** cookie banner con gestione consensi che **blocca gli embed YouTube** fino al consenso (`VideoYouTube` gate), due categorie (Necessari + Contenuti di terze parti), pagine `/privacy` e `/cookie` (bozza IT + disclaimer), footer con "Preferenze cookie". Consenso in cookie first-party `mcm_consent` letto lato server (no flash). **115 test**, `tsc`/`lint`/**build pulita** verdi. Spec: [`superpowers/specs/2026-07-28-fase1d-gdpr-design.md`](./superpowers/specs/2026-07-28-fase1d-gdpr-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1d-gdpr.md`](./superpowers/plans/2026-07-28-fase1d-gdpr.md).
   - **Il collaudo ha coperto:** banner presente senza cookie e Accetta/Rifiuta/Personalizza che scrivono `mcm_consent` corretto; **parità GDPR verificata sugli stili computati** (Accetta e Rifiuta identici, Personalizza ghost); **no flash** (con consenso salvato il banner **non è nel markup SSR**); **prova dell'Important #1 dal vivo** (`mcm_consent` = `%`, `%E0%A4%A`, JSON rotto, versione 999 → **HTTP 200 col banner, mai 500**); **gate YouTube** a consenso negato → **0 iframe nel DOM e 0 richieste** a youtube-nocookie/ytimg nel Network, poi "Attiva contenuti esterni" monta l'iframe e il video carica davvero; con **2 video** un solo clic li sblocca **entrambi** (contesto condiviso); "Guarda su YouTube" → `youtube.com/watch` con `target=_blank` + `rel="noopener noreferrer"`; **revoca dal footer** → iframe smontati con **marcatore JS ancora vivo = nessun reload**; `/privacy` e `/cookie` **da anonimo** (richiesta senza alcun cookie) → 200, `<title>` corretto, disclaimer in cima, e la cookie policy elenca onestamente `mcm_consent`/sessione Supabase/Turnstile.
 - 🟢 **Fase 1C-3 ✅ COMPLETATA** (Album foto) — **chiude la Fase 1C.** Implementazione subagent-driven (5 task) + **review finale whole-branch (opus, 0 Critical, 0 Important, "Ready to merge: Yes")** + wave di fix (2 minor) + **collaudo dal vivo superato (2026-07-28, 0 bug)** → **mergiata su `main`** (merge `bb09b87`), branch `feat/fase1c3-album` eliminato. Migrazione `0010` applicata. Album media per-evento (foto WebP nel bucket + video **link YouTube** incorporati + link **Drive** opzionale), caricato **solo dall'admin a raduno concluso**, pubblico. Il collaudo ha coperto: gate concluso (UI + **server**, con client stantio su evento reso futuro → insert bloccato), **upload batch** (foto3-grande 4.1MB → 186KB WebP, sotto i 2MB del bucket, `storage_path` per-evento), lightbox (Esc/frecce), video (URL canonico da `youtu.be?t=`, embed `youtube-nocookie` che carica, non-YouTube respinto), link Drive (`javascript:` respinto dal vincolo http/https, https ok, svuotamento), elimina (video → solo riga; foto → riga+file, **0 orfani**), gallery pubblica **da sloggato**, **prove negative** (anon insert → 401, membro insert → 403, upload storage → 400 RLS, >2MB → 413, MIME → 415, **notEmpty** su evento con media). **103 test**, `tsc`/`lint`/`build` verdi. Spec: [`superpowers/specs/2026-07-28-fase1c3-album-foto-design.md`](./superpowers/specs/2026-07-28-fase1c3-album-foto-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1c3-album-foto.md`](./superpowers/plans/2026-07-28-fase1c3-album-foto.md). ⚠️ **`main` è solo locale, non pushato.**
@@ -31,14 +32,22 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: **Fase 1E — restano solo cose che richiedono l'utente**
+## ▶️ DA COSA RIPARTIRE: **la 1E è chiusa — si decide come mostrare il sito al cliente**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: della 1E mancano i template email da incollare e il collaudo dal vivo."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la Fase 1E è chiusa, resta da spostare il branch di produzione Netlify e decidere il passo dopo."*
 
-> **Lo staging è vivo, pieno e verificato.** Sito: `https://polite-moxie-8dc031.netlify.app`
-> **La documentazione è allineata** (2026-08-04). ⚠️ **Ci sono 3 commit di documentazione NON pushati** — pushare fa ripartire un deploy Netlify, innocuo ma non silenzioso.
+> **Lo staging è vivo, pieno, collaudato e mergiato.** Sito: `https://polite-moxie-8dc031.netlify.app`
+> `main` è su GitHub (`e0a20c1`), albero pulito, `tsc`/`lint`/**119 test** verdi sul risultato del merge.
 
-### Il primo passo, in ordine
+### 🚨 Il primo passo, prima di qualunque altra cosa
+
+**Sul dashboard Netlify: *Site configuration → Build & deploy → Branch to deploy* → cambiare da
+`feat/fase1e-staging-cloud` a `main`.** Poi si può eliminare il branch, in locale e su origin.
+
+Finché non è fatto, ogni lavoro futuro mergiato su `main` **non arriverà sullo staging** e nessun
+errore lo segnalerà.
+
+### Come si è arrivati qui
 
 1. ➡️ **Task 9 — USCITO DALLA FASE, non è più da fare qui (2026-08-04).** I template **non si possono incollare**: col servizio di posta gratuito Supabase impone quelli di serie (*"Set up custom SMTP to edit templates… to edit their subject and body"* — oggetto **e** corpo bloccati). **Decisione dell'utente: rimandare al go-live**, dove c'è già il task SMTP e ci sarà il dominio vero.
    - **I file non sono sprecati:** `supabase/email-templates/` è scritto, verificato (logo 200 dal sito) e pronto: si incolla appena c'è l'SMTP.
@@ -50,8 +59,13 @@
    - **Da loggato:** 4 server action riuscite; rotella a **51 ms** con `aria-busy` e opacità 1; **velo di attesa opacità 0 fino a 349 ms, 1.00 a 616 ms** (soglia CSS esatta); regola `pending` rispettata (Conferma sì, Annulla no); logout pulito.
    - **6 prove negative RLS, ognuna con controprova.** ⭐ **Il fix `2052d8d` è finalmente verificato dal vivo:** auto altrui sulla propria iscrizione → **403**, mentre la propria → **201**.
    - ⚠️ **Una previsione di questo file era sbagliata:** il velo sul salvataggio profilo **compare** (l'operazione dura ~950 ms sul piano gratuito). Non è un difetto.
-3. **Poi la fase è chiusa:** merge del branch e decisione su come mostrare il sito al cliente.
-   🚨 **Subito dopo il merge: cambiare il branch di produzione su Netlify da `feat/fase1e-staging-cloud` a `main`**, altrimenti lo staging che il cliente guarda resta appeso a un branch che nessuno aggiorna più — e il guasto è muto.
+3. ✅ **Merge fatto (2026-08-04, `e0a20c1`)** e `main` pushato. Verifiche verdi sul risultato del merge. **Branch non eliminato di proposito**: è ancora quello di produzione su Netlify (vedi il riquadro rosso sopra).
+
+### Le tre strade davanti, ora che la 1E è chiusa
+
+1. **Mostrare il sito al cliente** e raccogliere il suo giudizio. ⚠️ Da dirgli prima: le pagine legali sono **dichiaratamente bozze** coi `[DA COMPILARE]`, e l'email di conferma è quella **inglese di serie**. ⚠️ E il progetto Supabase gratuito **si mette in pausa dopo 7 giorni di inattività**: se lo apre dopo dieci giorni trova il sito morto (si riattiva dal dashboard in un minuto). **Decisione ancora da prendere.**
+2. **Go-live pubblico** — dominio, contenuti legali reali (servono i dati del Titolare, da chiedere al cliente), **SMTP** (che porta con sé i template email dell'ex Task 9), Google OAuth, rimozione di `robots.ts`, e i due debiti del collaudo.
+3. **Fase 2** — onboarding post-registrazione, news/blog, mappa dei raduni, gestione utenti, cancellazione account (promessa nella privacy della 1D).
 
 ### 🔎 Due rilievi dal collaudo — debiti, non blocchi
 
