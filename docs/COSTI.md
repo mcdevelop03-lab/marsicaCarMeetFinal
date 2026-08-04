@@ -269,12 +269,53 @@ Questo ha una conseguenza pratica che va detta al cliente senza giri di parole: 
 i costi della privacy sono suoi.** Non è uno scarico di responsabilità, è come è fatta la legge:
 il Titolare è chi decide *perché* e *come* i dati vengono trattati, e quello è il club.
 
-🚨 **Prima domanda da fargli, e viene prima di ogni preventivo: il club esiste come soggetto
-giuridico?** Un'associazione costituita ha una denominazione, una sede e un codice fiscale — e
-sono esattamente i dati che oggi mancano nelle nostre pagine (`[DA COMPILARE]`). **Se il club non
-è costituito, il Titolare è una persona fisica**, con il suo nome e il suo indirizzo pubblicati
-sul sito. È una differenza enorme, e non è una questione tecnica: **senza questa risposta
-l'informativa non si può nemmeno scrivere.**
+### 🚨 Il punto che cambia tutto: **il club non è un soggetto giuridico**
+
+*Verificato col cliente il 2026-08-04: **non è un'associazione costituita**. È un gruppo di
+ragazzi con una pagina Instagram che organizza raduni per divertirsi.*
+
+**Non è un problema per andare online, ma va guardato in faccia:** se non esiste un'associazione,
+**il Titolare del trattamento è una persona fisica**. Uno di loro, con nome e cognome scritti
+nella privacy policy e un contatto pubblico. Non c'è modo di aggirarlo: un sito che raccoglie
+iscrizioni deve dichiarare **chi** risponde di quei dati, e senza un ente quel "chi" è qualcuno in
+carne e ossa.
+
+**"Ma siamo solo amici che si divertono, non vale l'esenzione per uso personale?"**
+È la prima obiezione che salta in mente, ed è ragionevole — ma **no**. Il GDPR esclude i
+trattamenti *"a carattere esclusivamente personale o domestico"*, e la giurisprudenza europea è
+costante nel dire che **pubblicare dati personali su un sito aperto a chiunque esce da quell'ambito**.
+Un sito con registrazione, profili e un elenco di iscritti non è la rubrica del telefono: è un
+trattamento ordinario, e resta soggetto alle regole. **La buona notizia è che, come visto sopra,
+è il tipo di trattamento più semplice ed economico che esista.**
+
+### Le due strade, e non riguardano solo la privacy
+
+**① Andare online con una persona fisica come Titolare — costo 0, subito**
+
+Uno del gruppo — tipicamente chi gestisce la pagina Instagram — mette il proprio nome
+nell'informativa, con un **indirizzo email di contatto**. Per una persona fisica di solito basta
+identità e un recapito: non è obbligatorio esporre l'indirizzo di casa, e **conviene usare
+un'email dedicata del club**, non quella personale (vedi §B.4).
+
+**È la strada proporzionata a quello che sono oggi**, e permette di partire senza spendere nulla.
+Va però detto chiaramente alla persona che ci mette il nome: **è una responsabilità personale**,
+non del gruppo.
+
+**② Costituire un'associazione — ha un costo, ma risolve più cose insieme**
+
+In Italia un'**associazione non riconosciuta** si costituisce con un atto scritto fra i soci e
+ottiene un **codice fiscale**. ⚠️ **Non metto cifre perché non le ho verificate** e cambiano;
+tipicamente c'è un'imposta di registro più i bolli, quindi una spesa una tantum di qualche
+centinaio di euro. **Da confermare con un commercialista prima di dare numeri al cliente.**
+
+🚨 **E qui c'è una cosa che va oltre la privacy e che vale la pena dire, anche se esula dal sito:
+loro organizzano raduni con delle auto.** Senza un ente, chi organizza risponde **personalmente**
+di quello che succede a un evento. Non è materia mia e non do consigli legali — ma **è la domanda
+più importante che dovrebbero fare a un professionista**, e vale molto più della questione
+privacy. Se un giorno decidessero di costituirsi, lo farebbero per quello, non per l'informativa:
+la privacy sarebbe solo un effetto collaterale gradito.
+
+**Per il sito, comunque: la strada ① basta.** Non serve costituirsi per andare online.
 
 ### Cosa serve davvero (e cosa abbiamo già)
 
@@ -282,7 +323,7 @@ l'informativa non si può nemmeno scrivere.**
 |---|---|---|
 | **Banner cookie con consenso** | ✅ **fatto e collaudato** (Fase 1D) — blocca gli embed YouTube finché non c'è consenso | già nostro |
 | **Pagine privacy e cookie** | 🟡 **struttura completa, testi in bozza** coi `[DA COMPILARE]` | testo: cliente/professionista |
-| **Dati del Titolare** | ❌ mancano | **solo il cliente** |
+| **Dati del Titolare** | ❌ mancano — e **il club non è costituito**, quindi sarà una **persona fisica** | **solo il cliente** |
 | **Registro dei trattamenti** | ❌ non esiste | cliente/professionista |
 | **Contratti coi fornitori** (Supabase, Netlify, Cloudflare) | ⚠️ da accettare | cliente, sono moduli standard dei fornitori |
 | **Trasferimenti fuori UE** | ⚠️ `[DA VERIFICARE]` nel testo | professionista |
@@ -412,25 +453,28 @@ Restano quindi solo le strade ① e ②.
 
 ### 🧭 Il consiglio pratico, aggiornato a quello che sappiamo
 
-**Cosa sappiamo già (2026-08-04):** il club **non ha un consulente**; le foto sono **controllate**,
-si chiede il permesso a chi potrebbe comparire; non si trattano **categorie particolari**, né
-pagamenti, né profilazione.
+**Il quadro è completo (2026-08-04):** il club **non è costituito** (gruppo informale con pagina
+Instagram) · **nessun consulente** · foto **controllate**, si chiede il permesso · **nessuna
+categoria particolare**, nessun pagamento, nessuna profilazione.
 
-**Resta una sola domanda aperta, ed è quella che blocca tutto: il club è costituito come
-associazione?** Serve denominazione, sede e codice fiscale. Da lì dipende chi è il Titolare — se
-l'associazione o una persona fisica col proprio nome pubblicato sul sito.
+**Non ci sono più domande aperte: si può decidere.**
 
-**Il percorso che consiglierei, visto il quadro:**
+**Il percorso che consiglierei, ed è tutto a costo zero:**
 
-1. **Ottieni i dati del Titolare dal cliente.** Senza, non si va avanti — è l'unico vero blocco.
-2. **Genera i testi col piano gratuito di iubenda** e compilaci i `[DA COMPILARE]`. Il caso è
-   quello standard (dati comuni, niente categorie particolari), quindi un modello ben compilato
-   copre onestamente la situazione. **Costo: 0.**
-3. **Metti l'avviso foto ai raduni** — una riga, costo zero, e mette al riparo la prassi che già
-   seguite.
-4. **Rimanda il professionista** a quando il club cresce o inizia a trattare qualcosa di diverso
-   (quote associative, pagamenti, dati di minori). Oggi sarebbe una spesa sproporzionata al
-   rischio.
+1. **Qualcuno del gruppo si prende il ruolo di Titolare.** Tipicamente chi gestisce la pagina
+   Instagram. Serve nome, cognome e **un'email di contatto** — meglio una dedicata al club che
+   quella personale. ⚠️ **Va detto esplicitamente a quella persona che è una responsabilità sua**,
+   non del gruppo: è l'unica cosa di tutta questa lista che non si risolve con un documento.
+2. **Genera i testi col piano gratuito di iubenda** e compilaci i `[DA COMPILARE]`. Caso ordinario
+   e trattamento minimo: un modello ben compilato lo copre onestamente. **Costo: 0.**
+3. **Metti l'avviso foto ai raduni** — una riga all'ingresso, costo zero, e mette al riparo la
+   prassi che già seguite.
+4. **Non costituire un'associazione per il sito.** Non serve, e sarebbe una spesa per il motivo
+   sbagliato. 🚨 Se un giorno la faranno, sarà per la **responsabilità sugli eventi** — che è una
+   questione molto più seria e che vale la pena portare a un professionista, indipendentemente dal
+   sito.
+5. **Rimanda il professionista privacy** a quando arriveranno quote associative, pagamenti o
+   minori. Oggi sarebbe sproporzionato al rischio.
 
 ⚠️ **L'unica cosa che non va fatta è pubblicare le pagine così come stanno adesso**, coi
 `[DA COMPILARE]` in bella vista. Non è tanto un rischio legale: è che si vede.
@@ -564,10 +608,11 @@ profilazione — è il **caso ordinario più semplice che esista**, quindi **nie
 canoni**: in Italia non si paga nulla per il fatto di trattare dati personali. Il **banner cookie
 ce l'abbiamo già** (Fase 1D, collaudato) e i **testi** si generano col piano gratuito di iubenda.
 
-⚠️ **Manca una cosa sola, e blocca tutto: i dati del Titolare.** Il club è costituito come
-associazione? Servono denominazione, sede e codice fiscale. Senza, l'informativa non si può
-scrivere — e il Titolare finirebbe per essere una **persona fisica**, col proprio nome e indirizzo
-pubblicati sul sito.
+⚠️ **Manca una cosa sola, e non si compra: qualcuno del gruppo deve mettere il proprio nome come
+Titolare.** Il club **non è costituito** — è un gruppo informale con una pagina Instagram —
+quindi il Titolare è per forza una **persona fisica**, con nome e un'email di contatto
+nell'informativa. Non serve costituire un'associazione per andare online; **è una responsabilità
+personale, e chi se la prende deve saperlo.**
 
 **Nessuna spesa ricorrente è necessaria**, e questo vale anche dopo il go-live.
 
