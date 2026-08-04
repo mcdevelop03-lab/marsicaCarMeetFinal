@@ -329,8 +329,9 @@
       {
         "titolo": "1. Titolare del trattamento",
         "paragrafi": [
-          "Il titolare del trattamento è Marsica Car Meet [DA COMPILARE: denominazione, sede, email di contatto].",
-          "Per qualsiasi richiesta relativa ai tuoi dati puoi scrivere a [DA COMPILARE: email]."
+          "Il titolare del trattamento è [DA COMPILARE: nome e cognome del referente], referente del gruppo Marsica Car Meet.",
+          "Marsica Car Meet è un gruppo informale di appassionati di motori e non è costituito in forma associativa: il titolare del trattamento è quindi una persona fisica.",
+          "Per qualsiasi richiesta relativa ai tuoi dati puoi scrivere a [DA COMPILARE: email di contatto, preferibilmente dedicata al sito]."
         ]
       },
       {
@@ -354,9 +355,10 @@
       {
         "titolo": "4. Terze parti e destinatari",
         "paragrafi": [
-          "Supabase: hosting del database, autenticazione e archiviazione file.",
+          "Supabase: database, autenticazione e archiviazione delle foto. I dati sono ospitati in un'infrastruttura situata nell'Unione Europea.",
+          "Netlify: hosting del sito e consegna delle pagine.",
           "Google: accesso opzionale con account Google (OAuth), avviato solo se scegli questa modalità.",
-          "Cloudflare: protezione anti-bot (Turnstile) e hosting del sito.",
+          "Cloudflare: protezione anti-bot dei moduli di accesso e registrazione (Turnstile).",
           "YouTube (Google): riproduzione dei video incorporati, caricati solo con il tuo consenso.",
           "Google Drive: alcuni eventi possono avere un link a un archivio Drive con le foto originali. Quell'archivio è esterno al nostro sito e non è governato dai nostri controlli: la rimozione di una foto dal sito non la rimuove da Drive, che va gestito separatamente."
         ]
@@ -380,7 +382,8 @@
       {
         "titolo": "7. Trasferimenti extra-UE",
         "paragrafi": [
-          "Alcuni fornitori (es. Supabase, Google, Cloudflare) potrebbero trattare dati al di fuori dell'UE con garanzie adeguate. [DA VERIFICARE: region e garanzie specifiche una volta configurato l'ambiente di produzione.]"
+          "Il database, l'autenticazione e le foto sono ospitati da Supabase in un'infrastruttura situata nell'Unione Europea.",
+          "Netlify e Cloudflare sono società con sede negli Stati Uniti: alcuni dati tecnici di connessione (ad esempio l'indirizzo IP) possono quindi essere trattati fuori dall'Unione Europea, sulla base delle garanzie previste dai rispettivi contratti. [DA VERIFICARE con un professionista: riferimento alle garanzie specifiche.]"
         ]
       }
     ]
