@@ -40,11 +40,11 @@
 
 ### Il primo passo, in ordine
 
-1. 🚨 **Task 9 — BLOCCATO, e non per poco (scoperto il 2026-08-04).** I template **non si possono incollare**: col servizio di posta gratuito Supabase impone quelli di serie. Il dashboard, in *Authentication → Emails*, dice *"Set up custom SMTP to edit templates… to edit their subject and body"*. Oggetto **e** corpo sono bloccati.
-   - **I file non sono sprecati:** `supabase/email-templates/` è scritto e pronto, si incolla appena c'è l'SMTP.
-   - **Tre limitazioni, una sola causa:** template bloccati + footer "powered by Supabase" + limite di 2 email/ora vengono tutti dal mailer condiviso e **cadono insieme** con un SMTP nostro.
-   - ⚠️ **Perché è successo, da non ripetere:** i template sono stati scritti dando per buono che si potessero incollare, **senza aprire prima quella pagina** — e il vincolo era perfino scritto nella spec (D-4). Prima di scrivere codice che dipende da una schermata, aprire la schermata.
-   - **Decisione da prendere:** collegare un SMTP adesso (sblocca anche il footer e il limite orario) oppure rimandare il Task 9 al go-live, dove l'SMTP è già in lista — accettando che il cliente riceva l'email inglese di serie.
+1. ➡️ **Task 9 — USCITO DALLA FASE, non è più da fare qui (2026-08-04).** I template **non si possono incollare**: col servizio di posta gratuito Supabase impone quelli di serie (*"Set up custom SMTP to edit templates… to edit their subject and body"* — oggetto **e** corpo bloccati). **Decisione dell'utente: rimandare al go-live**, dove c'è già il task SMTP e ci sarà il dominio vero.
+   - **I file non sono sprecati:** `supabase/email-templates/` è scritto, verificato (logo 200 dal sito) e pronto: si incolla appena c'è l'SMTP.
+   - **Tre limitazioni, una sola causa:** template bloccati + footer "powered by Supabase" + limite di 2 email/ora vengono tutti dal mailer condiviso e **cadono insieme**. Si fa una volta sola, col dominio.
+   - ⚠️ **Da dire al cliente:** chi si registra sullo staging riceve l'email di conferma **inglese di serie**. Brutta ma funzionante.
+   - ⚠️ **Perché è successo, da non ripetere:** i template sono stati scritti dando per buono che si potessero incollare, **senza aprire prima quella pagina** — e il vincolo era perfino scritto nella spec (D-4). **Prima di scrivere codice che dipende da una schermata, aprire la schermata.**
 2. **Task 8 — collaudo dal vivo.** Richiede una sessione loggata. Vanno guardate le cose del Task 10 mai provate con una sessione vera: il **velo di attesa** su creazione evento con foto grossa (**deve** comparire) e su salvataggio profilo (probabilmente **non** deve, è veloce), e la **rotella nei bottoni** delle azioni admin e dell'RSVP. La lista completa è nel piano, Task 8, Step 1-7-bis.
 3. **Poi la fase è chiusa:** merge del branch e decisione su come mostrare il sito al cliente.
    🚨 **Subito dopo il merge: cambiare il branch di produzione su Netlify da `feat/fase1e-staging-cloud` a `main`**, altrimenti lo staging che il cliente guarda resta appeso a un branch che nessuno aggiorna più — e il guasto è muto.

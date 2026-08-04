@@ -52,9 +52,12 @@ del go-live. Nessuna funzionalità nuova: è infrastruttura, più le rifiniture 
 - [x] **Contenuti demo** caricati dalla UI: 3 eventi (uno concluso con album e video), profili con avatar, 3 auto, 2 iscrizioni.
 - [x] **Prossimi raduni in home** — prima la home annunciava una sezione che non esisteva.
 - [x] **Feedback di caricamento**: scheletro/spinner a ogni cambio pagina, stato "sto lavorando" sui bottoni, velo di attesa sulle operazioni lente.
-- [ ] **Email di autenticazione in italiano** — i template sono scritti e pronti, ma **bloccati**: col servizio di posta gratuito Supabase impone quelli di serie, e per cambiarli serve un **SMTP nostro**. Stessa causa del footer "powered by Supabase" e del limite di 2 email/ora: cadono tutti insieme.
+- [x] ~~Email di autenticazione in italiano~~ → **spostata al go-live (2026-08-04).** I template sono scritti e pronti, ma **non applicabili**: col servizio di posta gratuito Supabase impone quelli di serie, e per cambiarli serve un **SMTP nostro**. Stessa causa del footer "powered by Supabase" e del limite di 2 email/ora: cadono tutti insieme, quindi si fa una volta sola col dominio vero.
 - [ ] Collaudo finale mirato e chiusura del branch.
 - **Esito atteso:** un URL che il cliente apre quando vuole lui, con dati veri dentro.
+
+⚠️ **Da dire al cliente:** chi si registra sullo staging riceve l'**email di conferma inglese
+di serie** di Supabase. È brutta ma funziona; diventa italiana col dominio e l'SMTP veri.
 
 ⚠️ **Il progetto Supabase gratuito si mette in pausa dopo 7 giorni di inattività:** se il
 cliente riapre il link dopo dieci giorni trova il sito morto (si riattiva dal dashboard in un
@@ -63,8 +66,15 @@ minuto). Come gestirlo è una decisione ancora aperta.
 ### Cosa serve per il go-live pubblico (dopo l'approvazione del cliente)
 
 Dominio del club + DNS, **contenuti legali reali** (i `[DA COMPILARE]` con i dati del Titolare,
-da chiedere al cliente, e una validazione legale dei testi), SMTP custom, Google OAuth col
-redirect URI definitivo, rimozione del `noindex`.
+da chiedere al cliente, e una validazione legale dei testi), Google OAuth col redirect URI
+definitivo, rimozione del `noindex`.
+
+**SMTP custom** — non è più solo una rifinitura: sblocca **tre cose insieme** che oggi non si
+possono avere separatamente. Via il footer "powered by Supabase", via il limite di 2 email/ora,
+e diventano applicabili i **template italiani già scritti** in `supabase/email-templates/`
+(l'ex Task 9 della 1E). ⚠️ Senza un dominio verificato, **Resend invia solo al titolare
+dell'account**: se un giorno servisse l'SMTP *prima* del dominio, serve un provider che
+verifichi un singolo mittente.
 
 ## Fase 2 — Contenuti & scoperta
 

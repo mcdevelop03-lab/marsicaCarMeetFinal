@@ -303,7 +303,7 @@ e per risparmiare un deploy.)*
 | 5 | `noindex` + bottone Google dietro un flag | `robots` nega tutto; le pagine auth non mostrano il bottone morto | ✅ `e4fa307` |
 | 6 | Deploy su Netlify + redirect URL Supabase aggiornati | la home risponde in HTTPS sull'URL di staging | ✅ |
 | 7 | Contenuti demo caricati **dalla UI** dall'admin | 3 eventi (futuro con RSVP, futuro senza capienza, concluso con album), profili con avatar, auto in garage | ✅ |
-| 9 | **Email di autenticazione presentabili** *(aggiunto)* | i due template italiani sono nel dashboard e una prova vera arriva leggibile **da telefono** | 🚨 **BLOCCATO**: file pronti `633dff2`, ma col mailer condiviso i template **non sono modificabili** — serve un SMTP nostro (D-4) |
+| 9 | **Email di autenticazione presentabili** *(aggiunto)* | i due template italiani sono nel dashboard e una prova vera arriva leggibile **da telefono** | ➡️ **USCITO DALLA FASE** (2026-08-04): bloccato dal mailer condiviso (D-4), **confluito nel task SMTP del go-live**. I file `633dff2` restano pronti |
 | 10 | **Feedback di caricamento** *(aggiunto)* | scheletro/spinner a ogni cambio pagina, stato "sto lavorando" sui bottoni | ✅ in 4 riprese, l'ultima `acc4633` |
 | 11 | **Prossimi raduni in home** *(aggiunto)* | la home mostra fino a 3 eventi futuri | ✅ `68dad51` |
 | 8 | Collaudo mirato + allineamento docs | §7 superata; spec, piano, `SETUP.md`, `STATO-LAVORI.md`, `ROADMAP.md` allineati | 🟡 in corso |
@@ -389,10 +389,22 @@ validazione legale — ma è meglio anticiparglielo che lasciarglielo scoprire c
 
 ## 10. Cosa resta dopo, per il go-live pubblico
 
-Dominio del club + DNS, contenuti legali reali, SMTP custom (che porta via il footer "powered
-by Supabase" e il limite di 2 email/ora), Google OAuth col redirect URI definitivo, rimozione
-del `noindex`, e la valutazione se passare al piano Supabase Pro (niente pausa per inattività,
-backup).
+Dominio del club + DNS, contenuti legali reali, Google OAuth col redirect URI definitivo,
+rimozione del `noindex`, e la valutazione se passare al piano Supabase Pro (niente pausa per
+inattività, backup).
+
+**SMTP custom — è diventato un task che porta con sé il Task 9.** Non è più solo "togliere il
+footer": sblocca **tre cose in un colpo** che oggi non si possono avere separatamente —
+
+1. il footer *"powered by Supabase"* sparisce;
+2. il limite di **2 email di auth all'ora** cade;
+3. **i template italiani già scritti** in `supabase/email-templates/` diventano applicabili
+   (oggi il dashboard li rifiuta, D-4).
+
+⚠️ **Vincolo sulla scelta del provider:** senza un dominio verificato, **Resend in modalità test
+invia solo al titolare dell'account** — inutile per far provare il sito a qualcun altro. Se
+l'SMTP si configura **prima** che il dominio del club esista, serve un provider che permetta di
+verificare un **singolo indirizzo mittente**. Col dominio, il vincolo sparisce.
 
 ⚠️ **Tre cose legate al dominio, che al cambio vanno toccate insieme** o restano appese
 all'indirizzo di staging: gli **URL di redirect Supabase** (trappola (c)), l'**hostname del

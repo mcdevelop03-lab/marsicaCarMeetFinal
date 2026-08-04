@@ -1218,15 +1218,28 @@ SMTP nostro. Non sono tre problemi da affrontare separatamente: è uno.
 **I file non sono lavoro sprecato:** `supabase/email-templates/` è scritto, verificato (il logo
 risponde 200 dal sito) e pronto. Si incolla nel momento in cui l'SMTP c'è.
 
-**Decisione da prendere con l'utente:**
-- **(a) SMTP adesso** — sblocca il task e con esso il footer e il limite orario. Costo: un
-  servizio in più da configurare, con un mittente verificato. ⚠️ Attenzione al vincolo già
-  registrato nella spec §2: **Resend in modalità test invia solo al titolare dell'account**
-  senza un dominio verificato, quindi non servirebbe a far provare il sito al cliente.
-- **(b) Rimandare al go-live**, dove l'SMTP è già in lista. Accettando che il cliente riceva
-  l'email inglese di serie — che è esattamente ciò che il task voleva evitare.
+### ➡️ DECISIONE PRESA (2026-08-04): il task esce dalla 1E e confluisce nel go-live
 
-- [ ] **Step 1 (quando sbloccato).** Dashboard Supabase → *Authentication → Emails*: incollare
+**Scelta dell'utente: rimandare.** Il Task 9 non si chiude in questa fase; diventa parte del
+task **SMTP custom** del go-live, dove ci sarà anche il dominio vero.
+
+**Perché è la scelta giusta e non una resa:**
+- Configurare un SMTP adesso significherebbe configurarlo **due volte**: senza il dominio del
+  club servirebbe un provider con mittente singolo verificato, e col dominio si rifarebbe tutto.
+- Il vincolo Resend (invia solo al titolare senza dominio verificato) rende la strada rapida
+  inutilizzabile proprio per lo scopo che avrebbe: far provare il sito **al cliente**.
+- Le tre limitazioni cadono **insieme** con l'SMTP: farlo una volta sola, e bene, al momento
+  giusto.
+
+**Costo accettato, da dire al cliente:** chi si registra sullo staging riceve l'**email inglese
+di serie** di Supabase, col footer "powered by Supabase". È brutta, ma funziona: il link di
+conferma porta dove deve.
+
+**Cosa NON si perde:** i template sono scritti, verificati (logo 200 dal sito) e committati.
+Al go-live si incollano e basta.
+
+- [ ] **Step 1 (al go-live, quando ci sarà l'SMTP).** Dashboard Supabase →
+  *Authentication → Emails*: incollare
   `conferma-registrazione.html` in **Confirm signup** e `reset-password.html` in
   **Reset password**, e mettere gli oggetti in italiano:
   - Confirm signup → `Conferma il tuo indirizzo — Marsica Car Meet`
