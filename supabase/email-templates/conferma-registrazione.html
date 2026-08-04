@@ -1,0 +1,75 @@
+<!-- Template Supabase: Authentication -> Emails -> "Confirm signup".
+     Copia da qui e incolla nel dashboard. Vedi README.md in questa cartella. -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0a0a0b;margin:0;padding:32px 12px;font-family:Arial,Helvetica,sans-serif;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background-color:#111114;border:1px solid rgba(255,255,255,0.08);">
+
+        <tr>
+          <td align="center" style="padding:32px 32px 8px 32px;">
+            <img src="https://polite-moxie-8dc031.netlify.app/email-logo.png"
+                 width="72" height="72" alt="Marsica Car Meet"
+                 style="display:block;border:0;width:72px;height:72px;" />
+          </td>
+        </tr>
+
+        <tr>
+          <td align="center" style="padding:12px 32px 0 32px;">
+            <div style="font-size:22px;font-weight:bold;font-style:italic;color:#ffffff;letter-spacing:-0.5px;text-transform:uppercase;">
+              Marsica Car Meet
+            </div>
+            <div style="font-size:10px;color:#ff3e00;letter-spacing:2px;text-transform:uppercase;padding-top:6px;">
+              La community dei motori della Marsica
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:28px 32px 0 32px;">
+            <div style="height:2px;background-color:#ff3e00;width:40px;"></div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:20px 32px 0 32px;color:#ffffff;font-size:18px;font-weight:bold;">
+            Conferma il tuo indirizzo email
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:14px 32px 0 32px;color:rgba(255,255,255,0.65);font-size:14px;line-height:22px;">
+            Benvenuto nel Marsica Car Meet. Manca un passaggio solo: conferma questo
+            indirizzo e il tuo profilo sarà attivo. Poi potrai aggiungere le tue auto al
+            garage e iscriverti ai prossimi raduni.
+          </td>
+        </tr>
+
+        <tr>
+          <td align="center" style="padding:28px 32px 0 32px;">
+            <a href="{{ .ConfirmationURL }}"
+               style="display:inline-block;background-color:#ff3e00;color:#ffffff;text-decoration:none;font-size:13px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;">
+              Conferma l'indirizzo
+            </a>
+          </td>
+        </tr>
+
+        <!-- Il link in chiaro non è ridondanza: alcuni client di posta non rendono il
+             bottone, e chi legge da webmail aziendali spesso vede solo il testo. -->
+        <tr>
+          <td style="padding:24px 32px 0 32px;color:rgba(255,255,255,0.4);font-size:11px;line-height:18px;">
+            Se il bottone non funziona, copia questo indirizzo nel browser:<br />
+            <span style="color:rgba(255,255,255,0.6);word-break:break-all;">{{ .ConfirmationURL }}</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:24px 32px 32px 32px;color:rgba(255,255,255,0.35);font-size:11px;line-height:18px;border-top:1px solid rgba(255,255,255,0.08);margin-top:24px;">
+            Se non ti sei registrato tu, ignora questa email: senza conferma non viene
+            creato nessun profilo.
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>

@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Camera } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
+import OverlayAttesa from "@/components/ui/OverlayAttesa";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { comprimiImmagine } from "@/lib/images/compress";
@@ -82,10 +83,11 @@ export default function AvatarUploader({
           onChange={onFileChange}
           className="hidden"
         />
+        <OverlayAttesa attivo={busy} messaggio={t("attesaAvatar")} />
         <Button
           type="button"
           variant="outline"
-          disabled={busy}
+          pending={busy}
           onClick={() => inputRef.current?.click()}
           className="flex items-center gap-2"
         >

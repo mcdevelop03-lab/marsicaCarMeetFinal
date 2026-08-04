@@ -51,7 +51,7 @@ export default function AuthForm({
         {state.error && (
           <p className="text-xs font-mono text-accent-red">{state.error}</p>
         )}
-        <Button type="submit" disabled={pending || !formValid} className="w-full">
+        <Button type="submit" pending={pending} disabled={!formValid} className="w-full">
           {submitLabel}
         </Button>
       </form>

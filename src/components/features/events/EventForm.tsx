@@ -4,6 +4,7 @@ import { flushSync } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Camera } from "lucide-react";
 import Button from "@/components/ui/Button";
+import OverlayAttesa from "@/components/ui/OverlayAttesa";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
@@ -291,7 +292,8 @@ export default function EventForm({
 
       {!valid && <p className="font-mono text-[11px] text-accent-red">{t("requiredHint")}</p>}
 
-      <Button type="submit" disabled={busy || !valid}>
+      <OverlayAttesa attivo={busy} messaggio={event ? t("attesaSalvataggio") : t("attesaCreazione")} />
+      <Button type="submit" pending={busy} disabled={!valid}>
         {t("save")}
       </Button>
     </form>

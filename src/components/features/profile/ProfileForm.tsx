@@ -2,6 +2,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Button from "@/components/ui/Button";
+import OverlayAttesa from "@/components/ui/OverlayAttesa";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import { SOCIAL_KEYS, SOCIAL_LABELS } from "@/lib/profile/socials";
@@ -99,7 +100,8 @@ export default function ProfileForm({
       {state.error && <p className="font-mono text-xs text-accent-red">{state.error}</p>}
       {state.success && <p className="font-mono text-xs text-accent-orange">{state.success}</p>}
 
-      <Button type="submit" disabled={pending || !valid}>
+      <OverlayAttesa attivo={pending} messaggio={t("attesaSalvataggio")} />
+      <Button type="submit" pending={pending} disabled={!valid}>
         {t("save")}
       </Button>
     </form>

@@ -49,7 +49,7 @@ export default function EventAdminActions({ id, annullato }: { id: string; annul
             type="button"
             variant="outline"
             onClick={() => esegui(() => ripristinaEvento(id), "ripristinato")}
-            disabled={pending}
+            pending={pending}
           >
             {t("restoreEvent")}
           </Button>
@@ -99,7 +99,7 @@ export default function EventAdminActions({ id, annullato }: { id: string; annul
                   conferma === "annulla" ? "annullato" : "eliminato",
                 )
               }
-              disabled={pending}
+              pending={pending}
             >
               {t("confirm")}
             </Button>

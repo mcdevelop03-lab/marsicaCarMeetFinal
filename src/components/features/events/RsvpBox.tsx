@@ -106,7 +106,7 @@ export default function RsvpBox({ eventId, stato, garage, autoIscritte }: Props)
                 {t("addCar")}
               </Button>
             </Link>
-            <Button type="button" onClick={partecipa} disabled={pending}>
+            <Button type="button" onClick={partecipa} pending={pending}>
               {t("participateNoCar")}
             </Button>
           </div>
@@ -132,7 +132,7 @@ export default function RsvpBox({ eventId, stato, garage, autoIscritte }: Props)
               </li>
             ))}
           </ul>
-          <Button type="button" onClick={partecipa} disabled={pending}>
+          <Button type="button" onClick={partecipa} pending={pending}>
             {t("participate")}
           </Button>
         </div>
@@ -145,7 +145,7 @@ export default function RsvpBox({ eventId, stato, garage, autoIscritte }: Props)
             <Button type="button" variant="outline" onClick={() => setConfermaDisdetta(false)} disabled={pending}>
               {t("cancel")}
             </Button>
-            <Button type="button" onClick={eseguiDisdetta} disabled={pending}>
+            <Button type="button" onClick={eseguiDisdetta} pending={pending}>
               {t("confirm")}
             </Button>
           </div>

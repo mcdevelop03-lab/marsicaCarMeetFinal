@@ -39,7 +39,7 @@ export default function DeleteVehicleButton({ id }: { id: string }) {
     <div className="space-y-2">
       <p className="font-mono text-[11px] text-white/60">{t("confirmDelete")}</p>
       <div className="flex gap-2">
-        <Button type="button" onClick={elimina} disabled={pending}>
+        <Button type="button" onClick={elimina} pending={pending}>
           {t("confirm")}
         </Button>
         <Button type="button" variant="outline" onClick={() => setConferma(false)} disabled={pending}>

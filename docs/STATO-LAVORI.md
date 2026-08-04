@@ -1,10 +1,22 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-07-29**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-08-04**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
 ## 🔖 Dove siamo
+
+- 🟡 **FASE 1E — STAGING CLOUD: in corso** sul branch **`feat/fase1e-staging-cloud`** (pushato su origin). **C'è un cliente che deve provare e approvare il sito**: è il motivo per cui esiste questa fase. Spec: [`superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md`](./superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md) · Piano: [`superpowers/plans/2026-07-30-fase1e-staging-cloud.md`](./superpowers/plans/2026-07-30-fase1e-staging-cloud.md) · Ledger: [`../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md`](../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md).
+  - ✅ **Spec e piano RIALLINEATI a Netlify (2026-08-04, `3e5c225`)** — non sono più obsoleti: si possono leggere. La storia Cloudflare è conservata **come motivo per cui quella strada non si ritenta**, non come istruzioni (quelle sono state rimosse). Riscritte anche `SETUP.md` §6 + la nuova §6-bis sul deploy, e `ROADMAP.md`, dove la Fase 1E non compariva affatto (`aabfb4a`).
+    - Trovato strada facendo: `provider.ts` e `.env.local.example` avevano commenti che nominavano *"lo staging workers.dev"* — un hosting mai usato, finito nel codice perché il piano diceva così. Corretti. E `SETUP.md` **consigliava di mettere in `.env.local` la `SUPABASE_SERVICE_ROLE_KEY`**, cioè la chiave che bypassa tutte le RLS: tolta.
+  - ✅ **Fatto:** `main` + branch **pushati su GitHub** (i 42 commit della Fase 1 non vivono più su un solo disco) · **progetto Supabase cloud** creato con le migrazioni `0001`–`0010` applicate e verificate · **sito Netlify deployato** · **`noindex` + bottone Google dietro flag** (commit `e4fa307`, 119 test, review indipendente con 0 rilievi).
+  - ✅ **Sito su Public e verifica funzionale superata (2026-08-03):** `/` → `/it` **307** (il middleware Node gira davvero su Netlify), `/it`+`/it/eventi`+`/it/login`+`/it/privacy`+`/it/cookie` **200**, `/it/membri` → login (guardia auth viva), `/robots.txt` nega tutto, cookie banner 1D nel markup SSR, Supabase cloud vivo (non in pausa).
+  - ✅ **Task 4 (Turnstile) completo e verificato (2026-08-03):** widget creato, variabili su Netlify, redeploy fatto. Il widget emette un token da 773 caratteri e un login con password errata risponde **"Credenziali non valide"** (non "Verifica anti-bot non superata") → la secret verifica davvero e **il server Netlify parla con Supabase cloud**. Login e registrazione sono vivi.
+  - ✅ **Task 3 (collaudo auth/dati) completo (2026-08-03):** admin e membro registrati e confermati sul cloud, admin promosso via SQL e confermato anche dalla UI; **tutte le prove negative da anonimo superate** (scritture RLS respinte, profili invisibili, upload respinti sui 4 bucket).
+  - ✅ **Task 7 (contenuti demo) completo (2026-08-03):** 3 eventi (2 futuri + 1 concluso con album di 2 foto e 1 video YouTube), profili con avatar per admin e membro, 3 auto in garage, **2 iscrizioni** al raduno di settembre. Caricato tutto **dalla UI**, quindi vale anche da collaudo: fuso corretto (10:00 italiane con server in UTC), compressione WebP, slug immutabile dopo il cambio data, gate GDPR verificato con un video vero (0 iframe e 0 richieste a YouTube senza consenso, `youtube-nocookie` dopo), e `profiles`/`vehicles` invisibili all'anonimo **anche da pieni**.
+  - ✅ **Task 11 e 10 completi e verificati dal vivo (2026-08-03):** home con i prossimi raduni in vetrina (`68dad51`); feedback di caricamento in **quattro riprese**, tutte nate da rilievi dell'utente in collaudo — `loading.tsx` (`5cfbb16`), **fix del confine** (`1efdebd`, prima non compariva **mai**: 4,2 s di silenzio, ora **6-14 ms**), **schede solo dove ci sono schede + spinner altrove** (`4796938`), **stato "sto lavorando" sui bottoni** (`cf34331`), **velo di attesa a comparsa ritardata** sulle operazioni lente (`acc4633`).
+    - ⚠️ **Lezione da ricordare:** in tutti e tre i casi `tsc`, `lint`, 119 test e build erano **verdi mentre il comportamento era sbagliato**. Il verde dice che compila, non che funziona: le modifiche di UX vanno provate su un dev server puntato al **Supabase cloud** prima del push.
+  - ⏸️ **Dove ci si è fermati (2026-08-04):** restano **solo cose che richiedono te**. (1) **Task 9:** i due template email sono scritti (`633dff2`) ma vanno **incollati a mano nel dashboard** Supabase. (2) **Task 8, collaudo dal vivo:** serve una sessione loggata, quindi le password. La parte documentale del Task 8 è **fatta**.
 
 - 🎉 **FASE 1 (MVP) COMPLETA** — 1A ✅ · 1B ✅ · 1C ✅ · 1D ✅. Tutto mergiato su `main`. ⚠️ **`main` è solo locale, non pushato** (41 commit avanti a `origin/main`).
 - 🟢 **Fase 1D ✅ COMPLETATA** (GDPR base) — **chiude la Fase 1.** Implementazione subagent-driven (Task 1-5, tutti rivisti con esito pulito) + **review finale whole-branch (opus): "Ready to merge: With fixes"** → **fix wave `531adc7`** (2 Important) → **re-review del fix wave: entrambi ADDRESSED, 0 nuove rotture** → **collaudo dal vivo superato (2026-07-29, 0 bug)** → **mergiata su `main`** (merge `173d864`), branch `feat/fase1d-gdpr` eliminato. **Nessun DB, nessuna migrazione.** **Cosa fa:** cookie banner con gestione consensi che **blocca gli embed YouTube** fino al consenso (`VideoYouTube` gate), due categorie (Necessari + Contenuti di terze parti), pagine `/privacy` e `/cookie` (bozza IT + disclaimer), footer con "Preferenze cookie". Consenso in cookie first-party `mcm_consent` letto lato server (no flash). **115 test**, `tsc`/`lint`/**build pulita** verdi. Spec: [`superpowers/specs/2026-07-28-fase1d-gdpr-design.md`](./superpowers/specs/2026-07-28-fase1d-gdpr-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1d-gdpr.md`](./superpowers/plans/2026-07-28-fase1d-gdpr.md).
@@ -19,21 +31,129 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: **la Fase 1 è chiusa — si sceglie il prossimo macro-step**
+## ▶️ DA COSA RIPARTIRE: **Fase 1E — restano solo cose che richiedono l'utente**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: la Fase 1 (MVP) è completa e tutto è mergiato su `main`. Decidiamo il prossimo passo."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: della 1E mancano i template email da incollare e il collaudo dal vivo."*
 
-Non c'è lavoro a metà: nessun branch di fase aperto, nessun workspace SDD attivo, `main` verde (115 test, `tsc`, `lint`, build pulita). Le tre strade possibili, in ordine di valore:
+> **Lo staging è vivo, pieno e verificato.** Sito: `https://polite-moxie-8dc031.netlify.app`
+> **La documentazione è allineata** (2026-08-04). ⚠️ **Ci sono 3 commit di documentazione NON pushati** — pushare fa ripartire un deploy Netlify, innocuo ma non silenzioso.
 
-1. **Configurazione cloud/deploy** — è ciò che trasforma l'MVP in un sito vero: progetto **Supabase cloud** (migrazioni 0001–0010 da applicare), **Google OAuth + Turnstile reali**, deploy su **Cloudflare Pages**. Guida di partenza in [`SETUP.md`](./SETUP.md) §6. Richiede decisioni tue (account, domini, chiavi) → conviene un brainstorming prima.
+### Il primo passo, in ordine
+
+1. ➡️ **Task 9 — USCITO DALLA FASE, non è più da fare qui (2026-08-04).** I template **non si possono incollare**: col servizio di posta gratuito Supabase impone quelli di serie (*"Set up custom SMTP to edit templates… to edit their subject and body"* — oggetto **e** corpo bloccati). **Decisione dell'utente: rimandare al go-live**, dove c'è già il task SMTP e ci sarà il dominio vero.
+   - **I file non sono sprecati:** `supabase/email-templates/` è scritto, verificato (logo 200 dal sito) e pronto: si incolla appena c'è l'SMTP.
+   - **Tre limitazioni, una sola causa:** template bloccati + footer "powered by Supabase" + limite di 2 email/ora vengono tutti dal mailer condiviso e **cadono insieme**. Si fa una volta sola, col dominio.
+   - ⚠️ **Da dire al cliente:** chi si registra sullo staging riceve l'email di conferma **inglese di serie**. Brutta ma funzionante.
+   - ⚠️ **Perché è successo, da non ripetere:** i template sono stati scritti dando per buono che si potessero incollare, **senza aprire prima quella pagina** — e il vincolo era perfino scritto nella spec (D-4). **Prima di scrivere codice che dipende da una schermata, aprire la schermata.**
+2. ✅ **Task 8 — COLLAUDO DAL VIVO SUPERATO (2026-08-04).** Eseguito sullo staging vero con sessione admin, **0 bug bloccanti**. Contenuti demo tutti ripristinati e verificati riga per riga. Dettaglio completo nel ledger; in sintesi:
+   - **Da anonimo:** middleware, pagine pubbliche, `robots.txt`, banner cookie SSR, Turnstile, gate GDPR (0 iframe), home coi 2 raduni futuri.
+   - **Da loggato:** 4 server action riuscite; rotella a **51 ms** con `aria-busy` e opacità 1; **velo di attesa opacità 0 fino a 349 ms, 1.00 a 616 ms** (soglia CSS esatta); regola `pending` rispettata (Conferma sì, Annulla no); logout pulito.
+   - **6 prove negative RLS, ognuna con controprova.** ⭐ **Il fix `2052d8d` è finalmente verificato dal vivo:** auto altrui sulla propria iscrizione → **403**, mentre la propria → **201**.
+   - ⚠️ **Una previsione di questo file era sbagliata:** il velo sul salvataggio profilo **compare** (l'operazione dura ~950 ms sul piano gratuito). Non è un difetto.
+3. **Poi la fase è chiusa:** merge del branch e decisione su come mostrare il sito al cliente.
+   🚨 **Subito dopo il merge: cambiare il branch di produzione su Netlify da `feat/fase1e-staging-cloud` a `main`**, altrimenti lo staging che il cliente guarda resta appeso a un branch che nessuno aggiorna più — e il guasto è muto.
+
+### 🔎 Due rilievi dal collaudo — debiti, non blocchi
+
+- **Le rotte protette rispondono 200, non più 307.** Regressione del `loading.tsx` per rotta del Task 10: il confine Suspense manda in strada l'intestazione HTTP prima che il server component esegua `redirect()`. **Misurato, non dedotto: 0 tracce di dati protetti** nel corpo di tutte e sei le rotte, e nel browser vero il redirect avviene. La barriera è RLS + `requireAdmin`, intatta. Unica conseguenza: **senza JavaScript** si resterebbe sullo scheletro invece di finire al login.
+- **Il cookie di sessione Supabase non ha il flag `Secure`.** Non è una nostra omissione: `@supabase/ssr@0.12.0` non lo mette fra i default (verificato nel sorgente del pacchetto); il nostro `mcm_consent` invece ce l'ha. **Oggi è coperto da HSTS** (`max-age=31536000; includeSubDomains; preload`) + `http` → 301. ⚠️ **Da guardare al go-live**, quando il dominio nuovo non sarà in preload list: fix da due righe, `cookieOptions: { secure: true }` in [`server.ts`](../src/lib/supabase/server.ts), condizionato all'ambiente per non rompere lo sviluppo in `http`.
+
+### ✅ Già fatto il 2026-08-03 (non rifarlo)
+
+**Sito su Public + verifica funzionale superata:** `/` → `/it` **307** (prova che il middleware Node gira, il pezzo su cui Cloudflare è fallita); `/it`, `/it/eventi`, `/it/login`, `/it/privacy`, `/it/cookie` **200**; `/it/membri` → `/it/login` (guardia `(auth)` viva sul cloud); `/robots.txt` = `Disallow: /`; cookie banner 1D nel markup SSR.
+
+**Task 4 (Turnstile) chiuso e verificato:** widget `marsica-car-meet-staging`, variabili su Netlify, redeploy fatto. Il widget emette un **token da 773 caratteri** (site key e hostname validi) e un login con password errata risponde **"Credenziali non valide"** invece di "Verifica anti-bot non superata" → la secret verifica davvero il token, e di conseguenza **il server Netlify parla con Supabase cloud**.
+
+**Task 3 (collaudo auth/dati) chiuso:** URL di redirect configurate su Supabase **prima** di registrarsi (altrimenti il link di conferma punta a `localhost` e si brucia una delle 2 email/ora); admin `mcdevelop03@gmail.com` e membro `matteo050903@gmail.com` registrati e confermati; admin promosso via SQL e verificato **anche dalla UI**. Prove negative da anonimo **tutte superate**: `POST` su `events`/`profiles`/`event_registrations` → 401 `42501`; `profiles`/`vehicles`/`event_registrations` in lettura → `[]`; upload sui 4 bucket → 403; `storage list` → `[]`; `iscritti_per_eventi` → 200.
+
+⚠️ **Due cose da non scambiare per guasti:**
+- L'iframe di challenge Cloudflare logga righe `%c%d font-size:0;...` come *error* in console. È suo debug interno.
+- L'**SQL Editor di Supabase dice "Success. No rows returned" anche quando la `update` non ha toccato niente**: non è una conferma. Verificare sempre con una `select`.
+
+**Task 7 (contenuti demo) chiuso:** 3 eventi (Alba Fucens 13 set con capienza 40 e **2 iscritti**, Altopiano delle Rocche 4 ott senza capienza né ora di fine, Castello Piccolomini 11 lug **concluso** con 2 foto e 1 video), profili con avatar per admin e membro, 3 auto. Caricato **dalla UI**, quindi vale anche da collaudo. ⚠️ **Trappola di percorso:** in creazione non si può datare un evento nel passato, in **modifica** sì → l'evento concluso è stato creato con data futura e poi spostato indietro.
+
+**Task 11 e 10 (home e feedback di caricamento) chiusi**, dettaglio nel ledger. In sintesi: la home mostra i prossimi raduni; ogni rotta ha il suo `loading.tsx`; schede dove ci sono schede e spinner altrove; i bottoni hanno lo stato "sto lavorando"; le operazioni lente coprono lo schermo con un velo dopo 350 ms.
+
+**Falso allarme già chiarito:** l'host Supabase **non** compare nei chunk JS della pagina di login, ed è corretto — il client browser è importato solo da `AvatarUploader`/`VehicleForm`/`EventForm`/`AdminMedia` (pagine autenticate); login e registrazione passano da server action e parlano con Supabase dal server. Non riaprire questa indagine.
+
+### 🔧 Provare l'interfaccia in locale contro il database CLOUD
+
+La ricetta che il 2026-08-03 ha smascherato **tre** difetti che `tsc`, `lint`, 119 test e build
+dichiaravano a posto. Non serve Docker né Supabase locale: si passano le variabili **inline**,
+così `.env.local` (che punta al locale) **non va toccato**.
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://ubvhdliqnkfknhlczcnj.supabase.co" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<publishable key, dal dashboard o dalle variabili Netlify>" \
+npm run dev
+```
+
+Next dà la precedenza alle variabili già presenti nell'ambiente rispetto a `.env.local`.
+Le chiavi Turnstile restano quelle **di test** di `.env.local`, che validano sempre: in locale
+va bene. Ciclo di prova da secondi invece che da minuti di deploy.
+
+⚠️ **A fine prova spegni il server**, altrimenti resta appeso sulla 3000 e il tentativo dopo
+parte sulla 3001 senza che te ne accorga:
+`Get-NetTCPConnection -LocalPort 3000 -State Listen | % { Stop-Process -Id $_.OwningProcess -Force }`
+
+### ⚠️ Il ledger di fase NON è su GitHub
+
+`.superpowers/sdd/.gitignore` contiene `*`: il registro dettagliato
+([`../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md`](../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md))
+**vive solo su questo disco**. Questo file invece è in git. Conseguenza pratica: **tutto ciò
+che serve a lavorare deve stare qui dentro**; nel ledger resta il ragionamento esteso, prezioso
+ma non indispensabile. Se un giorno si cambia macchina o il disco si guasta, il ledger si perde
+senza preavviso.
+
+### Coordinate dello staging (nessun segreto qui dentro)
+
+| Cosa | Valore |
+|---|---|
+| Sito Netlify | `polite-moxie-8dc031` · `https://polite-moxie-8dc031.netlify.app` |
+| Team Netlify | `MatteoCaricolaDevelop` (account GitHub `mcdevelop03-lab`) |
+| Branch di produzione | **`feat/fase1e-staging-cloud`** (non `main`) — è lì che sta `netlify.toml` |
+| Supabase URL | `https://ubvhdliqnkfknhlczcnj.supabase.co` |
+| Supabase Reference ID | `ubvhdliqnkfknhlczcnj` |
+| Chiave Supabase | formato nuovo `sb_publishable_...` (pubblica per progettazione) |
+| Turnstile widget | `marsica-car-meet-staging` (account Cloudflare `mcdevelop03@gmail.com`) · hostname `polite-moxie-8dc031.netlify.app` + `localhost` · mode `Managed` |
+| Turnstile **site key** | `0x4AAAAAAEFGzaPemdBugJn1` (pubblica per progettazione: finisce nel bundle del browser) |
+| Email admin | `mcdevelop03@gmail.com` |
+| Email membro | `matteo050903@gmail.com` (autorizzata dall'utente il 2026-07-30) |
+
+### ⚠️ Trappole scoperte oggi — non ripercorrerle
+
+- 🚨 **Cloudflare Workers è un vicolo cieco per questo progetto.** `@opennextjs/cloudflare` **rifiuta** il middleware Node di Next 16: `proxy.ts` gira sempre su runtime Node e i Workers girano su `workerd`. Errore: *"Node.js middleware is not currently supported"*. È l'issue Cloudflare `workers-sdk#13755`. Aggiornare Next non risolve. **Non riprovare questa strada** finché l'adapter non dichiara il supporto.
+- 🚨 **Vercel è escluso per scelta dell'utente:** il piano Hobby gratuito **vieta l'uso commerciale** nei termini, e il sito è per un cliente. Netlify invece **permette esplicitamente l'uso commerciale** sul piano gratuito: è per questo che è stato scelto.
+- 🚨 **La build Netlify non gira in locale su questa macchina.** `netlify build --offline` fallisce nel bundling Deno dell'edge function del middleware (*"Could not load edge function"*). **Ipotesi: il progetto vive dentro `OneDrive\Desktop`**, che blocca e virtualizza i file. Su Linux (CI Netlify) **passa senza problemi**. Non perdere tempo a debuggarlo in locale: si verifica pushando.
+- ⚠️ **Il nome della variabile della chiave Supabase non combacia.** Il dashboard Supabase la chiama `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, ma il codice legge **`NEXT_PUBLIC_SUPABASE_ANON_KEY`**. Il valore nuovo funziona (verificato sul campo), ma va messo **sotto il nostro nome**. Sbagliarlo produce un guasto **silenzioso**: il sito compila e si apre, semplicemente non parla col database.
+- ⚠️ **Le `NEXT_PUBLIC_*` sono incorporate nel bundle alla BUILD**, non lette a runtime. Cambiarle su Netlify richiede un **nuovo deploy**, non basta salvarle.
+- ⚠️ **`db push` NON applica `supabase/seed.sql`.** Sul cloud l'admin va promosso a mano con la `update` del seed, dopo che si è registrato.
+- ⚠️ **Sul cloud le email `@example.com` non funzionano più.** In locale le intercettava Mailpit; sul cloud la conferma deve arrivare a una casella vera. E il limite è **2 email di auth all'ora** (servizio email di default di Supabase, scelta D-4).
+- ⚠️ **`SUPABASE_SERVICE_ROLE_KEY` non è usata in `src/`** e **non va configurata da nessuna parte**: bypassa tutte le RLS.
+- ⚠️ **Il progetto Supabase gratuito si mette in pausa dopo 7 giorni di inattività.** Se il cliente riapre il link dopo dieci giorni trova il sito morto (si riattiva dal dashboard in un minuto). Decisione su come gestirlo ancora da prendere.
+
+### 💡 Osservazioni dell'utente dal collaudo del 2026-08-03
+
+Tre segnalazioni guardando lo staging. Le prime due sono diventate **Task 9 e 10 della 1E** (sopra); la terza è rimandata di proposito.
+
+- 🧭 **Velo di attesa (`OverlayAttesa`), 2026-08-03.** Pannello a schermo intero con rotella e messaggio, collegato dove l'attesa è reale: evento (creazione/modifica), auto, profilo, avatar, album. ⚠️ **La comparsa è ritardata di 350 ms e il ritardo lo fa il CSS** (`.velo-attesa` in `globals.css`), non un `setTimeout`: sotto la soglia non si vede nulla e il segnale resta la rotella nel bottone. **Non "correggere" togliendo il ritardo:** un velo che appare e sparisce in 200 ms è un lampo, e dà più fastidio del silenzio. Misurato: opacità 0 fino a 349 ms, 1.00 a 526 ms; intercetta i clic anche da trasparente, quindi il doppio invio è impossibile fin dal primo istante. Sull'album il messaggio è il contatore "3 di 12", perché il velo copre quello sotto al bottone.
+- 🧭 **Regola introdotta il 2026-08-03, da rispettare:** `Button` ha una prop **`pending`** che va **solo** ai bottoni che *avviano* un'azione (submit, conferme, upload). Quelli che restano bloccati durante l'attesa — gli "Annulla" dei modali — tengono `disabled`. Motivo: `disabled` da solo è ambiguo, perché i form spengono il Salva anche a campi mancanti. E ogni rotta nuova vuole il suo **`loading.tsx`**, altrimenti quella pagina torna a caricare in silenzio (spiegazione in testa a `PageSkeleton`); le schede di `PageSkeleton` solo per le rotte a griglia, `PageSpinner` per tutte le altre.
+- **Errori di form senza motivo, sotto il campo → da fare.** Emerso creando i contenuti demo: con una data d'inizio nel passato il browser marca il campo invalido, `Input` mette il bordo rosso e il Salva si spegne, ma l'unico testo è la riga generica `requiredHint` in fondo al form — **il motivo non lo dice nessuno**. Il browser ha già la spiegazione pronta in `validationMessage`: va stampata **sotto il campo** che l'ha causata. Riguarda **tutti i form** (passano tutti dallo stesso `Input`), non solo `EventForm`. **Urgenza onesta:** lo incontra l'**admin**, non il cliente che naviga — quindi non blocca l'approvazione, ma è il genere di cosa che fa arrendere chi dovrà gestire il sito.
+- **Non si può creare un evento con data passata → decisione da rivedere.** In creazione `EventForm` stringe il `min` dell'inizio ad "adesso" ([`EventForm.tsx:76`](../src/components/features/events/EventForm.tsx)); in **modifica** no, il minimo torna al `2000-01-01` assoluto perché un evento passato dev'essere modificabile. Conseguenza: per avere un evento concluso (che è il presupposto dell'**album foto**) bisogna crearlo nel futuro e **poi** modificarlo all'indietro — un giro che nessuno indovina. Ma **caricare a posteriori i raduni già fatti, con i loro album, è un caso d'uso normale per un club**. `eventSchema` accetta già qualunque data fra 2000 e 2100, quindi il divieto vive solo nel `min` del client. **Da decidere:** toglierlo in creazione (e lasciare che sia l'admin a sapere cosa fa) oppure tenerlo con una spiegazione esplicita. Non toccato ora per non allargare la 1E.
+- **Onboarding post-registrazione → rimandato alla Fase 2** (scheda completa in [`ROADMAP.md`](./ROADMAP.md)). L'utente proponeva un pop-up sul profilo; **sconsigliato**: c'è già il banner cookie come overlay, sui telefoni i modali sono ostili e il progetto usa sezioni **inline**. Direzione consigliata: atterraggio su `/it/profilo` (oggi è `/it/dashboard`, in [`auth/callback/route.ts`](../src/app/[locale]/(public)/auth/callback/route.ts)) + riquadro di benvenuto non modale che sparisce a profilo completo. **Non è una rifinitura: serve brainstorming + spec + piano.**
+
+### Le altre strade, quando la 1E sarà chiusa
+
+1. **Go-live pubblico** — dominio del club, contenuti legali reali (i `[DA COMPILARE]` con i dati del Titolare, da chiedere al cliente), SMTP vero, Google OAuth, rimozione di `src/app/robots.ts`.
 2. **Fase 2** — news/blog, mappa interattiva dei raduni, gestione utenti admin, cancellazione account (promessa nella privacy policy della 1D). Vedi `docs/ROADMAP.md`.
-3. **Micro-fase debiti** — saldare i follow-up accumulati (elencati qui sotto), in particolare `revalidatePath` e la **pulizia orfani storage**, che sono di sistema e toccano più fasi.
+3. **Micro-fase debiti** — `revalidatePath` e la **pulizia orfani storage**, che sono di sistema e toccano più fasi.
 
 **Deferred-minor 1D NON bloccanti (follow-up):** banner senza `role`/`aria-live`/focus management; il banner riaperto dal footer non ha una X di chiusura (si chiude solo riscegliendo); `title="video"` dell'iframe non passa da i18n; `Stored` type/array-guard cosmetici. **Contenuti da completare:** i `[DA COMPILARE]` nelle policy (denominazione, sede, email del Titolare) e la validazione legale dei testi — oggi entrambe le pagine dichiarano onestamente di essere una bozza.
 
 > ℹ️ **Note ambiente (2026-07-29):** Docker + Supabase locale accesi; dev server su **localhost:3000**. Admin `mcdevelop03@gmail.com` / `Marsica2026!`; membro `membro2.test@example.com` / `Membro2026!`. Evento concluso con media: `prova-primo-evento` (2 foto + 1 video). Dati di test **locali volatili** (spariscono con `db reset`).
 
 **Debiti/follow-up NON bloccanti ereditati (micro-fasi dedicate):**
+- Da 1E (collaudo 2026-08-04): **rotte protette a 200 invece di 307** (effetto del `loading.tsx` per rotta — nessuna fuga di dati, redirect vivo nel browser); **cookie di sessione Supabase senza `Secure`** (default della libreria, oggi coperto da HSTS — **da chiudere al go-live**).
 - Da 1C-3: `Modal onClose` inline; hidden `<input type=file>` non `disabled`; `alt=""` thumbnail; lightbox senza `aria-label`/focus/scroll-lock; due `import type` accorpabili; map `mediaAdmin`/`mediaGallery` duplicata; anti-orfano batch non copre il ramo `throw`.
 - Di sistema: `revalidatePath` (path non combacianti), **pulizia orfani storage di sistema**, `created_by` degli eventi leggibile da anon via PostgREST.
 
@@ -78,7 +198,8 @@ Non c'è lavoro a metà: nessun branch di fase aperto, nessun workspace SDD atti
 
 ### ⚠️ Trappole/fix già affrontati (non reintrodurli)
 
-- 🚨 **`iscriviti_evento` — bypass auth chiuso (fix `8444ab6`):** l'identity check usa **`is distinct from auth.uid()`** (non `<>`: con `auth.uid()` NULL il `<>` dà NULL → l'eccezione non scattava, un anon poteva iscrivere una vittima). E c'è **`revoke execute … from public`** su entrambe le funzioni **prima** dei grant (Postgres concede EXECUTE a PUBLIC di default → senza revoke `anon` poteva chiamare la funzione). **Non toccare questi due punti.**
+- 🚨 **`iscriviti_evento` — bypass auth chiuso (fix `8444ab6`):** l'identity check usa **`is distinct from auth.uid()`** (non `<>`: con `auth.uid()` NULL il `<>` dà NULL → l'eccezione non scattava, un anon poteva iscrivere una vittima). **Non toccare questo punto: è l'unica barriera reale.**
+  - ⚠️ **Correzione misurata sul cloud il 2026-08-03.** Questa nota diceva anche che il `revoke execute … from public` della `0009` impedisce ad `anon` di chiamare la funzione. **È falso.** Una chiamata anonima **esegue il corpo** e viene respinta dall'eccezione interna (`28000 "non autenticato"`), non da un `42501 permission denied`; `proacl` mostra `anon=X/postgres`. La revoca a `PUBLIC` **non rimuove i grant che i singoli ruoli hanno in proprio** (qui arrivano dai default privileges sulle funzioni). Quindi **non indebolire il controllo interno pensando che la revoca faccia da rete**: non la fa. Follow-up non bloccante: aggiungere un `revoke execute … from anon` esplicito.
 - **`event_vehicles_insert` irrobustita (fix `2052d8d`, dalla review finale):** ora richiede **anche** `owner_id = auth.uid()` sul veicolo, non solo la proprietà della registrazione (prima un membro poteva attaccare l'auto di un altro via PostgREST, e sarebbe comparsa sotto il suo nome nella lista). Da **verificare dal vivo** come prova negativa.
 - **Errori Supabase mai confusi col vuoto:** conteggio e query garage in `page.tsx` loggano l'errore (fix `c4f81ff`); la data "iscritto il" usa `formattaDataBreve` (fuso Roma), non `toLocaleDateString` (fix `4546a5c`).
 - **La nested select di `page.tsx` prende `town`/`socials` di proposito:** li usa il pannello admin. Non rimuoverli.

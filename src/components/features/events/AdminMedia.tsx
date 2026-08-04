@@ -3,6 +3,7 @@ import { useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Camera, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import OverlayAttesa from "@/components/ui/OverlayAttesa";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
@@ -162,10 +163,21 @@ export default function AdminMedia({
           onChange={onFilesChange}
           className="hidden"
         />
+        {/* Durante un upload batch il velo mostra il contatore invece di un testo fisso:
+            coprendo lo schermo nasconderebbe quello sotto al bottone, e sapere "3 di 12"
+            è ciò che rende l'attesa sopportabile. */}
+        <OverlayAttesa
+          attivo={busy}
+          messaggio={
+            caricamento
+              ? t("uploading", { done: caricamento.done, total: caricamento.total })
+              : t("attesaUpload")
+          }
+        />
         <Button
           type="button"
           variant="outline"
-          disabled={busy}
+          pending={busy}
           onClick={() => inputFileRef.current?.click()}
           className="flex items-center gap-2"
         >
@@ -196,7 +208,7 @@ export default function AdminMedia({
           placeholder={t("videoCaption")}
           maxLength={200}
         />
-        <Button type="button" onClick={aggiungiVideoClick} disabled={busy || !videoUrl.trim()}>
+        <Button type="button" onClick={aggiungiVideoClick} pending={busy} disabled={!videoUrl.trim()}>
           {t("add")}
         </Button>
       </div>
@@ -210,7 +222,7 @@ export default function AdminMedia({
           placeholder={t("driveUrl")}
           maxLength={500}
         />
-        <Button type="button" variant="outline" onClick={salvaDrive} disabled={busy}>
+        <Button type="button" variant="outline" onClick={salvaDrive} pending={busy}>
           {t("driveSave")}
         </Button>
       </div>
@@ -257,7 +269,7 @@ export default function AdminMedia({
             <Button type="button" variant="outline" onClick={() => setDaEliminare(null)} disabled={busy}>
               {t("cancel")}
             </Button>
-            <Button type="button" onClick={() => eseguiEliminazione(daEliminare)} disabled={busy}>
+            <Button type="button" onClick={() => eseguiEliminazione(daEliminare)} pending={busy}>
               {t("confirm")}
             </Button>
           </div>

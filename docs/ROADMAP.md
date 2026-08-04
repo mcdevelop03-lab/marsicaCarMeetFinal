@@ -1,6 +1,6 @@
 # ROADMAP — Marsica Car Meet
 
-> Documento vivo. Ultima modifica: 2026-07-15.
+> Documento vivo. Ultima modifica: 2026-08-04.
 > Sequenza pensata per uno sviluppatore singolo: ogni fase produce qualcosa di usabile.
 > Scelte di scope in [`DECISIONS.md`](./DECISIONS.md).
 
@@ -31,24 +31,63 @@ Obiettivo: primo prodotto realmente utile alla community. Suddivisa in sotto-pro
 - [x] **[1A]** Auth: registrazione + **conferma email**, login/logout, reset, **2FA TOTP**, guardie AAL2. *(Google OAuth + Turnstile reali: solo codice, config cloud rimandata.)*
 - [x] **[1B-1]** Profilo membro: visualizzazione e modifica (nome, tag, bio, paese, social), upload avatar. *(2026-07-12)*
 - [x] **[1B-2]** Garage: CRUD auto con upload foto (campi obbligatori/opzionali). *(2026-07-15 — con compressione WebP nel browser, migrazione `0007`)*
-- [ ] **[1C]** Eventi: elenco e dettaglio pubblici (con link mappa esterna); tipi raduno/giro/sociale.
-- [ ] **[1C]** Admin: creazione/gestione eventi + **album foto dell'evento** (video = link YouTube, D-171).
-- [ ] **[1C]** RSVP con capienza + associazione auto all'evento.
-- [ ] **[1D]** GDPR base: cookie banner + pagine privacy/cookie (struttura).
+- [x] **[1C-1]** Eventi: elenco e dettaglio pubblici (con link mappa esterna); tipi raduno/giro/sociale. *(2026-07-21 — migrazione `0008`)*
+- [x] **[1C-3]** Admin: creazione/gestione eventi + **album foto dell'evento** (video = link YouTube, D-171). *(2026-07-28 — migrazione `0010`)*
+- [x] **[1C-2]** RSVP con capienza + associazione auto all'evento. *(2026-07-23 — migrazione `0009`, capienza race-free via `iscriviti_evento`)*
+- [x] **[1D]** GDPR base: cookie banner + pagine privacy/cookie (struttura). *(2026-07-29 — gate sugli embed YouTube, nessuna migrazione)*
 - [x] **[1A]** Guardie di accesso (aree membro/admin).
 - **Esito:** membri si registrano, gestiscono auto e partecipano ai raduni creati dall'Admin;
   l'Admin pubblica gli album foto dei raduni conclusi.
+
+## Fase 1E — Staging cloud — 🟡 IN CHIUSURA
+
+Obiettivo: **rendere il sito raggiungibile dal cliente**, che deve provarlo e approvarlo prima
+del go-live. Nessuna funzionalità nuova: è infrastruttura, più le rifiniture emerse guardandolo.
+
+- [x] `main` + branch **pushati su GitHub** (i 42 commit della Fase 1 non vivono più su un solo disco).
+- [x] Progetto **Supabase cloud** (EU) con le migrazioni `0001`–`0010` applicate e le 26 policy verificate.
+- [x] Deploy su **Netlify**. ⚠️ **Cloudflare Workers è un vicolo cieco** (rifiuta il middleware Node di Next 16) e **Vercel è escluso** (il piano gratuito vieta l'uso commerciale, e qui c'è un cliente).
+- [x] **Turnstile** reale su login e registrazione, verificato dal vivo.
+- [x] `noindex` sullo staging + bottone Google nascosto finché il provider non è configurato.
+- [x] **Contenuti demo** caricati dalla UI: 3 eventi (uno concluso con album e video), profili con avatar, 3 auto, 2 iscrizioni.
+- [x] **Prossimi raduni in home** — prima la home annunciava una sezione che non esisteva.
+- [x] **Feedback di caricamento**: scheletro/spinner a ogni cambio pagina, stato "sto lavorando" sui bottoni, velo di attesa sulle operazioni lente.
+- [x] ~~Email di autenticazione in italiano~~ → **spostata al go-live (2026-08-04).** I template sono scritti e pronti, ma **non applicabili**: col servizio di posta gratuito Supabase impone quelli di serie, e per cambiarli serve un **SMTP nostro**. Stessa causa del footer "powered by Supabase" e del limite di 2 email/ora: cadono tutti insieme, quindi si fa una volta sola col dominio vero.
+- [x] **Collaudo finale mirato** — superato il 2026-08-04 sullo staging vero, 0 bug bloccanti, contenuti demo ripristinati. Due debiti annotati (rotte protette a 200 invece di 307; cookie di sessione senza `Secure`, coperto da HSTS).
+- [ ] Chiusura del branch e merge.
+- **Esito atteso:** un URL che il cliente apre quando vuole lui, con dati veri dentro.
+
+⚠️ **Da dire al cliente:** chi si registra sullo staging riceve l'**email di conferma inglese
+di serie** di Supabase. È brutta ma funziona; diventa italiana col dominio e l'SMTP veri.
+
+⚠️ **Il progetto Supabase gratuito si mette in pausa dopo 7 giorni di inattività:** se il
+cliente riapre il link dopo dieci giorni trova il sito morto (si riattiva dal dashboard in un
+minuto). Come gestirlo è una decisione ancora aperta.
+
+### Cosa serve per il go-live pubblico (dopo l'approvazione del cliente)
+
+Dominio del club + DNS, **contenuti legali reali** (i `[DA COMPILARE]` con i dati del Titolare,
+da chiedere al cliente, e una validazione legale dei testi), Google OAuth col redirect URI
+definitivo, rimozione del `noindex`.
+
+**SMTP custom** — non è più solo una rifinitura: sblocca **tre cose insieme** che oggi non si
+possono avere separatamente. Via il footer "powered by Supabase", via il limite di 2 email/ora,
+e diventano applicabili i **template italiani già scritti** in `supabase/email-templates/`
+(l'ex Task 9 della 1E). ⚠️ Senza un dominio verificato, **Resend invia solo al titolare
+dell'account**: se un giorno servisse l'SMTP *prima* del dominio, serve un provider che
+verifichi un singolo mittente.
 
 ## Fase 2 — Contenuti & scoperta
 
 Obiettivo: raccontare il club e facilitare la scoperta.
 
+- [ ] **Onboarding post-registrazione** (proposta dell'utente, 2026-08-03). Oggi dopo la conferma email si atterra su `/it/dashboard` ([`auth/callback/route.ts`](../src/app/[locale]/(public)/auth/callback/route.ts)) e nessuno invita l'utente a completare il profilo o ad aggiungere un'auto — su un sito di motori è proprio il dato che serve. **Direzione consigliata:** atterraggio su `/it/profilo` + **riquadro di benvenuto in cima alla pagina** (non modale) che sparisce quando il profilo è completo, con CTA "Completa il profilo" e "Aggiungi la tua auto". ⚠️ **Pop-up sconsigliato:** c'è già il banner cookie come overlay (due sovrapposti sono sgradevoli), sui telefoni i modali sono ostili, e il progetto ha un pattern di sezioni **inline** con cui un modale stona. **Richiede brainstorming + spec + piano**: è una funzionalità, non una rifinitura. La sola riga che cambia l'atterraggio da `/dashboard` a `/profilo` si può anticipare, ma da sola non è l'onboarding.
 - [ ] News/blog: CMS admin, elenco e dettaglio articoli.
 - [ ] Pagina **Gallery** aggregata (raccoglie gli album degli eventi) — opzionale.
 - [ ] **Mappa interattiva** dei raduni (Leaflet + OpenStreetMap) con georeferenziazione eventi.
 - [ ] Gestione utenti nel pannello admin (ruoli, sospensioni).
-- [ ] Lista partecipanti/auto per evento (admin).
-- [ ] Cancellazione account/dati (GDPR).
+- [x] ~~Lista partecipanti/auto per evento (admin)~~ → **già fatta nella 1C-2** (`AdminIscritti`): l'admin vede gli iscritti, può iscrivere a mano e rimuovere.
+- [ ] Cancellazione account/dati (GDPR) — **promessa nella privacy policy della 1D**, quindi non è opzionale.
 - [x] ~~Upload video diretto vs embed (decisione D-1)~~ → **deciso in anticipo (D-171, 2026-07-15): solo embed esterno**, link YouTube. Niente upload video, né ora né in Fase 2.
 - **Esito:** piattaforma ricca di contenuti, con mappa e gestione utenti.
 

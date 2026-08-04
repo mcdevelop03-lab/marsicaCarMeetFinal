@@ -1,9 +1,12 @@
 # SETUP — Configurare Marsica Car Meet da zero su un nuovo dispositivo
 
-> Documento vivo. Guida generica passo-passo per portare a regime il progetto su **qualsiasi
-> dispositivo** (Windows/macOS/Linux), da un clone pulito fino all'app funzionante.
-> Se un domani chiedi "aiutami a configurare da zero questo progetto su questo dispositivo",
-> si segue questo file.
+> Documento vivo. Ultima modifica: **2026-08-04**. Guida generica passo-passo per portare a
+> regime il progetto su **qualsiasi dispositivo** (Windows/macOS/Linux), da un clone pulito fino
+> all'app funzionante. Se un domani chiedi "aiutami a configurare da zero questo progetto su
+> questo dispositivo", si segue questo file.
+>
+> Per **il cloud e il deploy** vai alle sezioni **6** (Supabase) e **6-bis** (Netlify): sono
+> state riscritte col percorso realmente seguito, trappole incluse.
 
 ## 0. Riepilogo in breve
 
@@ -56,8 +59,7 @@ Quali valori mettere dipende dalla modalità scelta (Sezione 4A o 4B). Le variab
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL="..."        # URL del backend Supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY="..."   # chiave pubblica (anon)
-SUPABASE_SERVICE_ROLE_KEY="..."       # chiave privata SOLO server (mai esporre)
+NEXT_PUBLIC_SUPABASE_ANON_KEY="..."   # chiave pubblica
 NEXT_PUBLIC_TURNSTILE_SITE_KEY="..."  # Cloudflare Turnstile (anti-bot)
 TURNSTILE_SECRET_KEY="..."            # Turnstile secret (solo server)
 ```
@@ -65,6 +67,15 @@ TURNSTILE_SECRET_KEY="..."            # Turnstile secret (solo server)
 > **Turnstile in sviluppo:** puoi usare le *test key* Cloudflare che validano sempre —
 > site key `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`.
 > Le chiavi reali servono solo per il cloud/produzione.
+
+⚠️ **`SUPABASE_SERVICE_ROLE_KEY` non serve.** Non è usata da nessuna parte in `src/` e **non va
+configurata da nessuna parte**: bypassa tutte le RLS, cioè ogni protezione dei dati del sito.
+
+⚠️ **Il nome della chiave pubblica non combacia col dashboard Supabase.** Sul cloud il
+dashboard la chiama `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (formato nuovo `sb_publishable_...`,
+non più il JWT `eyJ...`), ma il codice legge `NEXT_PUBLIC_SUPABASE_ANON_KEY`: il valore nuovo va
+messo **sotto il nostro nome**. Sbagliarlo è un guasto **silenzioso** — il sito compila e si
+apre, semplicemente non parla col database.
 
 ---
 
@@ -81,7 +92,6 @@ TURNSTILE_SECRET_KEY="..."            # Turnstile secret (solo server)
    ```bash
    NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
    NEXT_PUBLIC_SUPABASE_ANON_KEY="<ANON_KEY dallo start>"
-   SUPABASE_SERVICE_ROLE_KEY="<SERVICE_ROLE_KEY dallo start>"
    ```
    > Le chiavi locali sono **standard** (uguali per tutti, non sono segreti reali).
 4. Applica lo schema del database (migrazioni versionate nel repo) + seed:
@@ -100,13 +110,14 @@ TURNSTILE_SECRET_KEY="..."            # Turnstile secret (solo server)
 
 Utile su dispositivi dove non vuoi/puoi installare Docker.
 
+Utile anche a chi **ha** Docker: è il modo per provare l'interfaccia contro i dati veri.
+
 1. Serve un **progetto Supabase cloud** già creato (vedi Sezione 6). Chiedi le chiavi a chi lo gestisce
    o prendile da: dashboard Supabase → **Project Settings → API**.
 2. Metti in `.env.local` i valori **cloud**:
    ```bash
    NEXT_PUBLIC_SUPABASE_URL="https://<REF>.supabase.co"
-   NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon key cloud>"
-   SUPABASE_SERVICE_ROLE_KEY="<service_role key cloud>"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="<publishable key cloud>"
    ```
 3. (Solo per chi applica le migrazioni al cloud) collega la CLI e applica lo schema:
    ```bash
@@ -114,6 +125,33 @@ Utile su dispositivi dove non vuoi/puoi installare Docker.
    npx supabase db push
    ```
    > Se il DB cloud è già allineato, salta questo passo: ti basta avviare l'app.
+
+### 💡 Meglio ancora: puntare al cloud SENZA toccare `.env.local`
+
+Se `.env.local` è già configurato per Docker e vuoi solo **provare una cosa** contro i dati
+veri, non scambiare i file: passa le variabili **inline**. Next dà la precedenza a ciò che
+trova nell'ambiente rispetto a `.env.local`.
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://<REF>.supabase.co" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<publishable key>" \
+npm run dev
+```
+
+Le chiavi Turnstile restano quelle **di test** di `.env.local`, che validano sempre: in locale
+va bene. Nessun file da rimettere a posto dopo, quindi nessun rischio di deployare un bundle
+che punta a `127.0.0.1`.
+
+**È la ricetta che conviene usare per ogni modifica di interfaccia**: il 2026-08-03 ha
+smascherato tre difetti che `tsc`, `lint`, 119 test e build dichiaravano a posto. Il ciclo di
+prova dura secondi invece dei minuti di un deploy.
+
+⚠️ **A fine prova spegni il dev server**, altrimenti resta appeso sulla 3000 e il tentativo
+dopo parte sulla 3001 senza che te ne accorga:
+
+```powershell
+Get-NetTCPConnection -LocalPort 3000 -State Listen | % { Stop-Process -Id $_.OwningProcess -Force }
+```
 
 ---
 
@@ -135,12 +173,83 @@ npx tsc --noEmit    # type-check
 
 ## 6. Creare un nuovo progetto Supabase cloud (una tantum, per il team)
 
+> Riscritta il 2026-08-04 col percorso **realmente seguito** nella Fase 1E, trappole incluse.
+
 Solo se il progetto cloud non esiste ancora:
-1. https://supabase.com → **New project** (regione EU, es. Frankfurt), scegli una password DB.
-2. **Project Settings → API**: copia `Project URL`, `anon key`, `service_role key`.
+
+1. https://supabase.com → **New project** (regione **EU**), scegli una password DB.
+   - Impostazioni usate: Data API **ON**, "expose new tables" ON (ininfluente: la migrazione
+     `0004` imposta gli stessi grant), **"automatic RLS" OFF** — la `0002` attiva le RLS
+     esplicitamente tabella per tabella, così il cloud combacia col locale già collaudato.
+   - **Non** collegare GitHub: sarebbe una seconda via di modifica dello schema.
+2. **Project Settings → API**: copia `Project URL` e la chiave **pubblica**.
+   ⚠️ Il dashboard la chiama `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; noi la mettiamo sotto
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Sezione 3). **La `service_role` non serve e non va copiata.**
 3. **Project Settings → General**: copia il **Reference ID**.
-4. Dalla cartella del progetto: `npx supabase link --project-ref <REF>` poi `npx supabase db push`.
-5. **Auth providers** (Google) e **Turnstile**: vedi il piano di Fase 1A per la configurazione guidata.
+4. Applica lo schema: `npx supabase link --project-ref <REF>` poi `npx supabase db push`.
+
+   🚨 **`db push` NON applica `supabase/seed.sql`.** Sul cloud nessuno è admin: bisogna prima
+   registrarsi dall'app e **poi** promuoversi eseguendo a mano la `update` del seed nell'SQL
+   Editor.
+
+   ⚠️ **L'SQL Editor risponde "Success. No rows returned" anche quando la `update` non ha
+   toccato niente.** Non è una conferma: verifica sempre con una `select` esplicita.
+
+5. **Authentication → URL Configuration — da fare PRIMA di registrare il primo account.**
+   - **Site URL:** l'URL del sito (es. quello di staging)
+   - **Redirect URLs:** quell'URL con `/**` **e** `http://localhost:3000/**`
+
+   🚨 Il motivo: il link di conferma è costruito come `${origin}/it/auth/callback`, ma Supabase
+   lo onora **solo se sta nella allow-list**; altrimenti ripiega **in silenzio** sul Site URL,
+   che su un progetto nuovo è `localhost:3000`. Il link arriva rotto e **hai bruciato una delle
+   2 email/ora**.
+
+6. ⚠️ **Sul cloud le email `@example.com` non funzionano.** In locale le intercettava Mailpit;
+   qui la conferma deve arrivare a una casella vera, e il limite è **2 email di auth all'ora**
+   (servizio di posta condiviso di Supabase).
+
+7. **Template email:** di serie sono in inglese. Le copie italiane di riferimento sono in
+   [`supabase/email-templates/`](../supabase/email-templates/) e vanno **incollate a mano** in
+   *Authentication → Emails*. ⚠️ **Vivono nel dashboard, nessuna migrazione le applica:** chi
+   modifica una delle due parti deve allineare l'altra.
+
+8. **Turnstile:** vedi il piano di Fase 1A. **Google OAuth:** non configurato — il bottone resta
+   nascosto finché `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` non vale `"true"`.
+
+---
+
+## 6-bis. Deploy su Netlify
+
+**L'hosting è Netlify.** 🚨 **Cloudflare Workers non è utilizzabile con questo progetto:**
+`@opennextjs/cloudflare` rifiuta il middleware Node di Next 16 (`proxy.ts`), che i Workers non
+possono eseguire. **Vercel è escluso** perché il piano gratuito vieta l'uso commerciale, e il
+sito è per un cliente. Netlify permette esplicitamente l'uso commerciale sul piano gratuito.
+
+**Il deploy è la build su CI: parte dal push del branch.** Non esiste un comando di deploy da
+locale.
+
+1. Collega il sito Netlify al repo GitHub e scegli il **branch di produzione** (dev'essere
+   quello che contiene `netlify.toml`).
+2. Metti le variabili nel dashboard Netlify: `NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`.
+   **Mai** `SUPABASE_SERVICE_ROLE_KEY`.
+3. `git push` sul branch di produzione. Atteso nel log: **"1 edge function deployed"** (è il
+   middleware Node avvolto da Netlify).
+4. **Visibilità:** Netlify pubblica come *Private* per default e tutte le rotte rispondono 401.
+   Va messa su **Public** perché il sito sia raggiungibile senza un account nel team. (La
+   protezione con password non è sul piano gratuito.)
+
+🚨 **Le `NEXT_PUBLIC_*` sono incorporate nel bundle alla BUILD, non lette a runtime.**
+Cambiarle nel dashboard **non basta: serve un nuovo deploy.** È un guasto muto — il sito
+continua a funzionare col valore vecchio.
+
+⚠️ **La build Netlify non gira in locale su una macchina Windows con il progetto dentro
+OneDrive:** `netlify build --offline` fallisce nel bundling Deno dell'edge function. Su Linux
+(la CI) passa. Non perderci tempo: si verifica pushando.
+
+⚠️ **Al cambio di dominio vanno aggiornati tre posti oltre al DNS**, e dimenticarne uno rompe
+qualcosa in silenzio: gli **URL di redirect Supabase**, l'**hostname del widget Turnstile**, e
+l'**URL assoluto del logo** nei template email (nei file **e** nel dashboard).
 
 ---
 
@@ -153,6 +262,12 @@ Solo se il progetto cloud non esiste ancora:
 | Porte 54321-54324 occupate | Un altro stack Supabase attivo | `npx supabase stop` nel progetto che lo teneva su |
 | Email di conferma non arrivano (locale) | Cerchi nella posta vera | In locale le email sono su Inbucket http://127.0.0.1:54324 |
 | Migrazioni non applicate | Non hai eseguito il reset/push | `npx supabase db reset` (locale) o `db push` (cloud) |
+| Sito online, ma non parla col database | chiave pubblica sotto il nome sbagliato (`..._PUBLISHABLE_KEY` invece di `..._ANON_KEY`) | Rinominala e **rifai il deploy** (Sezione 3 e 6-bis) |
+| Cambio una `NEXT_PUBLIC_*` e non succede niente | è inlinata alla build | Rifai il deploy: salvarla non ricompila (Sezione 6-bis) |
+| Il widget Turnstile non appare online | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` assente alla build, o hostname non registrato sul widget | Aggiungi la variabile / l'hostname, poi **redeploy** |
+| Link di conferma email che porta a `localhost` | l'URL non è nella allow-list Supabase | *Authentication → URL Configuration* (Sezione 6, punto 5) |
+| Il sito cloud risponde ma è "morto" da giorni | progetto Supabase free **in pausa** dopo 7 giorni di inattività | Riattivalo dal dashboard (~1 minuto) |
+| `npm run build` fa 404/500 sulle pagine con form | l'hai lanciata mentre girava `next dev`: `.next` è corrotto | Killa il dev server, `rm -rf .next`, riavvia |
 
 ---
 

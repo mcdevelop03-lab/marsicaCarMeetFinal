@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { logout } from "@/app/[locale]/(public)/auth/actions";
 import Avatar from "@/components/ui/Avatar";
 import MobileMenu from "./MobileMenu";
+import NavPending from "./NavPending";
 
 export default function Header({
   isAuthenticated,
@@ -66,6 +67,7 @@ export default function Header({
                   className="px-4 py-2 rounded text-white/60 hover:text-white transition-colors"
                 >
                   {l.label}
+                  <NavPending />
                 </Link>
               ))}
               {isAuthenticated ? (
@@ -80,6 +82,7 @@ export default function Header({
               ) : (
                 <Link href="/login" className="px-4 py-2 rounded text-accent-red hover:text-white transition-colors">
                   {t("login")}
+                  <NavPending />
                 </Link>
               )}
             </nav>
