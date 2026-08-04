@@ -1,13 +1,14 @@
 # STATO LAVORI — Punto di ripartenza
 
-> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-08-03**.
+> **Questo è il file da consultare per riprendere.** Ultima modifica: **2026-08-04**.
 > Quando riprendi, dimmi: *"vai in docs/STATO-LAVORI.md e controlla da cosa ripartire"*.
 > Viene aggiornato ogni volta che ci fermiamo con gli sviluppi.
 
 ## 🔖 Dove siamo
 
 - 🟡 **FASE 1E — STAGING CLOUD: in corso** sul branch **`feat/fase1e-staging-cloud`** (pushato su origin). **C'è un cliente che deve provare e approvare il sito**: è il motivo per cui esiste questa fase. Spec: [`superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md`](./superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md) · Piano: [`superpowers/plans/2026-07-30-fase1e-staging-cloud.md`](./superpowers/plans/2026-07-30-fase1e-staging-cloud.md) · Ledger: [`../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md`](../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md).
-  - ⚠️ **SPEC E PIANO SONO PARZIALMENTE OBSOLETI: dicono Cloudflare Workers, ma si è passati a Netlify.** Il ledger è la fonte di verità aggiornata. Riallineare spec e piano è un task ancora da fare.
+  - ✅ **Spec e piano RIALLINEATI a Netlify (2026-08-04, `3e5c225`)** — non sono più obsoleti: si possono leggere. La storia Cloudflare è conservata **come motivo per cui quella strada non si ritenta**, non come istruzioni (quelle sono state rimosse). Riscritte anche `SETUP.md` §6 + la nuova §6-bis sul deploy, e `ROADMAP.md`, dove la Fase 1E non compariva affatto (`aabfb4a`).
+    - Trovato strada facendo: `provider.ts` e `.env.local.example` avevano commenti che nominavano *"lo staging workers.dev"* — un hosting mai usato, finito nel codice perché il piano diceva così. Corretti. E `SETUP.md` **consigliava di mettere in `.env.local` la `SUPABASE_SERVICE_ROLE_KEY`**, cioè la chiave che bypassa tutte le RLS: tolta.
   - ✅ **Fatto:** `main` + branch **pushati su GitHub** (i 42 commit della Fase 1 non vivono più su un solo disco) · **progetto Supabase cloud** creato con le migrazioni `0001`–`0010` applicate e verificate · **sito Netlify deployato** · **`noindex` + bottone Google dietro flag** (commit `e4fa307`, 119 test, review indipendente con 0 rilievi).
   - ✅ **Sito su Public e verifica funzionale superata (2026-08-03):** `/` → `/it` **307** (il middleware Node gira davvero su Netlify), `/it`+`/it/eventi`+`/it/login`+`/it/privacy`+`/it/cookie` **200**, `/it/membri` → login (guardia auth viva), `/robots.txt` nega tutto, cookie banner 1D nel markup SSR, Supabase cloud vivo (non in pausa).
   - ✅ **Task 4 (Turnstile) completo e verificato (2026-08-03):** widget creato, variabili su Netlify, redeploy fatto. Il widget emette un token da 773 caratteri e un login con password errata risponde **"Credenziali non valide"** (non "Verifica anti-bot non superata") → la secret verifica davvero e **il server Netlify parla con Supabase cloud**. Login e registrazione sono vivi.
@@ -15,7 +16,7 @@
   - ✅ **Task 7 (contenuti demo) completo (2026-08-03):** 3 eventi (2 futuri + 1 concluso con album di 2 foto e 1 video YouTube), profili con avatar per admin e membro, 3 auto in garage, **2 iscrizioni** al raduno di settembre. Caricato tutto **dalla UI**, quindi vale anche da collaudo: fuso corretto (10:00 italiane con server in UTC), compressione WebP, slug immutabile dopo il cambio data, gate GDPR verificato con un video vero (0 iframe e 0 richieste a YouTube senza consenso, `youtube-nocookie` dopo), e `profiles`/`vehicles` invisibili all'anonimo **anche da pieni**.
   - ✅ **Task 11 e 10 completi e verificati dal vivo (2026-08-03):** home con i prossimi raduni in vetrina (`68dad51`); feedback di caricamento in **quattro riprese**, tutte nate da rilievi dell'utente in collaudo — `loading.tsx` (`5cfbb16`), **fix del confine** (`1efdebd`, prima non compariva **mai**: 4,2 s di silenzio, ora **6-14 ms**), **schede solo dove ci sono schede + spinner altrove** (`4796938`), **stato "sto lavorando" sui bottoni** (`cf34331`), **velo di attesa a comparsa ritardata** sulle operazioni lente (`acc4633`).
     - ⚠️ **Lezione da ricordare:** in tutti e tre i casi `tsc`, `lint`, 119 test e build erano **verdi mentre il comportamento era sbagliato**. Il verde dice che compila, non che funziona: le modifiche di UX vanno provate su un dev server puntato al **Supabase cloud** prima del push.
-  - ⏸️ **Dove ci si è fermati:** **Task 9** — i due template email sono scritti (`633dff2`) ma vanno **incollati a mano nel dashboard** Supabase. Poi il Task 8 chiude la fase.
+  - ⏸️ **Dove ci si è fermati (2026-08-04):** restano **solo cose che richiedono te**. (1) **Task 9:** i due template email sono scritti (`633dff2`) ma vanno **incollati a mano nel dashboard** Supabase. (2) **Task 8, collaudo dal vivo:** serve una sessione loggata, quindi le password. La parte documentale del Task 8 è **fatta**.
 
 - 🎉 **FASE 1 (MVP) COMPLETA** — 1A ✅ · 1B ✅ · 1C ✅ · 1D ✅. Tutto mergiato su `main`. ⚠️ **`main` è solo locale, non pushato** (41 commit avanti a `origin/main`).
 - 🟢 **Fase 1D ✅ COMPLETATA** (GDPR base) — **chiude la Fase 1.** Implementazione subagent-driven (Task 1-5, tutti rivisti con esito pulito) + **review finale whole-branch (opus): "Ready to merge: With fixes"** → **fix wave `531adc7`** (2 Important) → **re-review del fix wave: entrambi ADDRESSED, 0 nuove rotture** → **collaudo dal vivo superato (2026-07-29, 0 bug)** → **mergiata su `main`** (merge `173d864`), branch `feat/fase1d-gdpr` eliminato. **Nessun DB, nessuna migrazione.** **Cosa fa:** cookie banner con gestione consensi che **blocca gli embed YouTube** fino al consenso (`VideoYouTube` gate), due categorie (Necessari + Contenuti di terze parti), pagine `/privacy` e `/cookie` (bozza IT + disclaimer), footer con "Preferenze cookie". Consenso in cookie first-party `mcm_consent` letto lato server (no flash). **115 test**, `tsc`/`lint`/**build pulita** verdi. Spec: [`superpowers/specs/2026-07-28-fase1d-gdpr-design.md`](./superpowers/specs/2026-07-28-fase1d-gdpr-design.md) · Piano: [`superpowers/plans/2026-07-28-fase1d-gdpr.md`](./superpowers/plans/2026-07-28-fase1d-gdpr.md).
@@ -30,17 +31,23 @@
 - **Piano 1B-1:** [`superpowers/plans/2026-07-10-fase1b1-profilo.md`](./superpowers/plans/2026-07-10-fase1b1-profilo.md)
 - **Design/spec 1B-1:** [`superpowers/specs/2026-07-10-fase1b1-profilo-design.md`](./superpowers/specs/2026-07-10-fase1b1-profilo-design.md)
 
-## ▶️ DA COSA RIPARTIRE: **Fase 1E, Task 9 (email) e poi Task 8 — chiusura**
+## ▶️ DA COSA RIPARTIRE: **Fase 1E — restano solo cose che richiedono l'utente**
 
-**Come ripartire:** *"Leggi docs/STATO-LAVORI.md e il ledger della Fase 1E: manca solo incollare i template email e fare il Task 8."*
+**Come ripartire:** *"Leggi docs/STATO-LAVORI.md: della 1E mancano i template email da incollare e il collaudo dal vivo."*
 
-> **Lo staging è vivo, pieno e verificato.** Sito: `https://polite-moxie-8dc031.netlify.app` · branch allineato a `origin` · ultimo deploy verificato online (la classe `.velo-attesa` e il suo keyframe sono nel CSS pubblicato). **Restano due soli task**, e il primo è quasi tutto lavoro da dashboard.
+> **Lo staging è vivo, pieno e verificato.** Sito: `https://polite-moxie-8dc031.netlify.app`
+> **La documentazione è allineata** (2026-08-04). ⚠️ **Ci sono 3 commit di documentazione NON pushati** — pushare fa ripartire un deploy Netlify, innocuo ma non silenzioso.
 
 ### Il primo passo, in ordine
 
-1. **Task 9, la parte che resta a mano.** Incollare i due file di `supabase/email-templates/` nel dashboard Supabase (*Authentication → Emails* → **Confirm signup** e **Reset password**) e cambiare gli oggetti in italiano. Poi una prova vera, **aperta da telefono** — è lì che si vedono i disastri di impaginazione, non nell'anteprima del dashboard.
-2. **Task 8 — collaudo mirato + riallineamento della documentazione**, incluso **riscrivere spec e piano da Cloudflare a Netlify**. *(Le caselle 1C/1D di `ROADMAP.md` sono già state chiuse il 2026-08-03.)* Nel collaudo vanno guardate **dal vivo, da loggato**, le cose introdotte oggi che non ho potuto provare senza le password: il **velo di attesa** su creazione evento con foto grossa (deve comparire) e su salvataggio profilo (probabilmente **non** deve comparire, è veloce), e la **rotella nei bottoni** delle azioni admin e dell'RSVP.
+1. **Task 9, la parte che resta a mano — la fa l'utente.** Dashboard Supabase → *Authentication → Emails*: incollare `supabase/email-templates/conferma-registrazione.html` in **Confirm signup** e `reset-password.html` in **Reset password**, e mettere gli oggetti in italiano:
+   - Confirm signup → `Conferma il tuo indirizzo — Marsica Car Meet`
+   - Reset password → `Reimposta la password — Marsica Car Meet`
+
+   Poi una prova vera, **aperta da telefono** — è lì che si vedono i disastri di impaginazione, non nell'anteprima del dashboard. 💡 **Conviene farla insieme allo Step 3 del collaudo** (conferma email col dominio nuovo): è la stessa email, e il limite è 2 all'ora.
+2. **Task 8 — collaudo dal vivo.** Richiede una sessione loggata. Vanno guardate le cose del Task 10 mai provate con una sessione vera: il **velo di attesa** su creazione evento con foto grossa (**deve** comparire) e su salvataggio profilo (probabilmente **non** deve, è veloce), e la **rotella nei bottoni** delle azioni admin e dell'RSVP. La lista completa è nel piano, Task 8, Step 1-7-bis.
 3. **Poi la fase è chiusa:** merge del branch e decisione su come mostrare il sito al cliente.
+   🚨 **Subito dopo il merge: cambiare il branch di produzione su Netlify da `feat/fase1e-staging-cloud` a `main`**, altrimenti lo staging che il cliente guarda resta appeso a un branch che nessuno aggiorna più — e il guasto è muto.
 
 ### ✅ Già fatto il 2026-08-03 (non rifarlo)
 
