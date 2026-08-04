@@ -2,6 +2,21 @@
 
 > Spec approvata il **2026-07-30**. Segue la chiusura della Fase 1 (MVP).
 > Non introduce funzionalità: rende raggiungibile fuori da Docker ciò che già esiste.
+>
+> ⚠️ **Riallineata il 2026-08-04: l'hosting è Netlify, non Cloudflare Workers.** La spec
+> originale dava per buono `@opennextjs/cloudflare`; lo spike (Task 0) ha dimostrato che
+> quell'adapter **rifiuta categoricamente** il middleware Node di Next 16, che questo progetto
+> usa. Il rischio #1 della §8 si è materializzato, l'hosting è stato riscelto con l'utente e
+> quel ramo è chiuso — vedi **D-1**. Le parti riscritte descrivono **ciò che è stato fatto
+> davvero**, non ciò che si era previsto; dove la storia conta, è annotata.
+
+## 0. Sintesi dell'esito (aggiunta il 2026-08-04)
+
+Lo staging è **vivo, pieno e verificato**: `https://polite-moxie-8dc031.netlify.app`, servito
+da Netlify a partire dal branch `feat/fase1e-staging-cloud`, appoggiato al progetto Supabase
+cloud `ubvhdliqnkfknhlczcnj` (EU) con le migrazioni `0001`–`0010` applicate, Turnstile reale
+attivo, `noindex`, e contenuti demo caricati dalla UI. Rispetto al piano originale la fase si
+è allargata di **tre task** (9, 10, 11) nati da rilievi dell'utente in collaudo — vedi §6.
 
 ## 1. Perché questa fase esiste
 
@@ -23,7 +38,7 @@ fasi di codice nuovo impilate sopra e non si sa più a cosa attribuirli.
 
 ## 2. Obiettivo e confini
 
-**A fine fase esiste** un URL `https://<nome>.<account>.workers.dev` che serve l'app
+**A fine fase esiste** un URL `https://<nome>.netlify.app` che serve l'app
 Next 16 reale, appoggiata a un progetto Supabase cloud in regione EU con le migrazioni
 `0001`–`0010` applicate, Turnstile reale attivo su login e registrazione, `noindex` per i
 motori di ricerca, contenuti demo presentabili e un collaudo mirato superato.
@@ -34,18 +49,20 @@ locale. È una fase di infrastruttura: il valore è sapere che il codice regge f
 ### Dentro
 
 - Progetto Supabase cloud (EU) + push delle migrazioni `0001`–`0010`
-- Adapter `@opennextjs/cloudflare` + deploy su Cloudflare Workers
+- `@netlify/plugin-nextjs` + deploy su **Netlify**, build su CI a ogni push del branch
 - Chiavi Turnstile reali
 - `noindex` sullo staging
 - Bottone "Continua con Google" nascosto quando il provider non è configurato
 - Contenuti demo realistici caricati dall'admin
 - Push di `main` su `origin` (42 commit oggi solo locali)
 - Collaudo dal vivo mirato (§6)
+- **Aggiunti in corsa (2026-08-03):** email di autenticazione in italiano, feedback di
+  caricamento, prossimi raduni in home — vedi §6
 
 ### Fuori (per scelta, non per dimenticanza)
 
-- **Dominio proprio** — lo staging usa `workers.dev`
-- **Google OAuth** — il redirect URI è legato al dominio: configurarlo su `workers.dev`
+- **Dominio proprio** — lo staging usa il sottodominio `netlify.app` assegnato
+- **Google OAuth** — il redirect URI è legato al dominio: configurarlo sull'host di staging
   sarebbe lavoro da rifare col dominio definitivo, per una funzione che su uno staging
   privato non userebbe nessuno
 - **SMTP custom (Resend & co.)** — senza dominio verificato Resend in modalità test invia
@@ -55,77 +72,131 @@ locale. È una fase di infrastruttura: il valore è sapere che il codice regge f
 - **Debiti di sistema** — `revalidatePath`, pulizia orfani storage, `created_by` leggibile
   da anon
 - **Fase 2 e successive**
-- **CI/CD** (Workers Builds) — vedi §4, decisione D-3
+
+> **Non più fuori:** la CI. Con Netlify la build **è** su CI per costruzione (si deploya
+> pushando il branch), quindi la decisione D-3 è decaduta — vedi §4.
 
 ## 3. Architettura target
 
 ```
-Browser ──► Worker Cloudflare ──► Supabase cloud (EU)
-            (Next 16 via OpenNext,   Postgres + Auth + Storage
-             nodejs_compat)          RLS delle migrazioni 0001-0010
+Browser ──► Netlify ────────────────► Supabase cloud (EU)
+            Next 16 via                Postgres + Auth + Storage
+            @netlify/plugin-nextjs     RLS delle migrazioni 0001-0010
+            · 1 edge function = il middleware Node (proxy.ts)
+            · 1 serverless function = SSR
+            · statici serviti dalla CDN
    │
    └──► challenges.cloudflare.com (widget Turnstile)
             ▲
-            └── /siteverify, chiamato dal Worker
+            └── /siteverify, chiamato dal server Netlify
 ```
 
 **File nuovi:**
 
 | File | Contenuto | Tracciato in git |
 |---|---|---|
-| `wrangler.jsonc` | `main: ".open-next/worker.js"`, `compatibility_date: "2026-07-30"` (il minimo ammesso è `2024-09-23`), `compatibility_flags: ["nodejs_compat"]`, binding `assets` su `.open-next/assets` | sì |
-| `open-next.config.ts` | `export default defineCloudflareConfig()` | sì |
-| `.dev.vars` | variabili per la preview locale di wrangler | **no** — va aggiunta una riga a `.gitignore` |
+| `netlify.toml` | comando di build + `@netlify/plugin-nextjs` | sì |
 | `src/app/robots.ts` | route handler Next 16 (**non** `public/robots.txt`, che non passa da i18n né dal build), `disallow: "/"` | sì (da rimuovere al go-live) |
 
-**Nessun file esistente cambia per l'adapter.** In particolare `src/proxy.ts` è già
-compatibile: usa solo `next-intl` e il refresh di sessione Supabase, nessuna API Node.
-Verificato anche che in `src/` non esiste alcun `export const runtime`, import `node:` o
-`require()`.
+**Nessun file esistente cambia per l'hosting.** In particolare `src/proxy.ts` **non va
+toccato**: è il middleware Node di Next 16, ed è esattamente il pezzo che ha deciso la scelta
+dell'host (D-1). Netlify lo avvolge in una edge function da sé, senza chiedere modifiche.
+
+⚠️ **La build Netlify non gira su questa macchina.** `netlify build --offline` fallisce nel
+bundling Deno dell'edge function del middleware (*"Could not load edge function"*). Ipotesi
+principale, mai smentita: il progetto vive dentro `OneDrive\Desktop`, che blocca e virtualizza
+i file — rottura nota per i bundler, e Deno è esattamente quel tipo di strumento. Su Linux (la
+CI Netlify) **passa senza problemi**. Non perderci tempo: si verifica pushando.
 
 ## 4. Decisioni di design (prese, da non ridiscutere)
 
-**D-1 — Cloudflare Workers, non Cloudflare Pages.** `STATO-LAVORI.md` diceva "Cloudflare
-Pages": per Next.js con SSR quello è il percorso legacy. Il percorso raccomandato e
-supportato è Workers con `@opennextjs/cloudflare`, runtime Node.js (non edge). Next 16 è
-fra le versioni supportate dall'adapter.
+**D-1 — Netlify.** *(Riscritta il 2026-08-04. La versione originale diceva "Cloudflare
+Workers, non Cloudflare Pages"; la storia sotto resta perché è il motivo per cui non si
+ritenta quella strada.)*
 
-**D-2 — Niente R2, niente KV.** L'adapter non li richiede. Qui non servono perché
-praticamente ogni pagina legge i cookie (sessione Supabase, `mcm_consent`) ed è quindi
-dinamica: non esiste una cache incrementale da conservare. Gli statici li serve il binding
-`assets`. *Conseguenza accettata:* ogni richiesta è SSR, nessuna pagina cachata al bordo.
-*Effetto collaterale positivo:* R2 richiederebbe una carta registrata, così la fase resta a
-costo e attrito zero.
+🚨 **Cloudflare Workers è un vicolo cieco per questo progetto, e non per un difetto di
+configurazione.** `@opennextjs/cloudflare@1.20.2` (l'ultima su npm) **rifiuta la build**
+quando rileva un middleware Node: `ERROR Node.js middleware is not currently supported.
+Consider switching to Edge Middleware.` In Next 16 `proxy.ts` gira **sempre** su runtime Node
+e non può essere spostato su edge; i Workers girano su `workerd`. È l'issue Cloudflare
+`workers-sdk#13755`. Aggiornare Next non risolve: il rifiuto riguarda il middleware, non la
+versione. **Non riprovare finché l'adapter non dichiara il supporto.**
 
-**D-3 — Deploy da locale con `wrangler`, non da CI.** Workers Builds aggiungerebbe un
-secondo posto dove configurare le variabili di build — cioè un secondo posto dove
-sbagliarle — proprio nella fase in cui si stanno isolando le cause dei guasti. La CI
-diventa un task della fase pubblica. *Corollario:* il push di `main` resta comunque nello
-scope, ma per mettere al sicuro i 42 commit locali, non come prerequisito tecnico.
+**Vercel è escluso per scelta dell'utente:** il piano Hobby gratuito **vieta l'uso
+commerciale** nei termini, e questo sito è per un cliente. Il vincolo dell'utente è *nessuna
+spesa finché il cliente non approva*.
 
-**D-4 — Email: servizio Supabase di default.** Limiti accettati: **2 email di auth
-all'ora**, e i nuovi progetti free non possono personalizzare i template (cambio Supabase
-del 3 giugno 2026). I destinatari **non** sono ristretti. Su uno staging privato è
-sufficiente; l'SMTP vero è un task della fase pubblica.
+**Netlify soddisfa entrambi i vincoli:** il piano Starter gratuito **permette esplicitamente
+l'uso commerciale**, e `@netlify/plugin-nextjs` **gestisce** il middleware Node invece di
+rifiutarlo — la build genera `.netlify/edge-functions/___netlify-edge-handler-node-middleware/`
+che importa `./server/node-middleware.js` e lo avvolge. **Verificato sul campo, non dedotto:**
+il deploy summary dice "1 edge function deployed" e `/` risponde **307 → `/it`** in produzione,
+cioè il middleware gira davvero.
+
+*Fallback mai servito, da tenere in tasca:* un host Node puro (Render, Railway) che esegue
+`next start` senza alcun adapter — lì un'incompatibilità del genere è impossibile per
+costruzione. Ma costa, quindi violerebbe il vincolo "gratis fino all'approvazione".
+
+**D-2 — Nessuno store di cache aggiuntivo.** *(Era "niente R2, niente KV"; la sostanza non
+cambia con Netlify.)* Praticamente ogni pagina legge i cookie (sessione Supabase,
+`mcm_consent`) ed è quindi dinamica: non esiste una cache incrementale da conservare. Gli
+statici li serve la CDN di Netlify. *Conseguenza accettata:* ogni richiesta è SSR, nessuna
+pagina cachata al bordo — e sul piano gratuito questo si somma al **cold start**, che è parte
+della lentezza percepita e che nessun `loading.tsx` elimina (onestà da mantenere col cliente).
+
+**D-3 — DECADUTA: si deploya da CI.** *(L'originale diceva "deploy da locale con `wrangler`,
+non da CI", per non avere un secondo posto dove sbagliare le variabili.)* Con Netlify la scelta
+non esiste: il deploy parte dal push del branch, quindi la build **è** su CI. Le variabili
+vivono in un posto solo (il dashboard Netlify), il che elimina il rischio che D-3 voleva
+evitare. **Corollario che ha cambiato l'ordine dei task:** il push di `main`/branch su GitHub
+da messa-in-sicurezza è diventato **prerequisito tecnico del deploy**.
+
+⚠️ **Il branch di produzione su Netlify è `feat/fase1e-staging-cloud`, non `main`** — è lì che
+vive `netlify.toml`. Al merge di fine fase va cambiato, altrimenti lo staging resta appeso a un
+branch che nessuno aggiorna più.
+
+**D-4 — Email: servizio Supabase di default.** Limite accettato: **2 email di auth all'ora**.
+I destinatari **non** sono ristretti. Su uno staging privato è sufficiente; l'SMTP vero è un
+task della fase pubblica.
+
+⚠️ **Un pezzo di questa decisione era sbagliato** (corretto il 2026-08-03): la spec dava per
+buono che *"i nuovi progetti free non possono personalizzare i template"*. **Falso** — si
+personalizzano dal dashboard, e infatti è ciò che fa il **Task 9**. Restano davvero non
+rimovibili, perché vengono dal servizio di posta condiviso: il footer *"powered by Supabase"*
+e il limite di 2 email/ora. Cadono entrambi solo con l'SMTP nostro.
 
 **D-5 — Conferma email resta attiva.** Disattivarla accorcerebbe il collaudo ma
 significherebbe non collaudare il flusso vero, e dimenticarsi di riattivarla sarebbe un
 buco di sicurezza.
 
 **D-6 — Privatezza: `noindex` + URL non divulgato.** Nessuna infrastruttura aggiuntiva.
-Chi indovinasse l'URL vedrebbe home ed eventi con dati demo: accettabile. Cloudflare Access
-è stato scartato perché la documentazione è contraddittoria sulla sua applicabilità a
-`workers.dev` senza un dominio su zona attiva, e perché stando davanti a tutto
-complicherebbe il collaudo dei link di conferma email.
+Chi indovinasse l'URL vedrebbe home ed eventi con dati demo: accettabile.
+
+**Confermata sul campo, dopo aver provato l'alternativa.** Netlify pubblica i siti come
+**Private** per default: tutte le rotte rispondevano **401** rimandando ad `edge-access`, cioè
+il cliente non sarebbe potuto entrare senza un account nel team — inaccettabile, visto che è il
+motivo per cui lo staging esiste. La *password protection* (link + password al cliente, che
+sarebbe stata ideale) **non è sul piano gratuito**. Restavano Private e Public → si è tornati a
+D-6, con la visibilità su **Public**. Le Deploy Preview restano Private.
 
 **D-7 — Approccio incrementale, una variabile alla volta.** Prima l'app **locale** contro
-il Supabase **cloud** (ogni rottura è per forza configurazione cloud), poi il deploy su
-Workers (ogni nuova rottura è per forza l'adapter). Bisezione pulita, al prezzo di un
-passaggio in più. Nota: l'ordine inverso è **impossibile**, un Worker deployato non
-raggiunge il Supabase in Docker sul PC.
+il Supabase **cloud** (ogni rottura è per forza configurazione cloud), poi il deploy (ogni
+nuova rottura è per forza l'hosting). Bisezione pulita, al prezzo di un passaggio in più.
+Nota: l'ordine inverso è **impossibile**, un sito deployato non raggiunge il Supabase in Docker
+sul PC.
 
-**D-8 — Lo spike dell'adapter è il task zero.** È l'unica incognita tecnica reale della
+*Ha pagato due volte.* La stessa idea, applicata alla UX, è diventata la ricetta che il
+2026-08-03 ha smascherato **tre** difetti che `tsc`, `lint`, 119 test e build dichiaravano a
+posto: dev server locale puntato al **Supabase cloud** (variabili inline, `.env.local` non
+toccato) e navigazione pilotata dal browser. Ciclo di prova da secondi invece che da minuti di
+deploy. **Il verde non dice che funziona, dice che compila.**
+
+**D-8 — Lo spike dell'hosting è il task zero.** È l'unica incognita tecnica reale della
 fase e non richiede alcun account: va risolta prima che l'utente apra il primo account.
+
+**Questa decisione ha salvato la fase.** Lo spike è fallito (D-1) prima che l'utente avesse
+aperto un solo account Cloudflare: il costo del cambio di hosting è stato un revert e uno
+spike nuovo, non la riscrittura di una fase già configurata.
 
 **D-9 — Il bottone Google si nasconde via variabile pubblica, non cancellando codice.** Il
 gate è `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED`: assente o diverso da `"true"` → il bottone
@@ -139,20 +210,29 @@ Le variabili si dividono in due classi che **non** si configurano allo stesso mo
 
 | Variabile | Classe | Dove va |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | build-time, inlined nel bundle client | deve esistere **quando gira `opennextjs-cloudflare build`** |
+| `NEXT_PUBLIC_SUPABASE_URL` | build-time, inlined nel bundle client | variabili d'ambiente **Netlify** |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | idem | idem |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | idem | idem |
 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | idem | **assente sullo staging** (vedi D-9) |
-| `TURNSTILE_SECRET_KEY` | runtime, solo server | `wrangler secret put` |
+| `TURNSTILE_SECRET_KEY` | runtime, solo server | variabili d'ambiente Netlify |
 | `SUPABASE_SERVICE_ROLE_KEY` | **non usata dall'app** | **da nessuna parte** |
+
+⚠️ **Il nome della chiave Supabase non combacia, e sbagliarlo è un guasto silenzioso.** Il
+dashboard Supabase la chiama `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; il codice legge
+**`NEXT_PUBLIC_SUPABASE_ANON_KEY`**. Il valore nuovo (formato `sb_publishable_...`, non più il
+JWT `eyJ...`) funziona — verificato sul campo — ma va messo **sotto il nostro nome**. Col nome
+sbagliato il sito compila e si apre, semplicemente non parla col database.
 
 ### Le tre trappole note
 
 **(a) `NEXT_PUBLIC_*` e il guasto muto.** Quelle variabili vengono incorporate nel
-JavaScript **al momento della build**. Se si configurano solo come segreti del Worker, la
+JavaScript **al momento della build**. Se si configurano solo come variabili di runtime, la
 build produce un bundle con `undefined` dentro e **non c'è nessun errore**: semplicemente
 il widget Turnstile non appare e il client Supabase non si crea. Mitigazione: il criterio
 di uscita del task Turnstile è letteralmente "il widget appare".
+
+⚠️ **Corollario specifico di Netlify, costato un giro:** cambiare una `NEXT_PUBLIC_*` nel
+dashboard **non basta**, serve un **nuovo deploy**. Salvare la variabile non ricompila niente.
 
 **(b) `SUPABASE_SERVICE_ROLE_KEY` non va spedita.** Verificato con grep: non è usata in
 nessun punto di `src/`, esiste solo in `docs/` e `.env.local.example`. È la chiave che
@@ -160,20 +240,34 @@ bypassa **tutte** le RLS. Spedirla sul Worker per abitudine sarebbe il singolo p
 rischio della fase.
 
 **(c) Redirect URL di Supabase.** `site_url` e `additional_redirect_urls` devono includere
-l'URL `workers.dev` con `/it/auth/callback` e il glob `**`, altrimenti la conferma email
+l'URL dello staging con `/it/auth/callback` e il glob `**`, altrimenti la conferma email
 non fa l'auto-login. È esattamente il bug #2 del collaudo di Fase 1A, e sul cloud si
 ripresenta identico perché l'URL cambia.
 
-⚠️ **Questi URL vanno cambiati due volte, non una.** Al task 3 l'app gira ancora su
-`localhost:3000` contro il Supabase cloud, quindi `site_url` deve puntare a `localhost`; al
-task 5, col deploy, passa all'URL `workers.dev`. Chi lo configura una volta sola si ritrova
-la conferma email rotta in uno dei due passaggi e non capisce perché.
+**Il meccanismo, misurato:** il link di conferma è costruito come `${origin}/it/auth/callback`
+in `auth/actions.ts:33`, ma Supabase lo onora **solo se sta nella sua allow-list**; altrimenti
+ripiega **in silenzio** sul Site URL, che su un progetto nuovo è `http://localhost:3000`.
+Configurazione finale: Site URL = l'host di staging, Redirect URLs = quell'host con `/**`
+**più** `http://localhost:3000/**`, per non rompere lo sviluppo locale.
+
+⚠️ **Va configurato PRIMA di registrare il primo account**, non dopo: sbagliarlo brucia una
+delle 2 email/ora su un link che punta a `localhost`.
 
 ### Locale vs cloud
 
-Lo sviluppo continua a puntare a Docker. `.env.local` va scambiato quando serve parlare col
-cloud: i due set si tengono in file di appoggio **non tracciati** e lo swap va documentato
-in `SETUP.md`.
+Lo sviluppo continua a puntare a Docker. **Non serve però scambiare `.env.local`** per parlare
+col cloud, come diceva la versione originale: basta passare le variabili **inline** al dev
+server, perché Next dà la precedenza all'ambiente su `.env.local`.
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://<REFERENCE_ID>.supabase.co" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<publishable key>" \
+npm run dev
+```
+
+Le chiavi Turnstile restano quelle **di test** di `.env.local`, che validano sempre: in locale
+va bene. Nessun file da scambiare, nessun rischio di dimenticare `.env.local` puntato al posto
+sbagliato.
 
 ### Cosa `db push` NON fa
 
@@ -182,21 +276,44 @@ registrato, esattamente come in locale.
 
 ## 6. Sequenza dei task
 
-| # | Task | Criterio di uscita |
-|---|---|---|
-| 0 | **Spike OpenNext**: adapter + `wrangler.jsonc` + `open-next.config.ts`, build e preview locale. **Nessun account toccato.** | `opennextjs-cloudflare build` completa e la preview serve la home **e** una pagina con server action, puntando ancora a Supabase Docker |
-| 1 | Push di `main` su `origin` | `git status` up-to-date con `origin/main` |
-| 2 | Progetto Supabase cloud (EU/Frankfurt) + `link` + `db push` | le 10 migrazioni risultano applicate; `pg_policies` combacia con il locale |
-| 3 | **App locale → Supabase cloud** (swap `.env.local`) | registrazione + conferma email, promozione admin, una prova RLS, upload coi limiti dei bucket: tutto sul cloud, con frontend noto buono |
-| 4 | Turnstile reale (chiavi + hostname registrato) | widget visibile, login passa, POST senza token respinto |
-| 5 | Deploy su Workers + redirect URL Supabase aggiornati | la home risponde in HTTPS sull'URL `workers.dev` |
-| 6 | `noindex` + bottone Google nascosto quando il provider non è configurato | `robots` nega tutto; le pagine auth non mostrano il bottone morto |
-| 7 | Contenuti demo caricati dall'admin sullo staging | 2–3 eventi (uno futuro con RSVP aperto, uno concluso con album foto), 2–3 membri con auto in garage |
-| 8 | Collaudo mirato + aggiornamento docs | §7 superata; `SETUP.md`, `STATO-LAVORI.md` e le caselle 1C/1D di `ROADMAP.md` allineati |
+*(Tabella riscritta il 2026-08-04 con la numerazione realmente eseguita e i tre task aggiunti
+in corsa. La numerazione del **piano** differisce da quella originale della spec: il `noindex`
++ gate Google è stato anticipato prima del deploy, per non lasciare finestre di indicizzazione
+e per risparmiare un deploy.)*
 
-I task 2, 4 e parte del 5 richiedono azioni **manuali nel browser dell'utente** (creazione
-account, chiavi, consensi): il ruolo dell'assistente lì è fornire un runbook passo-passo e
-verificare gli esiti, non eseguire.
+| # | Task | Criterio di uscita | Stato |
+|---|---|---|---|
+| 0 | **Spike dell'hosting.** **Nessun account toccato.** | la build dell'adapter completa e la preview serve la home **e** una pagina con server action | ❌ **fallito su Cloudflare** (D-1) → rifatto su Netlify, ✅ passato in CI |
+| 1 | Push di `main` e del branch su `origin` | `git rev-list --count` = 0 su entrambi | ✅ |
+| 2 | Progetto Supabase cloud (EU) + `link` + `db push` | le 10 migrazioni applicate; `pg_policies` combacia col locale (26 policy) | ✅ |
+| 3 | **App → Supabase cloud**, collaudo del blocco DB/auth | registrazione + conferma email, promozione admin, prove RLS negative, limiti dei bucket | ✅ |
+| 4 | Turnstile reale (chiavi + hostname registrato) | widget visibile e **la secret verifica davvero** | ✅ |
+| 5 | `noindex` + bottone Google dietro un flag | `robots` nega tutto; le pagine auth non mostrano il bottone morto | ✅ `e4fa307` |
+| 6 | Deploy su Netlify + redirect URL Supabase aggiornati | la home risponde in HTTPS sull'URL di staging | ✅ |
+| 7 | Contenuti demo caricati **dalla UI** dall'admin | 3 eventi (futuro con RSVP, futuro senza capienza, concluso con album), profili con avatar, auto in garage | ✅ |
+| 9 | **Email di autenticazione presentabili** *(aggiunto)* | i due template italiani sono nel dashboard e una prova vera arriva leggibile **da telefono** | 🟡 file scritti `633dff2`, **incollaggio a mano da fare** |
+| 10 | **Feedback di caricamento** *(aggiunto)* | scheletro/spinner a ogni cambio pagina, stato "sto lavorando" sui bottoni | ✅ in 4 riprese, l'ultima `acc4633` |
+| 11 | **Prossimi raduni in home** *(aggiunto)* | la home mostra fino a 3 eventi futuri | ✅ `68dad51` |
+| 8 | Collaudo mirato + allineamento docs | §7 superata; spec, piano, `SETUP.md`, `STATO-LAVORI.md`, `ROADMAP.md` allineati | 🟡 in corso |
+
+I task 2, 4, 6 e parte del 9 richiedono azioni **manuali nel browser dell'utente** (creazione
+account, chiavi, consensi, incollaggio dei template): il ruolo dell'assistente lì è fornire un
+runbook passo-passo e verificare gli esiti, non eseguire.
+
+### Perché la fase si è allargata di tre task
+
+Nascono tutti e tre da **rilievi dell'utente guardando lo staging**, cioè dalla cosa per cui lo
+staging esiste. Il criterio con cui sono stati accettati: *il cliente lo vede?*
+
+- **Task 9** — chi si registra riceve oggi il template inglese di serie di Supabase. Il cliente
+  si registrerà davvero, quindi quella email fa parte di ciò che valuta.
+- **Task 10** — navigazione lenta e **nessun** segnale di caricamento, quindi si clicca più
+  volte. Causa accertata e non ipotizzata: `find src -name loading.tsx` → nessun risultato.
+- **Task 11** — la home aveva un `<Badge>Prossimi raduni</Badge>` scritto a mano nel JSX che
+  **annunciava una sezione inesistente**. Invisibile finché il sito era vuoto.
+
+**Rimandato di proposito:** l'onboarding post-registrazione → Fase 2. Non è una rifinitura,
+è una funzionalità: serve brainstorming + spec + piano.
 
 ## 7. Collaudo: cosa si prova e cosa no
 
@@ -204,7 +321,7 @@ Non si rifà la Fase 1. Si provano **solo** le cose che possono comportarsi dive
 fuori da Docker:
 
 - **Server action attraverso l'adapter** — è il meccanismo su cui poggia ogni form del sito
-  (profilo, garage, eventi, RSVP). Se OpenNext sbaglia qualcosa, sbaglia qui.
+  (profilo, garage, eventi, RSVP). Se l'adapter sbaglia qualcosa, sbaglia qui.
 - **Cookie su HTTPS reale** — sessione Supabase e `mcm_consent` col flag `Secure`, che in
   locale su `http` non è mai stato esercitato.
 - **Conferma email col dominio nuovo** — trappola (c) di §5.
@@ -214,24 +331,42 @@ fuori da Docker:
   di un altro.
 - **Gate GDPR YouTube** su HTTPS e **Turnstile** che respinge.
 
-**Non** si riprovano logica pura, fuso orario e validazione: sono coperti dai 115 test e non
+**Non** si riprovano logica pura, fuso orario e validazione: sono coperti dai 119 test e non
 dipendono dall'ambiente.
+
+⚠️ **Aggiunta dopo il 2026-08-03, pagata tre volte:** il collaudo deve coprire anche le
+**modifiche di UX** introdotte in corsa (Task 10). `tsc`, `lint`, 119 test e build erano
+**tutti verdi mentre il comportamento era sbagliato** — lo scheletro di caricamento non
+compariva *mai*, e nessuna verifica offline poteva dirlo. Le modifiche di UX si provano su un
+dev server puntato al Supabase cloud, prima del push.
 
 ## 8. Rischi e piani B
 
-1. **Lo spike OpenNext fallisce.** Rischio più alto, mitigato mettendolo per primo. Piano B:
-   Vercel (supporto first-party per Next 16, zero adapter; il piano Hobby gratuito vieta
-   l'uso commerciale, zona grigia per un'associazione senza vendita). Costo: si riscrive §3,
-   non il resto della fase.
+*(Aggiornata il 2026-08-04 con l'esito reale di ciascun rischio.)*
+
+1. **Lo spike dell'adapter fallisce.** Rischio più alto, mitigato mettendolo per primo.
+   🚨 **SI È MATERIALIZZATO** — vedi D-1. Il piano B previsto era Vercel; l'utente l'ha
+   **escluso** (uso commerciale vietato dal piano Hobby, e qui c'è un cliente vero) e si è
+   scelta **Netlify**, che l'uso commerciale lo permette esplicitamente. Costo reale: un
+   revert, uno spike nuovo, e la riscrittura di §3-§4 — **non** il resto della fase. La
+   mitigazione ha funzionato esattamente come sperato.
 2. **Il limite di 2 email/ora blocca il collaudo.** Si registrano gli account con calma. Se
    diventa un impiccio serio, su uno staging è legittimo confermare un account a mano via
-   SQL.
+   SQL. *Esito: mai diventato bloccante, ma ha reso critico configurare le redirect URL*
+   **prima** *di registrarsi — trappola (c).*
 3. **Pausa del progetto free dopo 7 giorni di inattività — tocca direttamente il cliente.**
    Se lui riapre il link dopo dieci giorni di silenzio trova il sito morto. Si riattiva dal
-   dashboard in un minuto. *Decisione rimandata al task 8:* avvisare il cliente, oppure
-   predisporre un ping programmato.
+   dashboard in un minuto. ⏳ **Decisione ancora da prendere** (task 8): avvisare il cliente
+   e riattivare a mano prima delle demo, un ping programmato, o il piano Pro.
 4. **`NEXT_PUBLIC_*` assenti al momento della build** → guasto muto. Vedi trappola (a).
-5. **Costi: zero.** Tutto nei piani gratuiti; senza R2 non serve registrare una carta.
+   *Esito: si è presentato in forma attenuata al task 4 — le variabili Turnstile erano salvate
+   ma non ricompilate. Diagnosticato in un minuto perché il criterio di uscita era osservabile
+   ("il widget appare"), non deducibile.*
+5. **Costi: zero.** Rispettato: tutto nei piani gratuiti, nessuna carta registrata.
+6. **Rischio non previsto, emerso: la build non gira in locale.** Il bundling Deno
+   dell'edge function fallisce su questa macchina (ipotesi `OneDrive`), quindi **ogni verifica
+   dell'hosting passa da un push**. Mitigazione trovata: per tutto ciò che non è
+   specificamente l'hosting, il dev server locale contro il Supabase cloud (D-7).
 
 ## 9. Da comunicare al cliente
 
@@ -242,6 +377,16 @@ validazione legale — ma è meglio anticiparglielo che lasciarglielo scoprire c
 
 ## 10. Cosa resta dopo, per il go-live pubblico
 
-Dominio del club + DNS, contenuti legali reali, SMTP custom con template in italiano,
-Google OAuth col redirect URI definitivo, rimozione del `noindex`, e la valutazione se
-passare al piano Supabase Pro (niente pausa per inattività, backup).
+Dominio del club + DNS, contenuti legali reali, SMTP custom (che porta via il footer "powered
+by Supabase" e il limite di 2 email/ora), Google OAuth col redirect URI definitivo, rimozione
+del `noindex`, e la valutazione se passare al piano Supabase Pro (niente pausa per inattività,
+backup).
+
+⚠️ **Tre cose legate al dominio, che al cambio vanno toccate insieme** o restano appese
+all'indirizzo di staging: gli **URL di redirect Supabase** (trappola (c)), l'**hostname del
+widget Turnstile**, e l'**URL assoluto del logo nei template email** — che va cambiato in
+`supabase/email-templates/` **e** nel dashboard, perché nelle email non esistono percorsi
+relativi.
+
+⚠️ **`NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` è inlinata a build-time:** al go-live servirà un
+**rebuild**, non un toggle.

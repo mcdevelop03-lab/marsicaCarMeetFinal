@@ -2,19 +2,32 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> 🚨 **RIALLINEATO IL 2026-08-04 — L'HOSTING È NETLIFY, NON CLOUDFLARE WORKERS.**
+> Il piano fu scritto per Cloudflare Workers. Il **Task 0 è fallito al cancello**:
+> `@opennextjs/cloudflare` **rifiuta** il middleware Node di Next 16, che questo progetto usa
+> (vedi il Task 0 qui sotto, riscritto). L'hosting è stato riscelto con l'utente e la fase è
+> proseguita su **Netlify**.
+>
+> **Come leggere questo file:** i task sono stati **eseguiti**, quindi le caselle non sono una
+> lista di cose da fare ma il registro di ciò che è stato fatto. Dove il percorso reale ha
+> divergiato dal previsto — Task 0, Task 6, e i tre task 9/10/11 aggiunti in corsa — il testo è
+> stato riscritto sul percorso vero. **Non riesumare le istruzioni Cloudflare: sono conservate
+> solo come motivo per cui quella strada non si ritenta.**
+
 **Goal:** portare l'MVP già completo su uno staging cloud privato e raggiungibile
-(`https://<nome>.<account>.workers.dev`), con Supabase cloud EU, Turnstile reale, `noindex` e
+(`https://<nome>.netlify.app`), con Supabase cloud EU, Turnstile reale, `noindex` e
 contenuti demo, così che il cliente possa provarlo da sé.
 
-**Architecture:** Cloudflare Workers serve Next 16 tramite l'adapter
-`@opennextjs/cloudflare` (runtime `nodejs_compat`, **nessun** bucket R2/KV perché ogni pagina
-è dinamica); il backend è un progetto Supabase cloud in regione EU con le migrazioni
-`0001`–`0010`. Deploy lanciato da locale con `wrangler`, non da CI. Approccio incrementale:
+**Architecture:** **Netlify** serve Next 16 tramite `@netlify/plugin-nextjs`, che avvolge il
+middleware Node (`proxy.ts`) in una edge function e l'SSR in una serverless function; gli
+statici vanno sulla CDN. Nessuno store di cache aggiuntivo: ogni pagina legge i cookie ed è
+dinamica. Il backend è un progetto Supabase cloud in regione EU con le migrazioni
+`0001`–`0010`. **Il deploy è su CI: parte dal push del branch.** Approccio incrementale:
 prima l'app **locale** contro il Supabase **cloud** (isola i guasti di configurazione DB),
-poi il deploy (isola i guasti dell'adapter).
+poi il deploy (isola i guasti dell'hosting).
 
 **Tech Stack:** Next.js 16.2.10, React 19.2.4, next-intl 4, Supabase (`@supabase/ssr`),
-TailwindCSS 4, vitest 4, `@opennextjs/cloudflare`, `wrangler`.
+TailwindCSS 4, vitest 4, `@netlify/plugin-nextjs`.
 
 **Spec:** [`../specs/2026-07-30-fase1e-staging-cloud-design.md`](../specs/2026-07-30-fase1e-staging-cloud-design.md)
 
@@ -38,38 +51,70 @@ TailwindCSS 4, vitest 4, `@opennextjs/cloudflare`, `wrangler`.
 - **La conferma email resta ATTIVA** (spec D-5). Non disattivare "Confirm email" su Supabase
   per accorciare il collaudo: significherebbe non collaudare il flusso vero, e dimenticarsi
   di riattivarla sarebbe un buco di sicurezza. Il limite di 2 email/ora si aggira aspettando.
-- **Wrangler ≥ 3.99.0.**
+- ⚠️ **La build dell'hosting NON gira su questa macchina** (bundling Deno dell'edge function,
+  ipotesi `OneDrive`). Ogni verifica dell'hosting passa da un **push**. Per tutto il resto:
+  dev server locale puntato al **Supabase cloud**, variabili inline (vedi in fondo).
+- ⚠️ **Il verde non dice che funziona, dice che compila.** Tre volte in questa fase `tsc`,
+  `lint`, 119 test e build erano tutti verdi mentre il comportamento era sbagliato. Ogni
+  modifica di **UX** va provata dal vivo prima del push.
 
 ## Ordine dei task e scostamento dalla spec
 
 La spec §6 elencava il `noindex` + gate Google **dopo** il deploy. Qui sono **prima**
 (Task 5, deploy al Task 6) per due motivi: il primo deploy include già `noindex`, quindi non
 esiste una finestra in cui i crawler possono indicizzare lo staging; e si evita un deploy in
-più. Nessun'altra deviazione dalla spec.
+più.
+
+**Deviazioni successive, tutte dichiarate quando sono avvenute:**
+
+1. **L'hosting è cambiato** (Task 0 fallito → Netlify). Conseguenza sull'ordine: il push su
+   GitHub (Task 1) da messa-in-sicurezza è diventato **prerequisito tecnico** del deploy,
+   perché la build è su CI. Il Task 2 (Supabase cloud) è stato anticipato prima della verifica
+   del cancello Netlify: la build in CI ha bisogno delle `NEXT_PUBLIC_*` per compilare, e in
+   caso di secondo fallimento il progetto Supabase non sarebbe stato lavoro sprecato.
+2. **Il `noindex` è finito dopo il primo deploy, non prima.** Il sito era già stato deployato
+   (in privato) e l'incognita prioritaria era che l'app *funzionasse*. Rischio della finestra
+   trascurabile: un crawler raggiunge una pagina solo se qualcosa la collega, e quell'URL non
+   era linkato da nessuna parte.
+3. **Tre task aggiunti in corsa** (9, 10, 11), nati da rilievi dell'utente sullo staging.
 
 ## File Structure
 
 | File | Responsabilità | Task |
 |---|---|---|
-| `wrangler.jsonc` | **crea** — configurazione del Worker: entry, flag di compatibilità, binding assets/self-reference/images | 0 |
-| `open-next.config.ts` | **crea** — configurazione dell'adapter, una riga, nessuna cache override | 0 |
-| `next.config.ts` | **modifica** — aggiunge `initOpenNextCloudflareForDev()` per la preview locale | 0 |
-| `package.json` | **modifica** — dipendenze adapter/wrangler + script `preview`/`deploy`/`cf-typegen` | 0 |
-| `.gitignore` | **modifica** — `.open-next`, `.dev.vars`, `cloudflare-env.d.ts` | 0 |
-| `.dev.vars` | **crea, non tracciato** — `NEXTJS_ENV=development` per la preview locale | 0 |
+| `netlify.toml` | **crea** — comando di build + `@netlify/plugin-nextjs` | 0 |
+| `package.json` | **modifica** — dipendenza `@netlify/plugin-nextjs` | 0 |
+| `.gitignore` | **modifica** — artefatti di build dell'adapter | 0 |
 | `.env.local.example` | **modifica** — documenta `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` e annota che la service role key non serve all'app | 5 |
 | `src/lib/auth/provider.ts` | **crea** — un'unica funzione pura `googleAuthAbilitato()`, testabile | 5 |
 | `src/lib/auth/provider.test.ts` | **crea** — test della funzione pura | 5 |
 | `src/app/[locale]/(public)/login/page.tsx` | **modifica** — riga 44: bottone Google dietro il gate | 5 |
 | `src/app/[locale]/(public)/registrati/page.tsx` | **modifica** — riga 21: idem | 5 |
 | `src/app/robots.ts` | **crea** — `disallow: "/"` per tutta la superficie dello staging | 5 |
-| `docs/SETUP.md` | **modifica** — §6 riscritta col percorso reale + swap `.env.local` locale/cloud + deploy | 8 |
+| `docs/SETUP.md` | **modifica** — §6 riscritta col percorso reale + dev server contro il cloud + deploy | 8 |
 | `docs/STATO-LAVORI.md` | **modifica** — punto di ripartenza post-1E | 8 |
 | `docs/ROADMAP.md` | **modifica** — caselle 1C/1D (oggi vuote pur essendo fatte) + riga Fase 1E | 8 |
+| `docs/superpowers/specs/2026-07-30-…-design.md` | **modifica** — riallineamento da Cloudflare a Netlify | 8 |
+| questo file | **modifica** — idem | 8 |
 
-**Nessun file esistente cambia per l'adapter** oltre a `next.config.ts`. In particolare
-`src/proxy.ts` è già compatibile (solo next-intl + refresh sessione, nessuna API Node) e
-**non va toccato**.
+**Aggiunti dai task nati in corsa** *(sezione aggiunta il 2026-08-04)*:
+
+| File | Responsabilità | Task |
+|---|---|---|
+| `supabase/email-templates/*.html` + `README.md` | **crea** — copia di riferimento dei template; ⚠️ **vivono nel dashboard, nessuna migrazione li applica** | 9 |
+| `public/email-logo.png` | **crea** — logo bianco ridotto a 240px, **17,8 KB invece di 872** | 9 |
+| `src/components/ui/PageSkeleton.tsx` | **crea** — scheletro a schede; in testa la spiegazione del confine (leggerla prima di toccare i `loading.tsx`) | 10 |
+| `src/components/ui/PageSpinner.tsx` | **crea** — fallback per le rotte **non** a griglia | 10 |
+| `src/app/[locale]/**/loading.tsx` | **crea** — **22 file**, uno per rotta, più quello in cima | 10 |
+| `src/components/layout/NavPending.tsx` | **crea** — `useLinkStatus` nei link dell'header | 10 |
+| `src/components/ui/Button.tsx` | **modifica** — prop `pending` (rotella + `aria-busy`), 18 bottoni collegati | 10 |
+| `src/components/ui/OverlayAttesa.tsx` + `globals.css` | **crea/modifica** — velo a comparsa **ritardata dal CSS** | 10 |
+| `src/lib/events/pubblici.ts` | **crea** — `COLONNE_PUBBLICHE` + tipo, una sola copia | 11 |
+| `src/app/[locale]/(public)/page.tsx` | **modifica** — sezione "Prossimi raduni" | 11 |
+
+**Nessun file esistente cambia per l'hosting.** In particolare `src/proxy.ts` **non va
+toccato**: è il middleware Node, cioè il pezzo che ha deciso la scelta dell'host. Netlify lo
+avvolge da sé in una edge function.
 
 ---
 
@@ -95,225 +140,108 @@ all'utente.
 
 ---
 
-## Task 0: Spike dell'adapter OpenNext — nessun account, nessun costo
+## Task 0: Spike dell'hosting — nessun account, nessun costo
+
+> 🔁 **Riscritto il 2026-08-04.** Questo task fu scritto come *"spike dell'adapter OpenNext"*
+> per Cloudflare Workers, con 13 step di configurazione `wrangler`. **È fallito al cancello.**
+> Qui resta il motivo del fallimento — che è la ragione per cui quella strada non si ritenta —
+> e il percorso Netlify che l'ha sostituita. Le istruzioni Cloudflare sono state rimosse
+> perché erano indicazioni operative su una strada chiusa: chi le seguisse rifarebbe l'errore.
 
 **Perché è il primo:** è l'unica incognita tecnica reale della fase. Se fallisce, tutto il
-resto del piano cambia (piano B: Vercel) e l'utente non deve aver aperto neanche un account.
+resto del piano cambia e l'utente non deve aver aperto neanche un account.
+**Questa scelta ha salvato la fase** — vedi sotto.
 
-**Files:**
-- Create: `wrangler.jsonc`
-- Create: `open-next.config.ts`
-- Create: `.dev.vars` (non tracciato)
-- Modify: `next.config.ts`
-- Modify: `package.json`
-- Modify: `.gitignore`
+### ❌ Tentativo 1: Cloudflare Workers + `@opennextjs/cloudflare` — FALLITO
 
-**Interfaces:**
-- Consumes: niente (primo task)
-- Produces: gli script npm `preview` e `deploy`, usati dal Task 6. Il nome del Worker
-  scelto qui (`marsica-car-meet`) determina l'URL `workers.dev` e va riusato **identico**
-  nel binding `WORKER_SELF_REFERENCE` e nei Task 4 e 6.
-
-**Prerequisito d'ambiente:** Docker Desktop avviato e `npx supabase start` attivo (lo spike
-punta ancora al Supabase **locale**), `.env.local` presente con le chiavi locali.
-
-- [ ] **Step 1: Installare adapter e wrangler**
-
-```bash
-npm install @opennextjs/cloudflare@latest
-npm install --save-dev wrangler@latest
-```
-
-- [ ] **Step 2: Verificare la versione di wrangler (minimo 3.99.0)**
-
-```bash
-npx wrangler --version
-```
-
-Atteso: una versione ≥ 3.99.0. Se inferiore, l'installazione non ha preso `@latest`: ripetere
-lo Step 1.
-
-- [ ] **Step 3: Creare `wrangler.jsonc`**
-
-Nella root del progetto Next (`marsicaCarMeetFinal/marsicaCarMeetFinal/`).
-
-Nota sui campi: `r2_buckets` è **volutamente assente** (decisione D-2 della spec: nessuna
-cache incrementale, ogni pagina è dinamica). Il binding `images` è quello del template
-ufficiale e serve a `next/image`, usato dal logo in `Header.tsx` e `MobileMenu.tsx`.
-
-```jsonc
-{
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "main": ".open-next/worker.js",
-  "name": "marsica-car-meet",
-  "compatibility_date": "2026-07-30",
-  "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public"
-  ],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "marsica-car-meet"
-    }
-  ],
-  "images": {
-    "binding": "IMAGES"
-  }
-}
-```
-
-- [ ] **Step 4: Creare `open-next.config.ts`**
-
-Una riga, senza override della cache incrementale (niente R2).
-
-```typescript
-import { defineCloudflareConfig } from "@opennextjs/cloudflare";
-
-export default defineCloudflareConfig();
-```
-
-- [ ] **Step 5: Aggiungere `initOpenNextCloudflareForDev()` a `next.config.ts`**
-
-Va **in fondo** al file. Serve a far vedere i binding Cloudflare a `next dev`.
-
-Contenuto finale completo del file:
-
-```typescript
-import type { NextConfig } from "next";
-import createNextIntlPlugin from "next-intl/plugin";
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-
-const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
-
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default withNextIntl(nextConfig);
-
-initOpenNextCloudflareForDev();
-```
-
-- [ ] **Step 6: Creare `.dev.vars`** (non tracciato)
+Commit `558ec32` (poi revertito da `1f50369`). Tutto verde fino al cancello: `tsc`, `lint`,
+115/115 test, e perfino il `next build` interno dell'adapter (21 pagine statiche). Poi:
 
 ```
-NEXTJS_ENV=development
+ERROR Node.js middleware is not currently supported.
+Consider switching to Edge Middleware.
 ```
 
-- [ ] **Step 7: Aggiornare `.gitignore`**
+🚨 **La causa è architetturale, non locale, e non si aggira.** In Next 16 `proxy.ts` gira
+**sempre** su runtime Node e non può essere spostato su edge; i Workers girano su `workerd`.
+`@opennextjs/cloudflare@1.20.2` — l'ultima su npm — rifiuta la build appena rileva un
+middleware Node. È l'issue Cloudflare `workers-sdk#13755` (*"Version Trap: between Next.js 16's
+new Proxy architecture and OpenNext's current Cloudflare adapter"*). **Aggiornare Next non
+risolve:** il peer dep era già soddisfatto, il rifiuto riguarda il middleware, non la versione.
 
-`.env*` **non** copre `.dev.vars`. Aggiungere in fondo al file:
+**→ Non riprovare questa strada** finché l'adapter non dichiara il supporto al middleware Node.
 
-```
-# cloudflare / opennext
-/.open-next/
-.dev.vars
-cloudflare-env.d.ts
-```
+Fatto d'ambiente emerso e ancora valido: `wrangler@4.86.0` richiede **Node ≥ 22**, il Node di
+sistema qui è **20.19.3**. Irrilevante ora che l'hosting Cloudflare è abbandonato.
 
-- [ ] **Step 8: Aggiungere gli script a `package.json`**
+### 🔀 La scelta dell'hosting, tornata all'utente
 
-Il blocco `scripts` diventa:
+Il rischio #1 della spec §8 si era materializzato. Vincolo dell'utente: **nessuna spesa finché
+il cliente non approva** (dopo, le spese le sostiene il cliente).
 
-```json
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "test": "vitest run",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
-  },
-```
+- **Vercel — escluso dall'utente.** Il piano Hobby gratuito **vieta l'uso commerciale** nei
+  termini, e questo sito è per un cliente.
+- **Netlify — scelto.** Il piano Starter gratuito **permette esplicitamente l'uso commerciale**,
+  e Netlify ha un adapter proprio per Next 16.
+- **Fallback mai servito:** host Node puro (Render ~$7/mese, Railway ~$5/mese) che esegue
+  `next start` senza alcun adapter — lì un'incompatibilità del genere è impossibile per
+  costruzione. Ma costa, quindi viola il vincolo.
 
-- [ ] **Step 9: Verificare che tsc e lint restino verdi**
+### ✅ Tentativo 2: Netlify — passato (in CI)
 
-```bash
-npx tsc --noEmit
-npm run lint
-npm test
-```
+Commit `54e7ed4`: `netlify.toml` + `@netlify/plugin-nextjs@5.15.13`. Baseline riverificata,
+115/115 test verdi.
 
-Atteso: tutti e tre verdi, 115 test passati. `next.config.ts` è l'unico file di codice
-toccato: se `tsc` protesta, l'import di `initOpenNextCloudflareForDev` è il sospetto.
+**Il fatto che conta:** l'adapter Netlify **gestisce** il middleware Node invece di rifiutarlo.
+La build genera `.netlify/edge-functions/___netlify-edge-handler-node-middleware/` che importa
+`./server/node-middleware.js` e lo avvolge. Nessun rifiuto categorico.
 
-- [ ] **Step 10: 🚦 IL CANCELLO — build dell'adapter**
+⚠️ **In locale il cancello non si può verificare su questa macchina.** `next build` interno: OK.
+Vendoring Deno: OK. Poi **fallisce il bundling Deno** di quell'edge function:
+`Could not load edge function at '...___netlify-edge-handler-node-middleware.js'`, senza alcuna
+diagnostica Deno sotto. **Non è causato da `--offline`** (il vendoring era riuscito).
+**Ipotesi principale, mai smentita: il progetto vive dentro `OneDrive\Desktop`**, che blocca e
+virtualizza i file — causa nota di rotture nei bundler, e Deno è esattamente quel tipo di
+strumento. `netlify-cli build` **senza** `--offline` pretende un sito già collegato, quindi la
+verifica locale completa non è possibile senza account.
 
-⚠️ **Killare prima il dev server** (`next dev`): vedi Global Constraints.
+**→ Verifica rinviata alla build su CI Netlify (Linux).** Conseguenza sull'ordine dei task:
+serve un account Netlify + repo GitHub collegato, quindi **il Task 1 (push) diventa
+prerequisito tecnico del deploy**, non solo messa in sicurezza.
 
-```bash
-rm -rf .next .open-next
-npx opennextjs-cloudflare build
-```
+### 🚦 IL CANCELLO — passato su CI ✅
 
-Atteso: build completa senza errori, e la cartella `.open-next/` contiene `worker.js` e
-`assets/`.
+Sito creato dall'utente: `polite-moxie-8dc031`, team `MatteoCaricolaDevelop`, branch di
+produzione `feat/fase1e-staging-cloud` (**non** `main` — è lì che sta `netlify.toml`).
 
-**Se questo step fallisce:** NON proseguire col resto del piano. Raccogliere l'errore
-completo, fermarsi e riferire all'utente. È lo scenario di rischio #1 della spec §8 → si
-rivaluta l'hosting (piano B: Vercel).
+**Deploy summary: "1 edge function deployed"** — cioè esattamente l'artefatto che
+`@opennextjs/cloudflare` si rifiutava di produrre. Più: 22 file caricati, 3 redirect, 1 header
+rule, 1 function serverless.
 
-- [ ] **Step 11: Preview locale — la home**
+**Conferma l'ipotesi OneDrive/Windows: il problema era la macchina, non il progetto.**
+La prova definitiva è arrivata dopo, con la verifica funzionale: `/` risponde **307 → `/it`**,
+cioè il middleware Node **gira davvero** in produzione.
 
-```bash
-npx opennextjs-cloudflare preview
-```
-
-Aprire l'URL stampato (tipicamente `http://localhost:8788`) su `/it`.
-
-Atteso: la home si carica, il logo è visibile, l'header mostra la navigazione. Il Supabase
-puntato è ancora quello **locale in Docker**.
-
-- [ ] **Step 12: Preview locale — una pagina con server action**
-
-Questo è il vero criterio di uscita: le server action sono il meccanismo su cui poggia ogni
-form del sito.
-
-Sulla preview aprire `/it/login` e verificare **entrambe** le cose:
-1. la pagina renderizza il form (quindi il render del server component funziona);
-2. inviare il form con credenziali **volutamente sbagliate** (es. `nessuno@esempio.it` /
-   `sbagliata`) e verificare che compaia il messaggio d'errore dell'app.
-
-Atteso: appare il messaggio d'errore dell'applicazione. Un **404** o un **500** al submit
-significa che le server action non passano dall'adapter → trattarlo come fallimento dello
-Step 10 (fermarsi e riferire).
-
-Nota: il widget Turnstile probabilmente **non** apparirà se `.env.local` non ha una site key
-— è atteso e non è un fallimento dello spike. L'errore mostrato potrebbe essere
-"Verifica anti-bot non superata" invece di "credenziali errate": va bene, dimostra comunque
-che la server action è stata eseguita e ha risposto.
-
-- [ ] **Step 13: Commit**
-
-```bash
-git add wrangler.jsonc open-next.config.ts next.config.ts package.json package-lock.json .gitignore
-git commit -m "chore(1e): adapter @opennextjs/cloudflare + config Worker (spike verde)"
-```
-
-**Criterio di uscita del task:** `opennextjs-cloudflare build` completa **e** la preview
-locale serve la home **e** esegue una server action rispondendo con un messaggio
-dell'applicazione.
+**Criterio di uscita del task: soddisfatto.** L'hosting serve l'app **e** esegue le server
+action (verificato al Task 4: un login con password errata risponde con un messaggio
+dell'applicazione, non con un 404/500).
 
 ---
 
 ## Task 1: Mettere al sicuro `main` su origin
 
 **Perché:** oggi 42 commit — tutta la Fase 1 — esistono su un solo disco. Costo zero,
-rischio eliminato. Non è un prerequisito tecnico del deploy (D-3: si deploya con `wrangler`
-da locale), è messa in sicurezza.
+rischio eliminato.
+
+⚠️ **Promosso a prerequisito tecnico** (2026-08-04). Nella versione originale non lo era —
+D-3 diceva che si sarebbe deployato da locale con `wrangler`. Col cambio a Netlify la build è
+su **CI e parte dal push**, quindi senza questo task non esiste alcun deploy.
 
 **Files:** nessuno.
 
 **Interfaces:**
 - Consumes: niente
-- Produces: niente (nessun task successivo dipende da questo)
+- Produces: il repo su GitHub da cui Netlify costruisce (Task 0b/6)
 
 - [ ] **Step 1: Confermare quanti commit sono a rischio**
 
@@ -506,11 +434,34 @@ cp .env.local .env.local.cloud
 Da qui in poi lo swap fra i due ambienti è `cp .env.local.docker .env.local` oppure
 `cp .env.local.cloud .env.local`, seguito da un riavvio del dev server.
 
+> 💡 **Superata il 2026-08-03 da una ricetta migliore.** Lo swap di file funziona ma è
+> pericoloso: basta dimenticarlo per deployare un bundle che punta a `127.0.0.1`, o per credere
+> di star provando il cloud mentre si parla con Docker. **Non serve scambiare niente:** Next dà
+> la precedenza alle variabili già presenti nell'ambiente rispetto a `.env.local`, quindi
+> bastano inline —
+>
+> ```bash
+> NEXT_PUBLIC_SUPABASE_URL="https://<REFERENCE_ID>.supabase.co" \
+> NEXT_PUBLIC_SUPABASE_ANON_KEY="<publishable key>" \
+> npm run dev
+> ```
+>
+> Le chiavi Turnstile restano quelle **di test** di `.env.local`, che validano sempre: in locale
+> va bene. `.env.local` non si tocca mai, quindi non c'è niente da rimettere a posto dopo.
+>
+> ⚠️ **A fine prova spegni il dev server**, altrimenti resta appeso sulla 3000 e il tentativo
+> dopo parte sulla 3001 senza che te ne accorga:
+> `Get-NetTCPConnection -LocalPort 3000 -State Listen | % { Stop-Process -Id $_.OwningProcess -Force }`
+
 - [ ] **Step 4: Configurare gli URL di redirect per lo sviluppo locale**
 
 ⚠️ Questa configurazione va cambiata **due volte**: ora per `localhost`, e di nuovo nel
-Task 6 per l'URL `workers.dev`. Configurarla una volta sola rompe la conferma email in uno
+Task 6 per l'URL di staging. Configurarla una volta sola rompe la conferma email in uno
 dei due passaggi, e il sintomo non dice perché. È il bug #2 del collaudo di Fase 1A.
+
+**Configurazione finale, dopo entrambi i giri:** Site URL = l'host Netlify, Redirect URLs =
+quell'host con `/**` **più** `http://localhost:3000/**` (non toglierlo: serve alla ricetta del
+dev server contro il cloud).
 
 Dashboard Supabase → **Authentication → URL Configuration**:
 - **Site URL:** `http://localhost:3000`
@@ -624,25 +575,27 @@ funzionante, un upload riuscito coi limiti del bucket, una prova negativa RLS a 
 
 **Interfaces:**
 - Consumes: niente dal codice
-- Produces: `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (build-time, serve al Task 6) e
-  `TURNSTILE_SECRET_KEY` (runtime, diventa un secret del Worker al Task 6)
+- Produces: `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (build-time) e `TURNSTILE_SECRET_KEY` (runtime),
+  entrambe da mettere fra le variabili Netlify al Task 6
+
+⚠️ **L'account Cloudflare serve ANCHE SE l'hosting è Netlify.** Turnstile è un servizio
+Cloudflare e resta la nostra scelta anti-bot dalla Fase 1: le due cose sono indipendenti.
 
 ### Runbook manuale (utente, nel browser)
 
 - [ ] **Step 1: Creare l'account Cloudflare**
 
-https://dash.cloudflare.com/sign-up. È lo stesso account che servirà per Workers al Task 6:
-crearne uno solo.
+https://dash.cloudflare.com/sign-up. Serve **solo** per Turnstile (l'hosting è Netlify).
+Account usato: `mcdevelop03@gmail.com`.
 
 - [ ] **Step 2: Creare il widget Turnstile**
 
 Dashboard Cloudflare → **Turnstile** → **Add widget**:
 - **Widget name:** `marsica-car-meet-staging`
-- **Hostnames:** aggiungere `localhost` **e** `marsica-car-meet.<tuo-subdominio>.workers.dev`
+- **Hostnames:** aggiungere `localhost` **e** l'host Netlify dello staging
 
-  Il secondo non esiste ancora (nasce al Task 6): registrarlo ora evita di tornare indietro.
-  Se il subdominio dell'account non è ancora noto, aggiungere per ora solo `localhost` e
-  **tornare qui al Task 6** ad aggiungere l'altro.
+  Il secondo può non esistere ancora: registrarlo appena è noto evita di tornare indietro.
+  Senza l'hostname giusto **Cloudflare non emette alcun token** e il widget non carica.
 - **Widget mode:** `Managed`
 
 Copiare **Site Key** e **Secret Key**.
@@ -788,8 +741,8 @@ Create `src/lib/auth/provider.ts`:
 
 ```typescript
 // Il login con Google esiste nel codice (signInWithGoogle) ma il provider OAuth va
-// configurato per dominio: sullo staging workers.dev non lo è, quindi il bottone
-// "Continua con Google" va nascosto invece di mostrarne uno che dà errore.
+// configurato per dominio: sullo staging non lo è, quindi il bottone "Continua con
+// Google" va nascosto invece di mostrarne uno che dà errore.
 // Alla fase pubblica basta valorizzare la variabile: nessun codice da riscrivere.
 export function googleAuthAbilitato(): boolean {
   return process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true";
@@ -892,7 +845,7 @@ NEXT_PUBLIC_TURNSTILE_SITE_KEY=""
 TURNSTILE_SECRET_KEY=""
 
 # Login con Google: "true" solo dove il provider OAuth è configurato davvero
-# (non sullo staging workers.dev). Assente o diverso da "true" = bottone nascosto.
+# (non sullo staging). Assente o diverso da "true" = bottone nascosto.
 NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=""
 ```
 
@@ -934,134 +887,104 @@ senza il flag e presente con il flag.
 
 ---
 
-## Task 6: Deploy su Cloudflare Workers
+## Task 6: Deploy su Netlify
 
-**Files:** nessun file del repo cambia. Il deploy usa `wrangler.jsonc` dal Task 0.
+> 🔁 **Riscritto il 2026-08-04.** Era *"Deploy su Cloudflare Workers"*, con `wrangler login`,
+> `wrangler secret put` e `npm run deploy` da locale. Su Netlify **non si deploya da locale**:
+> si deploya **pushando il branch**, e le variabili vivono nel dashboard.
+
+**Files:** nessun file del repo cambia. Il deploy usa `netlify.toml` dal Task 0.
 
 **Interfaces:**
-- Consumes: script `deploy` e nome Worker `marsica-car-meet` (Task 0); chiavi Supabase cloud
-  (Task 2); chiavi Turnstile (Task 4); `robots.ts` e gate Google (Task 5)
-- Produces: l'URL `workers.dev` dello staging, usato dai Task 7 e 8
+- Consumes: repo su GitHub (Task 1); chiavi Supabase cloud (Task 2); chiavi Turnstile
+  (Task 4); `robots.ts` e gate Google (Task 5)
+- Produces: l'URL di staging, usato dai Task 7, 8, 9
 
-- [ ] **Step 1: Autenticare wrangler**
+- [x] **Step 1: Collegare il sito Netlify al repo GitHub** *(azione manuale dell'utente)*
 
-```bash
-npx wrangler login
-```
+Sito `polite-moxie-8dc031`, team `MatteoCaricolaDevelop`, account GitHub `mcdevelop03-lab`.
 
-Apre il browser per autorizzare l'account Cloudflare creato al Task 4. **Azione manuale.**
+⚠️ **Branch di produzione: `feat/fase1e-staging-cloud`, non `main`.** È lì che vive
+`netlify.toml`. **Da cambiare al merge di fine fase**, altrimenti lo staging resta appeso a un
+branch che nessuno aggiorna più.
 
-- [ ] **Step 2: Verificare a quale account si è connessi**
+- [x] **Step 2: Impostare le variabili d'ambiente sul dashboard Netlify**
 
-```bash
-npx wrangler whoami
-```
+| Variabile | Nota |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ⚠️ il valore è la chiave che **Supabase chiama** `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (formato `sb_publishable_...`). Va messa **sotto il nostro nome**: il codice legge quello |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | pubblica per progettazione (finisce nel bundle) |
+| `TURNSTILE_SECRET_KEY` | **incollata dall'utente direttamente sul dashboard**, mai passata dalla conversazione |
+| `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | **assente** sullo staging (spec D-9) |
+| `SUPABASE_SERVICE_ROLE_KEY` | **da nessuna parte**: bypassa tutte le RLS |
 
-Atteso: l'email dell'account Cloudflare e l'Account ID.
+🚨 **Le `NEXT_PUBLIC_*` sono incorporate nel bundle alla BUILD, non lette a runtime.**
+Salvarle non basta: **serve un nuovo deploy**. Questo passo è costato un giro al Task 4 —
+le chiavi Turnstile erano salvate ma il sito serviva ancora il bundle vecchio.
 
-- [ ] **Step 3: Assicurarsi che `.env.local` contenga la configurazione CLOUD**
+Il guasto è **muto**: col nome sbagliato o senza rebuild, il sito compila e si apre,
+semplicemente non parla col database o non disegna il widget.
 
-⚠️ **Il punto più delicato di tutta la fase.** Le tre `NEXT_PUBLIC_*` vengono **incorporate
-nel bundle JavaScript al momento della build**. Se al momento del `deploy` `.env.local`
-contiene le chiavi **Docker**, il Worker verrà pubblicato puntando a `127.0.0.1:54321` — e
-il sintomo sarà un sito che carica ma non fa login, senza alcun errore chiaro.
-
-```bash
-cp .env.local.cloud .env.local
-grep NEXT_PUBLIC_SUPABASE_URL .env.local
-```
-
-Atteso: l'URL `https://<REFERENCE_ID>.supabase.co`, **non** `127.0.0.1`.
-
-- [ ] **Step 4: Caricare il secret runtime sul Worker**
-
-`TURNSTILE_SECRET_KEY` è letta a runtime dal server, quindi va come secret del Worker (non
-serve alla build).
+- [x] **Step 3: Deploy = push del branch**
 
 ```bash
-npx wrangler secret put TURNSTILE_SECRET_KEY
+git push origin feat/fase1e-staging-cloud
 ```
 
-Incollare la secret key del Task 4 quando richiesto.
+Netlify costruisce da sé. Atteso nel log: **"1 edge function deployed"** (il middleware Node)
++ la function serverless dell'SSR. Deploy **Published**.
 
-Nota: al primo deploy il Worker potrebbe non esistere ancora e il comando può fallire. In tal
-caso eseguire prima lo Step 5, poi ripetere questo, poi rifare lo Step 5.
+⚠️ **Non si può anticipare in locale:** `netlify build --offline` fallisce su questa macchina
+(vedi Task 0). Si verifica pushando.
 
-- [ ] **Step 5: Build e deploy**
+- [x] **Step 4: Visibilità del sito — la pendenza che ha richiesto una decisione**
 
-⚠️ Killare prima il dev server.
+Netlify pubblica come **Private** per default: tutte le rotte rispondevano **HTTP 401** con
+`<title>Login Redirect</title>`, rimandando ad `app.netlify.com/edge-access`. Non è un guasto
+dell'app, è il controllo accessi di Netlify — ma **il cliente non sarebbe potuto entrare**
+senza un account nel team, che è il contrario del motivo per cui lo staging esiste.
 
-```bash
-rm -rf .next .open-next
-npm run deploy
-```
+La *password protection* (link + password al cliente) sarebbe stata la soluzione ideale ma
+**non è sul piano gratuito**. Restavano Private e Public → si è tornati al piano approvato
+**D-6: Public + `noindex`**. Deploy Preview lasciate Private.
 
-Atteso: wrangler stampa l'URL pubblicato, tipo
-`https://marsica-car-meet.<subdominio>.workers.dev`. **Annotarlo:** serve negli step
-seguenti e nei Task 7 e 8.
-
-- [ ] **Step 6: Verificare che il secret sia sul Worker**
-
-```bash
-npx wrangler secret list
-```
-
-Atteso: una voce `TURNSTILE_SECRET_KEY`. Se manca, tornare allo Step 4 e ripetere il deploy.
-
-- [ ] **Step 7: Aggiornare gli URL di redirect Supabase — il secondo dei due giri**
+- [x] **Step 5: Aggiornare gli URL di redirect Supabase**
 
 Dashboard Supabase → **Authentication → URL Configuration**:
-- **Site URL:** `https://marsica-car-meet.<subdominio>.workers.dev`
-- **Redirect URLs:** aggiungere
-  `https://marsica-car-meet.<subdominio>.workers.dev/**` — **lasciando** anche
-  `http://localhost:3000/**`, così lo sviluppo locale contro il cloud continua a funzionare.
+- **Site URL:** `https://polite-moxie-8dc031.netlify.app`
+- **Redirect URLs:** quell'host con `/**` — **lasciando** anche `http://localhost:3000/**`,
+  così lo sviluppo locale contro il cloud continua a funzionare.
 
-- [ ] **Step 8: Registrare l'hostname su Turnstile, se non già fatto**
+⚠️ **Va fatto PRIMA di registrare il primo account**, non dopo: il link di conferma è costruito
+come `${origin}/it/auth/callback` in `auth/actions.ts:33`, ma Supabase lo onora solo se sta
+nella allow-list, altrimenti ripiega **in silenzio** sul Site URL (`localhost:3000` su un
+progetto nuovo) — e si è bruciata una delle 2 email/ora. È il bug #2 del collaudo 1A.
 
-Se al Task 4 Step 2 il subdominio `workers.dev` non era noto, aggiungerlo ora al widget
-Turnstile. Senza, il widget si rifiuta di caricare sul dominio nuovo.
+- [x] **Step 6: Registrare l'hostname sul widget Turnstile**
 
-- [ ] **Step 9: Prima verifica — la home in HTTPS**
+Hostname del widget: `polite-moxie-8dc031.netlify.app` **+** `localhost`. Senza, Cloudflare
+non emette alcun token e il widget non carica.
 
-Aprire l'URL `workers.dev` su `/it`.
+- [x] **Step 7: Verifica funzionale dall'esterno** *(curl, nessun browser)*
 
-Atteso: la home carica in HTTPS, il logo si vede, l'header è a posto.
+| Prova | Esito |
+|---|---|
+| `/` | **307 → `/it`** — il **middleware Node gira**: è il punto su cui Cloudflare era fallita |
+| `/it`, `/it/eventi`, `/it/login`, `/it/privacy`, `/it/cookie` | **200**, `<title>` corretti |
+| `/it/membri` | **307 → `/it/login`** — la guardia `(auth)` è viva anche sul cloud |
+| `/robots.txt` | `User-Agent: *` + `Disallow: /` — il `noindex` del Task 5 è in produzione |
+| Cookie banner 1D | presente nel **markup SSR** |
+| Supabase cloud | `rest/v1/events` e `auth/v1/health` → 401 senza apikey = progetto **vivo, non in pausa** |
 
-**Se il logo è rotto** (e solo il logo): è l'unica immagine che passa da `next/image`
-(`Header.tsx:42`, più `MobileMenu.tsx`), quindi il sospetto è il binding `IMAGES` del
-Worker. Rimedio, che non costa nulla perché si tratta di un PNG di pochi KB — aggiungere a
-`next.config.ts`:
+⚠️ **Il logo non ha avuto problemi** (era il rischio previsto per il binding immagini di
+Cloudflare): `next/image` funziona sull'adapter Netlify senza `unoptimized: true`.
 
-```typescript
-const nextConfig: NextConfig = {
-  images: { unoptimized: true },
-};
-```
+- [x] **Step 8: Nessun commit** — nessun file tracciato è cambiato.
 
-Poi rifare build e deploy. Nessun'altra immagine del sito è interessata: le foto di auto ed
-eventi sono `<img>` che puntano allo Storage Supabase, già compresse in WebP dal client.
+**Criterio di uscita:** la home risponde in HTTPS sull'URL di staging, le richieste dati vanno
+al Supabase cloud, `/robots.txt` nega tutto, il sito è raggiungibile dal cliente. ✅
 
-- [ ] **Step 10: Verificare che punti al Supabase cloud e non a localhost**
-
-Aprire `/it/eventi` sullo staging.
-
-Atteso: si vedono gli eventi presenti sul **cloud** (probabilmente nessuno: l'album demo
-arriva al Task 7). Nella tab **Network** del browser le richieste devono andare a
-`<REFERENCE_ID>.supabase.co`, **mai** a `127.0.0.1`. Se vanno a `127.0.0.1`, lo Step 3 è
-stato saltato: ripetere build e deploy.
-
-- [ ] **Step 11: Verificare `robots.txt` sullo staging**
-
-Aprire `https://marsica-car-meet.<subdominio>.workers.dev/robots.txt`.
-
-Atteso: `User-Agent: *` e `Disallow: /`.
-
-- [ ] **Step 12: Nessun commit**
-
-Nessun file tracciato è cambiato.
-
-**Criterio di uscita:** la home risponde in HTTPS sull'URL `workers.dev`, le richieste dati
-vanno al Supabase cloud, `/robots.txt` nega tutto, il secret Turnstile è sul Worker.
 
 ---
 
@@ -1082,7 +1005,7 @@ fa con quel che c'è e si annota il debito — meglio poche foto vere che nessun
 
 - [ ] **Step 1: Loggarsi come admin sullo staging**
 
-Sull'URL `workers.dev`, login con l'account admin del Task 3.
+Sull'URL di staging, login con l'account admin del Task 3.
 
 Atteso: il login riesce **attraverso l'adapter** — è già mezza prova del Task 8.
 
@@ -1144,12 +1067,160 @@ vuote.
 
 ---
 
+# I tre task aggiunti in corsa (2026-08-03)
+
+> Non erano nel piano. Nascono da **rilievi dell'utente guardando lo staging**, cioè dalla cosa
+> per cui lo staging esiste. Criterio con cui sono stati accettati: **il cliente lo vede?**
+> Ordine di esecuzione: prima i due di codice (un solo deploy), poi quello che richiede il
+> dashboard.
+
+## Task 11: I prossimi raduni in home ✅ `68dad51`
+
+**Il rilievo:** `(public)/page.tsx:22` aveva un `<Badge>Prossimi raduni</Badge>` **scritto a
+mano nel JSX** (non passava nemmeno da i18n), residuo del mockup, che **annunciava una sezione
+inesistente**. La home era hero + CTA, nient'altro. Invisibile finché il sito era vuoto; col
+Task 7 il cliente atterra sulla home e non vede nessuno dei tre eventi.
+
+**Scelte motivate, da non "correggere" per distrazione:**
+- La sezione **sparisce** se non c'è nulla: una landing che annuncia "nessun raduno" è peggio
+  di una che tace.
+- Sparisce **anche in caso di errore** — ma l'errore **viene loggato**. Non diciamo "nessun
+  raduno" al posto di "non lo so".
+- Il filtro resta **in TS**, non in query: la regola della mezzanotte italiana vive in
+  `eConcluso`, quindi un `limit` in SQL scarterebbe le righe sbagliate.
+- `COLONNE_PUBBLICHE` + tipo estratti in `src/lib/events/pubblici.ts`: due copie della stessa
+  lista sono due occasioni di aggiungere `created_by` per distrazione (mai `select('*')` sulle
+  pagine pubbliche).
+
+**Verificato sullo staging:** due schede con foto, in ordine di data, evento concluso escluso.
+
+## Task 10: Feedback di caricamento ✅ (quattro riprese)
+
+**Il rilievo:** navigazione lenta e **nessun** segnale, quindi si clicca più volte.
+**Causa accertata, non ipotizzata:** `find src -name loading.tsx` → **nessun risultato**, e
+ogni pagina è dinamica (legge i cookie di sessione).
+
+**Onestà da mantenere col cliente:** parte della lentezza è il **cold start del piano gratuito**
+e nessun `loading.tsx` la elimina. Quello che si elimina è il *silenzio*.
+
+| # | Commit | Cosa |
+|---|---|---|
+| 1 | `5cfbb16` | `loading.tsx` a livello di `[locale]` + `NavPending` con `useLinkStatus` |
+| 2 | `1efdebd` | 🚨 **il fix del confine** — vedi sotto |
+| 3 | `4796938` | schede solo dove ci sono schede, spinner altrove |
+| 4 | `cf34331` | stato "sto lavorando" sui bottoni |
+| 5 | `acc4633` | velo di attesa a comparsa ritardata |
+
+### 🚨 La ripresa 1 era SBAGLIATA, e tutto il verde diceva il contrario
+
+Misurato pilotando il browser: il puntino compariva (quindi `useLinkStatus` funzionava) ma lo
+**scheletro non compariva mai**, e la navigazione restava muta per **4,2 secondi**. Il problema
+segnalato dall'utente era ancora intero — con `tsc`, `lint`, 119 test e build **tutti verdi**.
+
+**Causa, letta nella guida "Ensuring instant navigations" di Next 16 e non dedotta:** in una
+navigazione lato client Next ridisegna **solo ciò che sta sotto il layout condiviso** fra
+partenza e destinazione. Un `loading.tsx` a livello di `[locale]` sta **sopra** quel layout,
+quindi resta fuori dal ridisegno. Funzionava solo al primo caricamento — dove l'albero viene
+reso tutto — ed è per questo che nell'HTML lo scheletro si vedeva: **un falso positivo che
+sembrava conferma.**
+
+> *"a Suspense boundary in the root layout covers everything on a page load, but for a client
+> navigation the shared layout is the entry point. The root Suspense sits above it and has no
+> effect."*
+
+**Correzione:** un `loading.tsx` **per rotta** (22 file di una riga), più quello in cima che
+resta valido per il primo caricamento. ⚠️ **Rotta nuova = suo `loading.tsx`**, altrimenti quella
+pagina torna a caricare in silenzio — la spiegazione è in testa a `PageSkeleton`, dove la trova
+chi tocca quel codice.
+
+`unstable_instant` (l'altra strada indicata dai doc) **non è applicabile**: richiede
+`cacheComponents`, che il progetto non abilita.
+
+| Navigazione | Scheletro dopo | Totale |
+|---|---|---|
+| home → eventi | **14 ms** | 922 ms |
+| eventi → home | **6 ms** | 801 ms |
+| home → gadget | **6 ms** | 310 ms |
+
+*Prima del fix: scheletro **mai**, 4,2 s di silenzio.*
+
+**Effetto collaterale atteso, non un guasto:** il puntino di `NavPending` **non compare più** —
+con il confine al posto giusto lo stato `pending` dura meno di un fotogramma. Tenuto lo stesso,
+per il caso in cui il prefetch non ha fatto in tempo (rete lenta, link appena entrato in
+viewport). **Non rimuoverlo pensando che sia codice morto senza prima riprovare su rete lenta.**
+
+### Le riprese 3, 4 e 5 — due rilievi dell'utente, entrambi fondati
+
+**3. Schede ovunque = bugia grafica.** L'utente si aspettava uno spinner e ha visto tre card
+lampeggiare: lo stesso scheletro a griglia era usato su **tutte** le rotte, anche prima di
+`/privacy`, del profilo e dei form. Ora il fallback segue la pagina, **classificata sul codice
+e non a occhio** (contando le rotte con `grid gap`/`sm:grid-cols`): **schede** su home,
+`/eventi`, `/garage`, `/membri`; **spinner** sulle altre 19. ⚠️ Verificato contando il markup
+del fallback **a stili e script esclusi** — contarlo grezzo è un falso positivo, perché i nomi
+delle classi compaiono anche nel CSS iniettato e nel payload RSC. `/it/privacy` e `/it/login`
+non hanno **nessun** fallback: non fanno query, e un lampeggio inutile è peggio di niente.
+
+**4. I form "restavano statici" premendo Salva.** `loading.tsx` copre i **cambi pagina**, non
+l'invio di una **server action**. **La causa non era la mancanza di uno spinner, ma l'ambiguità
+del segnale:** l'unico effetto era `disabled:opacity-40`, e i form spengono il Salva **anche a
+campi mancanti** → "sto salvando" e "non hai finito di compilare" avevano lo stesso aspetto.
+Ora `Button` accetta **`pending`**: piena opacità + rotella + `aria-busy`, restando `disabled`
+(doppio invio impossibile). Verificato dal vivo: **10 ms dopo il clic** rotella presente,
+`aria-busy="true"`, opacità `1`.
+
+⚠️ **Regola da rispettare:** `pending` va **solo** ai bottoni che *avviano* un'azione (submit,
+conferme, upload). Quelli che restano bloccati durante l'attesa — gli "Annulla" dei modali —
+tengono `disabled`.
+
+**5. Velo di attesa** (`OverlayAttesa`) sulle operazioni davvero lente: evento, auto, profilo,
+avatar, album. ⚠️ **La comparsa è ritardata di 350 ms e il ritardo lo fa il CSS**
+(`.velo-attesa` in `globals.css`), non un `setTimeout`. **Non "correggere" togliendo il
+ritardo:** un velo che appare e sparisce in 200 ms è un lampo, e dà più fastidio del silenzio.
+Misurato: opacità 0 fino a 349 ms, 1.00 a 526 ms; intercetta i clic **anche da trasparente**,
+quindi il doppio invio è impossibile fin dal primo istante.
+
+## Task 9: Email di autenticazione presentabili 🟡 `633dff2` — manca l'incollaggio
+
+**Il rilievo:** oggi chi si registra riceve il template **inglese di serie** di Supabase, senza
+logo e senza niente che ricordi il sito — sembra spam. Il cliente si registrerà davvero, quindi
+quella email fa parte di ciò che valuta.
+
+**Fatto:** due template HTML italiani coi colori del tema in `supabase/email-templates/` + un
+README. `public/email-logo.png` = logo bianco ridotto a 240px, **17,8 KB invece di 872** (in una
+email l'originale è improponibile).
+
+🚨 **I template vivono nel DASHBOARD, non nel repo, e nessuna migrazione li applica.** La
+cartella è la copia di riferimento: chi modifica una delle due parti deve allineare l'altra a
+mano, altrimenti un ripristino del progetto Supabase riporta i template inglesi senza che
+nessuno se ne accorga.
+
+- [ ] **Step 1 — l'unica cosa che resta, ed è manuale.** Dashboard Supabase →
+  *Authentication → Emails*: incollare `conferma-registrazione.html` in **Confirm signup** e
+  `reset-password.html` in **Reset password**, e mettere gli oggetti in italiano:
+  - Confirm signup → `Conferma il tuo indirizzo — Marsica Car Meet`
+  - Reset password → `Reimposta la password — Marsica Car Meet`
+- [ ] **Step 2 — prova vera, aperta DA TELEFONO.** È lì che si vedono i disastri di
+  impaginazione, non nell'anteprima del dashboard.
+
+**Non rimovibili adesso, e non sono difetti nostri:** il footer *"powered by Supabase"* e il
+limite di **2 email/ora** vengono dal servizio di posta condiviso. Cadono entrambi con l'SMTP
+nostro, che è nella lista del go-live.
+
+⚠️ **HTML da email, non da sito:** tabelle e stili in linea, niente flexbox, niente grid,
+niente CSS esterno. Sembra codice del 2005 ed è voluto: è ciò che Outlook e Gmail rendono in
+modo affidabile. E il **logo è un URL assoluto** — al cambio di dominio va aggiornato in
+entrambi i file **e** nel dashboard.
+
+---
+
 ## Task 8: Collaudo mirato + allineamento della documentazione
 
 **Files:**
 - Modify: `docs/SETUP.md`
 - Modify: `docs/STATO-LAVORI.md`
 - Modify: `docs/ROADMAP.md`
+- Modify: la spec di questa fase e **questo file** *(aggiunto: il riallineamento da Cloudflare
+  a Netlify)*
 
 **Interfaces:**
 - Consumes: tutto quanto sopra
@@ -1159,7 +1230,10 @@ vuote.
 riprovano logica pura, fuso orario e validazione: coperti dai 119 test e indipendenti
 dall'ambiente.
 
-### Collaudo (tutto sull'URL `workers.dev`)
+⚠️ **Aggiunto dopo il 2026-08-03:** vanno guardate dal vivo **da loggato** anche le cose
+introdotte dal Task 10, che non si sono potute provare senza le password. Sono nello Step 8-bis.
+
+### Collaudo (tutto sull'URL di staging)
 
 - [ ] **Step 1: Server action attraverso l'adapter**
 
@@ -1187,9 +1261,12 @@ Registrare un **terzo** account usa-e-getta con un altro alias dell'indirizzo co
 dall'utente, e confermarlo.
 
 Atteso: il link di conferma porta sullo staging e si finisce **già autenticati**. È la prova
-diretta che lo Step 7 del Task 6 (Site URL/Redirect URLs) è corretto.
+diretta che lo Step 5 del Task 6 (Site URL/Redirect URLs) è corretto.
 
 ⚠️ Attenzione al limite di 2 email/ora: se al Task 7 sono già partite email, attendere.
+
+💡 **Da fare INSIEME al Task 9 Step 2:** è la stessa email. Una sola registrazione prova sia il
+redirect sia il template nuovo — e va **aperta da telefono**.
 
 - [ ] **Step 4: Limiti dei bucket sul cloud, prova negativa**
 
@@ -1247,6 +1324,22 @@ document.querySelector('input[name="cf-turnstile-response"]').value = "";
 
 Atteso: **"Verifica anti-bot non superata."**
 
+- [ ] **Step 7-bis: Le cose del Task 10 che si vedono solo da loggato** *(aggiunto 2026-08-04)*
+
+Sono le uniche modifiche di UX mai provate **con una sessione vera**. Le prime tre riprese del
+Task 10 sono state verificate dal vivo; queste no, perché richiedono le password.
+
+1. **Velo di attesa dove l'attesa è reale:** creare un evento con una **foto grossa** → il velo
+   **deve** comparire (soglia 350 ms).
+2. **Velo dove l'attesa NON è reale:** salvare il profilo senza cambiare l'avatar →
+   **probabilmente non deve comparire**, è troppo veloce. Se comparisse e sparisse in un lampo,
+   il comportamento è giusto ma la soglia è tarata male: **non togliere il ritardo**, alzarlo.
+3. **Rotella nei bottoni** delle azioni admin (annulla/ripristina/elimina evento) e dell'**RSVP**
+   (partecipa/disdici): 18 bottoni collegati, questi sono i meno esercitati.
+
+Atteso: opacità piena + rotella + `aria-busy="true"` sul bottone premuto, e nessun doppio invio
+possibile.
+
 - [ ] **Step 8: Decidere cosa fare della pausa a 7 giorni**
 
 Un progetto Supabase free si mette in pausa dopo **7 giorni di inattività**: se il cliente
@@ -1259,22 +1352,31 @@ programmato; (c) valutare il piano Pro. Non implementare nulla senza risposta.
 
 ### Documentazione
 
+- [x] **Step 8-bis: Riallineare spec e piano da Cloudflare a Netlify** *(2026-08-04)*
+
+Erano il pezzo di documentazione più fuorviante del progetto: descrivevano un hosting che non
+si usa. Rifatti: spec §0/§2/§3/§4/§5/§6/§7/§8/§10 e, qui, intestazione, vincoli, Task 0, Task 1,
+Task 6, più i tre task nati in corsa che non erano documentati in nessun piano.
+
 - [ ] **Step 9: Riscrivere `docs/SETUP.md` §6**
 
 Sostituire la §6 attuale (5 righe generiche) con il percorso reale seguito: creazione
-progetto EU, `link`, `db push`, la nota che **`db push` non applica `seed.sql`**, i due giri
-di configurazione degli URL di redirect, lo swap `.env.local.docker` / `.env.local.cloud`, e
-una §6-bis sul deploy (`npm run deploy`, `wrangler secret put`, e l'avvertenza che le
-`NEXT_PUBLIC_*` sono build-time).
+progetto EU, `link`, `db push`, la nota che **`db push` non applica `seed.sql`**, la
+configurazione degli URL di redirect (**prima** di registrare il primo account), la ricetta del
+**dev server locale contro il Supabase cloud** con variabili inline, e una §6-bis sul deploy
+Netlify (push del branch, variabili sul dashboard, e l'avvertenza che le `NEXT_PUBLIC_*` sono
+build-time e richiedono un rebuild).
+
+⚠️ **Non documentare lo swap `.env.local.docker` / `.env.local.cloud`**: era la ricetta
+prevista, ma non è quella adottata — le variabili si passano inline e `.env.local` non si tocca.
 
 - [ ] **Step 10: Allineare `docs/ROADMAP.md`**
 
-Due cose:
-1. Spuntare le caselle `[1C]` (righe 34-36) e `[1D]` (riga 37): sono complete da giorni ma
-   il file le mostra ancora vuote.
-2. Correggere "Lista partecipanti/auto per evento (admin)" in Fase 2 (riga 50): è **già
-   fatta** nella 1C-2 (`AdminIscritti`).
+1. ~~Spuntare le caselle `[1C]` e `[1D]`~~ — **già fatto il 2026-08-03.**
+2. Correggere "Lista partecipanti/auto per evento (admin)" in Fase 2: è **già fatta** nella
+   1C-2 (`AdminIscritti`).
 3. Aggiungere una riga per la **Fase 1E** con esito e URL dello staging.
+4. Verificare che la scheda **onboarding post-registrazione** rimandata alla Fase 2 ci sia.
 
 - [ ] **Step 11: Riscrivere il punto di ripartenza in `docs/STATO-LAVORI.md`**
 
@@ -1304,15 +1406,28 @@ git commit -m "docs(1e): SETUP con percorso cloud reale, ROADMAP allineata, STAT
 Usare la skill `superpowers:finishing-a-development-branch` per merge/PR di
 `feat/fase1e-staging-cloud` su `main`, e pushare `main`.
 
-**Criterio di uscita:** i sette collaudi passati (o i bug emersi corretti con commit
-dedicati), i tre documenti allineati, branch mergiato, `main` pushato.
+🚨 **Subito dopo il merge: cambiare il branch di produzione su Netlify da
+`feat/fase1e-staging-cloud` a `main`.** Altrimenti lo staging che il cliente sta guardando
+resta appeso a un branch che nessuno aggiorna più — e il guasto è muto: il sito continua a
+funzionare, semplicemente non riceve più niente.
+
+**Criterio di uscita:** i collaudi passati (o i bug emersi corretti con commit dedicati), la
+documentazione allineata, branch mergiato, `main` pushato, branch di produzione Netlify
+aggiornato.
 
 ---
 
 ## Cosa resta dopo, per il go-live pubblico
 
 Dominio del club + DNS, contenuti legali reali (i `[DA COMPILARE]` con i dati del Titolare,
-da chiedere al cliente), SMTP custom con template in italiano, Google OAuth col redirect URI
-definitivo (e `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED="true"`), **rimozione di
-`src/app/robots.ts`**, CI via Workers Builds, e la valutazione del piano Supabase Pro
-(niente pausa per inattività, backup).
+da chiedere al cliente), **SMTP custom** (che porta via anche il footer "powered by Supabase" e
+il limite di 2 email/ora), Google OAuth col redirect URI definitivo (e
+`NEXT_PUBLIC_GOOGLE_AUTH_ENABLED="true"`, che essendo build-time richiede un **rebuild**, non un
+toggle), **rimozione di `src/app/robots.ts`**, e la valutazione del piano Supabase Pro (niente
+pausa per inattività, backup).
+
+⚠️ **La CI non è più un lavoro da fare:** con Netlify c'è già, il deploy parte dal push.
+
+⚠️ **Il cambio di dominio tocca tre posti oltre al DNS**, e dimenticarne uno rompe qualcosa in
+silenzio: gli **URL di redirect Supabase**, l'**hostname del widget Turnstile**, e l'**URL
+assoluto del logo** nei template email (nei due file **e** nel dashboard).
