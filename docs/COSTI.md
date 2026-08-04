@@ -4,6 +4,20 @@
 > Serve a rispondere a due domande distinte: **quanto costa andare online adesso** e
 > **quanto costano i miglioramenti**, che sono cose diverse e vanno decise separatamente.
 
+## 💰 Il vincolo di budget, che viene prima di tutto il resto
+
+**Il budget è limitato e le spese ricorrenti vanno evitate in fase iniziale.** In particolare
+**una spesa da ~25 $/mese non è sostenibile adesso**, ed è un vincolo dichiarato dall'utente, non
+una preferenza da bilanciare con altre.
+
+**Conseguenza pratica su come leggere questo file:** la **Parte A** è l'unica che riguarda il
+presente, e la sua risposta è **il dominio e basta**. La **Parte B** è materiale per decidere
+**più avanti**, quando ci sarà un motivo concreto e magari un budget diverso — non è una lista
+della spesa e **niente lì dentro va comprato ora**.
+
+Dove un piano a pagamento risolve un problema vero, questo file indica anche **come affrontare
+lo stesso problema a costo zero**. Nella maggior parte dei casi si può.
+
 ## ⚠️ Come leggere le cifre di questo file
 
 **Nessun prezzo qui dentro è stato verificato sul sito del fornitore il giorno in cui scrivo.**
@@ -98,16 +112,36 @@ incontrata durante lo staging.
 *inattività*: un sito vivo, con visitatori, non si ferma mai. Era un problema sullo **staging**,
 dove passavano giorni senza che nessuno lo aprisse.
 
-🚨 **Il problema vero del piano free è un altro: non ci sono backup.** Se qualcosa cancella i
-dati — un errore, una migrazione sbagliata, un guaio del fornitore — **non c'è modo di tornare
+**Il problema vero del piano free è un altro: non ci sono backup.** Se qualcosa cancella i dati —
+un errore, una migrazione sbagliata, un guaio del fornitore — **non c'è modo di tornare
 indietro**. Finché ci sono tre eventi demo non importa niente. Quando ci saranno i profili veri
 dei soci, le loro auto e gli album dei raduni, quel rischio cambia natura: **sono contenuti che
 le persone non possono ricreare**.
 
-**Il mio consiglio onesto:** parti gratis e **passa al Pro quando entrano i primi contenuti veri
-del club**, non prima. Il momento giusto non è il go-live: è il primo raduno vero con le foto
-dentro. Nel frattempo si può fare un export manuale ogni tanto, che è meglio di niente ma dipende
-da qualcuno che si ricorda di farlo.
+### ✅ E si risolve senza pagare: il backup costa zero
+
+**Il piano Pro non è l'unico modo di avere dei backup, ed è il più caro.** La Supabase CLI —
+che il progetto ha già installato come dipendenza — sa esportare tutto:
+
+```bash
+npx supabase db dump --db-url "<connection string>" -f backup-AAAA-MM-GG.sql
+```
+
+Le **foto** stanno nei bucket dello Storage e si scaricano a parte, sempre da CLI o con uno
+script.
+
+Si può fare **a mano** (un promemoria mensile) oppure **automatizzare gratis** con una GitHub
+Action pianificata: il piano gratuito di GitHub include minuti più che sufficienti per un dump
+settimanale.
+
+🚨 **Attenzione a dove finisce il file, però: un dump contiene i dati personali dei soci.**
+**Non committarlo nel repository** — nemmeno privato: resterebbe nella cronologia git per
+sempre, e sarebbe difficile da cancellare davvero se qualcuno chiedesse la rimozione dei propri
+dati. Meglio un artifact con scadenza, o un archivio cifrato fuori dal repo.
+
+**Quindi:** il piano free **va benissimo**, e i backup si fanno lo stesso. Il Pro si valuta solo
+se un giorno il lavoro manuale diventa un peso o servono davvero le risorse maggiori — vedi
+Parte B, dove è **materiale per il futuro, non una spesa da fare ora**.
 
 ## A.4 — Email di autenticazione (SMTP) 🟡 **gratis, ma solo col dominio**
 
@@ -187,33 +221,42 @@ differenza è quella legale, che è una tantum e dipende da chi la fa.
 
 # PARTE B — Miglioramenti, e quanto costano
 
-> Nessuno di questi serve per andare online. Sono scelte da fare **dopo**, quando il sito è vivo
-> e si vede come viene usato davvero. Li ho messi in ordine di quanto li consiglio.
+> 🚨 **Niente di tutto questo serve, e niente di tutto questo va comprato ora.** Sono scelte da
+> valutare **più avanti**, quando il sito è vivo, si vede come viene usato davvero, e magari il
+> budget è diverso. Dato il vincolo dichiarato in cima al file, l'ordine qui sotto parte da
+> **ciò che si ottiene gratis**.
 
-## B.1 — 🥇 Supabase Pro — **~25 $/mese** ⚠️ · *il primo che consiglierei*
+## B.1 — 🥇 Le due cose gratis che valgono più di quelle a pagamento
 
-**Cosa risolve:** backup automatici giornalieri, niente pausa per inattività, risorse molto più
-ampie.
+**Costano zero e coprono i due rischi reali della fase iniziale.**
 
-**Quando ha senso:** **non al go-live, ma al primo contenuto vero che nessuno può ricreare.** Il
-giorno in cui ci sono le foto di un raduno vero e i profili dei soci, l'assenza di backup smette
-di essere un dettaglio tecnico e diventa un rischio sulle persone.
+**a) Backup fatti da noi — 0 €.** Vedi il riquadro in A.3: `supabase db dump` da CLI, a mano o
+automatizzato con una GitHub Action. Chiude il **solo** vero motivo per cui si guarderebbe al
+piano Pro. ⚠️ Il dump contiene dati personali: non finisce nel repository.
 
-**È il più importante della lista** perché è l'unico che protegge da un danno **irreversibile**.
-Tutti gli altri migliorano qualcosa; questo evita di perdere qualcosa.
+**b) Monitoraggio degli errori — 0 €.** Oggi, se un socio incontra un errore, **nessuno lo viene
+a sapere**: lo si scopre solo se si lamenta con qualcuno. Strumenti come Sentry hanno un piano
+gratuito che per questa scala è quasi certamente sufficiente ⚠️. Si paga **solo** se il volume
+cresce, e a quel punto vorrà dire che il sito è usato davvero.
 
-## B.2 — 🥈 Monitoraggio degli errori — **0 → ~26 $/mese** ⚠️
+**Se dovessi fare una cosa sola dopo il go-live, farei queste due, e non spenderei niente.**
 
-**Cosa risolve:** oggi, se un utente incontra un errore, **nessuno lo viene a sapere**. Non
-arriva nessuna notifica: lo scopriamo solo se quella persona si lamenta con qualcuno.
+## B.2 — Supabase Pro — **~25 $/mese** ⚠️ · 🔕 *non ora, e forse mai*
 
-**Opzioni:** strumenti come Sentry hanno un piano gratuito che per un sito di questa scala è
-probabilmente sufficiente ⚠️. Si parte da zero e si paga solo se il volume cresce.
+**Cosa dà:** backup automatici giornalieri, niente pausa per inattività, risorse più ampie.
 
-**Perché è alto in classifica:** costa poco o niente e cambia il modo in cui si scoprono i
-problemi — da "un socio si lamenta" a "lo sappiamo prima di lui".
+**Perché NON serve adesso**, punto per punto:
+- **I backup** si fanno gratis (B.1a). Era l'unico argomento forte.
+- **La pausa a 7 giorni** non riguarda un sito pubblico con visitatori: scatta per *inattività*.
+- **I limiti di spazio** del piano free sono lontani — le foto sono compresse in WebP e i bucket
+  hanno un tetto di 2 MB a file.
 
-## B.3 — 🥉 Statistiche di visita — **0 → ~10 €/mese** ⚠️
+**Quando riparlarne davvero:** se il backup manuale diventa un peso che nessuno fa più, se lo
+spazio si avvicina davvero al limite, o se il club cresce al punto che un fermo di qualche ora
+sarebbe un problema serio. **Non prima**, e a quel punto sarà una decisione con dei numeri
+davanti invece che un'ipotesi.
+
+## B.3 — Statistiche di visita — **0 → ~10 €/mese** ⚠️
 
 **Cosa risolve:** sapere quante persone visitano, quali raduni interessano, se il sito viene
 usato dai telefoni. Al cliente questi numeri di solito interessano parecchio.
@@ -272,9 +315,10 @@ La spesa che invece va messa in conto sul serio è **la validazione legale delle
 cookie**, perché il sito raccoglie dati di persone vere e quel documento oggi è dichiaratamente
 una bozza. È una tantum, e va decisa col cliente perché il Titolare è lui.
 
-**Poi, quando il sito sarà vivo e con contenuti veri**, la prima spesa ricorrente che consiglierei
-è **Supabase Pro (~25 $/mese)** — non per le prestazioni, ma perché è l'unica che protegge da una
-perdita di dati **irreversibile**.
+**Nessuna spesa ricorrente è necessaria**, e questo vale anche dopo il go-live. Il solo rischio
+serio del piano gratuito — l'assenza di backup — **si chiude gratis** con un dump periodico da
+CLI. **Supabase Pro resta un'ipotesi per il futuro**, da riaprire solo con dei numeri davanti
+(spazio vicino al limite, o backup manuali che nessuno fa più), non al lancio.
 
 ⚠️ **Un'ultima cosa da tenere a mente:** i piani gratuiti sono gratuiti **finché il fornitore
 decide che lo siano**. È già successo che cambino le condizioni proprio su ciò che ci serviva —

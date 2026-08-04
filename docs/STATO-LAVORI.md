@@ -68,9 +68,13 @@ branch di produzione non è stato spostato davvero.
 [`COSTI.md`](./COSTI.md) (2026-08-04) risponde a due domande separate: **quanto serve per andare
 online adesso** e **quanto costano i miglioramenti**. In sintesi: l'unica spesa tecnica
 obbligatoria è **il dominio (~10-20 €/anno)**, tutto il resto parte legittimamente da zero; la
-spesa vera da mettere in conto è la **validazione legale** delle pagine privacy/cookie, e la
-prima ricorrente da valutare — quando ci saranno contenuti veri — è **Supabase Pro**, l'unica che
-protegge da una perdita di dati irreversibile.
+spesa vera da mettere in conto è la **validazione legale** delle pagine privacy/cookie.
+
+💰 **Vincolo dichiarato dall'utente, scritto in cima a quel file: il budget è limitato e le spese
+ricorrenti vanno evitate in fase iniziale** — in particolare **~25 $/mese non sono sostenibili
+adesso**. Quindi **nessun piano a pagamento**: l'unico rischio serio del piano gratuito Supabase è
+l'assenza di backup, e **si chiude gratis** con `supabase db dump` periodico da CLI (⚠️ il dump
+contiene dati personali: non va committato nel repo).
 
 ⚠️ **Le cifre in quel file non sono verificate sui listini**: sono ordini di grandezza per
 ragionare, da ricontrollare prima di attivare qualunque cosa.
