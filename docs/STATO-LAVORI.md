@@ -6,8 +6,8 @@
 
 ## 🔖 Dove siamo
 
-- 🎉 **FASE 1E — STAGING CLOUD: COMPLETATA e MERGIATA** su `main` (merge `e0a20c1`, 2026-08-04), **`main` pushato su origin**. **C'è un cliente che deve provare e approvare il sito**: è il motivo per cui esiste questa fase.
-  - 🚨 **UNICA COSA RIMASTA, da fare sul dashboard Netlify: spostare il branch di produzione da `feat/fase1e-staging-cloud` a `main`.** Finché non è fatto, lo staging che il cliente guarda si aggiorna da un branch che nessuno toccherà più — e il guasto è **muto**: il sito continua a funzionare, semplicemente non riceve più niente. **Il branch NON è stato eliminato apposta**, per non spegnere lo staging: si elimina dopo lo spostamento. Spec: [`superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md`](./superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md) · Piano: [`superpowers/plans/2026-07-30-fase1e-staging-cloud.md`](./superpowers/plans/2026-07-30-fase1e-staging-cloud.md) · Ledger: [`../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md`](../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md).
+- 🎉 **FASE 1E — STAGING CLOUD: COMPLETATA, MERGIATA e CHIUSA** (merge `e0a20c1`, 2026-08-04). `main` pushato su origin, **branch `feat/fase1e-staging-cloud` eliminato** (locale e remoto), branch di produzione Netlify **spostato su `main`** dall'utente. **C'è un cliente che deve provare e approvare il sito**: è il motivo per cui esiste questa fase.
+  - ⚠️ **Una verifica che non è stato possibile fare, e va fatta al primo commit di codice.** Che Netlify costruisca davvero da `main` **non è dimostrabile dall'esterno adesso**: `main` e il vecchio branch producono un output **identico** (gli ultimi commit erano solo documentazione), quindi il sito è uguale in entrambi i casi. **La prova arriva alla prima modifica visibile pushata su `main`: se non compare sullo staging, il branch di produzione è ancora quello vecchio.** Il sito pubblicato non cade comunque — Netlify continua a servire l'ultimo deploy riuscito — quindi il sintomo è "il sito non cambia mai più", non un errore. Spec: [`superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md`](./superpowers/specs/2026-07-30-fase1e-staging-cloud-design.md) · Piano: [`superpowers/plans/2026-07-30-fase1e-staging-cloud.md`](./superpowers/plans/2026-07-30-fase1e-staging-cloud.md) · Ledger: [`../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md`](../.superpowers/sdd/2026-07-30-fase1e-staging-cloud/progress.md).
   - ✅ **Spec e piano RIALLINEATI a Netlify (2026-08-04, `3e5c225`)** — non sono più obsoleti: si possono leggere. La storia Cloudflare è conservata **come motivo per cui quella strada non si ritenta**, non come istruzioni (quelle sono state rimosse). Riscritte anche `SETUP.md` §6 + la nuova §6-bis sul deploy, e `ROADMAP.md`, dove la Fase 1E non compariva affatto (`aabfb4a`).
     - Trovato strada facendo: `provider.ts` e `.env.local.example` avevano commenti che nominavano *"lo staging workers.dev"* — un hosting mai usato, finito nel codice perché il piano diceva così. Corretti. E `SETUP.md` **consigliava di mettere in `.env.local` la `SUPABASE_SERVICE_ROLE_KEY`**, cioè la chiave che bypassa tutte le RLS: tolta.
   - ✅ **Fatto:** `main` + branch **pushati su GitHub** (i 42 commit della Fase 1 non vivono più su un solo disco) · **progetto Supabase cloud** creato con le migrazioni `0001`–`0010` applicate e verificate · **sito Netlify deployato** · **`noindex` + bottone Google dietro flag** (commit `e4fa307`, 119 test, review indipendente con 0 rilievi).
@@ -39,13 +39,15 @@
 > **Lo staging è vivo, pieno, collaudato e mergiato.** Sito: `https://polite-moxie-8dc031.netlify.app`
 > `main` è su GitHub (`e0a20c1`), albero pulito, `tsc`/`lint`/**119 test** verdi sul risultato del merge.
 
-### 🚨 Il primo passo, prima di qualunque altra cosa
+### ✅ La fase è chiusa — non c'è nulla di sospeso
 
-**Sul dashboard Netlify: *Site configuration → Build & deploy → Branch to deploy* → cambiare da
-`feat/fase1e-staging-cloud` a `main`.** Poi si può eliminare il branch, in locale e su origin.
+Merge fatto, `main` pushato, branch eliminato, branch di produzione Netlify spostato su `main`.
+Verifiche verdi sul risultato del merge (`tsc`, `lint`, **119 test**) e staging ancora vivo dopo
+l'eliminazione del branch (`/` → 307, pagine 200, raduni in home).
 
-Finché non è fatto, ogni lavoro futuro mergiato su `main` **non arriverà sullo staging** e nessun
-errore lo segnalerà.
+⚠️ **L'unica cosa da tenere d'occhio** è nel riquadro qui sopra: che Netlify costruisca davvero
+da `main` si vedrà **alla prima modifica visibile** pushata. Se non compare sullo staging, il
+branch di produzione non è stato spostato davvero.
 
 ### Come si è arrivati qui
 
