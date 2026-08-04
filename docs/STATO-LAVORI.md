@@ -45,9 +45,18 @@
    - **Tre limitazioni, una sola causa:** template bloccati + footer "powered by Supabase" + limite di 2 email/ora vengono tutti dal mailer condiviso e **cadono insieme**. Si fa una volta sola, col dominio.
    - ⚠️ **Da dire al cliente:** chi si registra sullo staging riceve l'email di conferma **inglese di serie**. Brutta ma funzionante.
    - ⚠️ **Perché è successo, da non ripetere:** i template sono stati scritti dando per buono che si potessero incollare, **senza aprire prima quella pagina** — e il vincolo era perfino scritto nella spec (D-4). **Prima di scrivere codice che dipende da una schermata, aprire la schermata.**
-2. **Task 8 — collaudo dal vivo.** Richiede una sessione loggata. Vanno guardate le cose del Task 10 mai provate con una sessione vera: il **velo di attesa** su creazione evento con foto grossa (**deve** comparire) e su salvataggio profilo (probabilmente **non** deve, è veloce), e la **rotella nei bottoni** delle azioni admin e dell'RSVP. La lista completa è nel piano, Task 8, Step 1-7-bis.
+2. ✅ **Task 8 — COLLAUDO DAL VIVO SUPERATO (2026-08-04).** Eseguito sullo staging vero con sessione admin, **0 bug bloccanti**. Contenuti demo tutti ripristinati e verificati riga per riga. Dettaglio completo nel ledger; in sintesi:
+   - **Da anonimo:** middleware, pagine pubbliche, `robots.txt`, banner cookie SSR, Turnstile, gate GDPR (0 iframe), home coi 2 raduni futuri.
+   - **Da loggato:** 4 server action riuscite; rotella a **51 ms** con `aria-busy` e opacità 1; **velo di attesa opacità 0 fino a 349 ms, 1.00 a 616 ms** (soglia CSS esatta); regola `pending` rispettata (Conferma sì, Annulla no); logout pulito.
+   - **6 prove negative RLS, ognuna con controprova.** ⭐ **Il fix `2052d8d` è finalmente verificato dal vivo:** auto altrui sulla propria iscrizione → **403**, mentre la propria → **201**.
+   - ⚠️ **Una previsione di questo file era sbagliata:** il velo sul salvataggio profilo **compare** (l'operazione dura ~950 ms sul piano gratuito). Non è un difetto.
 3. **Poi la fase è chiusa:** merge del branch e decisione su come mostrare il sito al cliente.
    🚨 **Subito dopo il merge: cambiare il branch di produzione su Netlify da `feat/fase1e-staging-cloud` a `main`**, altrimenti lo staging che il cliente guarda resta appeso a un branch che nessuno aggiorna più — e il guasto è muto.
+
+### 🔎 Due rilievi dal collaudo — debiti, non blocchi
+
+- **Le rotte protette rispondono 200, non più 307.** Regressione del `loading.tsx` per rotta del Task 10: il confine Suspense manda in strada l'intestazione HTTP prima che il server component esegua `redirect()`. **Misurato, non dedotto: 0 tracce di dati protetti** nel corpo di tutte e sei le rotte, e nel browser vero il redirect avviene. La barriera è RLS + `requireAdmin`, intatta. Unica conseguenza: **senza JavaScript** si resterebbe sullo scheletro invece di finire al login.
+- **Il cookie di sessione Supabase non ha il flag `Secure`.** Non è una nostra omissione: `@supabase/ssr@0.12.0` non lo mette fra i default (verificato nel sorgente del pacchetto); il nostro `mcm_consent` invece ce l'ha. **Oggi è coperto da HSTS** (`max-age=31536000; includeSubDomains; preload`) + `http` → 301. ⚠️ **Da guardare al go-live**, quando il dominio nuovo non sarà in preload list: fix da due righe, `cookieOptions: { secure: true }` in [`server.ts`](../src/lib/supabase/server.ts), condizionato all'ambiente per non rompere lo sviluppo in `http`.
 
 ### ✅ Già fatto il 2026-08-03 (non rifarlo)
 
@@ -144,6 +153,7 @@ Tre segnalazioni guardando lo staging. Le prime due sono diventate **Task 9 e 10
 > ℹ️ **Note ambiente (2026-07-29):** Docker + Supabase locale accesi; dev server su **localhost:3000**. Admin `mcdevelop03@gmail.com` / `Marsica2026!`; membro `membro2.test@example.com` / `Membro2026!`. Evento concluso con media: `prova-primo-evento` (2 foto + 1 video). Dati di test **locali volatili** (spariscono con `db reset`).
 
 **Debiti/follow-up NON bloccanti ereditati (micro-fasi dedicate):**
+- Da 1E (collaudo 2026-08-04): **rotte protette a 200 invece di 307** (effetto del `loading.tsx` per rotta — nessuna fuga di dati, redirect vivo nel browser); **cookie di sessione Supabase senza `Secure`** (default della libreria, oggi coperto da HSTS — **da chiudere al go-live**).
 - Da 1C-3: `Modal onClose` inline; hidden `<input type=file>` non `disabled`; `alt=""` thumbnail; lightbox senza `aria-label`/focus/scroll-lock; due `import type` accorpabili; map `mediaAdmin`/`mediaGallery` duplicata; anti-orfano batch non copre il ramo `throw`.
 - Di sistema: `revalidatePath` (path non combacianti), **pulizia orfani storage di sistema**, `created_by` degli eventi leggibile da anon via PostgREST.
 

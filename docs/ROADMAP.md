@@ -53,7 +53,8 @@ del go-live. Nessuna funzionalità nuova: è infrastruttura, più le rifiniture 
 - [x] **Prossimi raduni in home** — prima la home annunciava una sezione che non esisteva.
 - [x] **Feedback di caricamento**: scheletro/spinner a ogni cambio pagina, stato "sto lavorando" sui bottoni, velo di attesa sulle operazioni lente.
 - [x] ~~Email di autenticazione in italiano~~ → **spostata al go-live (2026-08-04).** I template sono scritti e pronti, ma **non applicabili**: col servizio di posta gratuito Supabase impone quelli di serie, e per cambiarli serve un **SMTP nostro**. Stessa causa del footer "powered by Supabase" e del limite di 2 email/ora: cadono tutti insieme, quindi si fa una volta sola col dominio vero.
-- [ ] Collaudo finale mirato e chiusura del branch.
+- [x] **Collaudo finale mirato** — superato il 2026-08-04 sullo staging vero, 0 bug bloccanti, contenuti demo ripristinati. Due debiti annotati (rotte protette a 200 invece di 307; cookie di sessione senza `Secure`, coperto da HSTS).
+- [ ] Chiusura del branch e merge.
 - **Esito atteso:** un URL che il cliente apre quando vuole lui, con dati veri dentro.
 
 ⚠️ **Da dire al cliente:** chi si registra sullo staging riceve l'**email di conferma inglese
