@@ -1,6 +1,6 @@
 # ROADMAP — Marsica Car Meet
 
-> Documento vivo. Ultima modifica: 2026-08-03.
+> Documento vivo. Ultima modifica: 2026-08-04.
 > Sequenza pensata per uno sviluppatore singolo: ogni fase produce qualcosa di usabile.
 > Scelte di scope in [`DECISIONS.md`](./DECISIONS.md).
 
@@ -39,6 +39,33 @@ Obiettivo: primo prodotto realmente utile alla community. Suddivisa in sotto-pro
 - **Esito:** membri si registrano, gestiscono auto e partecipano ai raduni creati dall'Admin;
   l'Admin pubblica gli album foto dei raduni conclusi.
 
+## Fase 1E — Staging cloud — 🟡 IN CHIUSURA
+
+Obiettivo: **rendere il sito raggiungibile dal cliente**, che deve provarlo e approvarlo prima
+del go-live. Nessuna funzionalità nuova: è infrastruttura, più le rifiniture emerse guardandolo.
+
+- [x] `main` + branch **pushati su GitHub** (i 42 commit della Fase 1 non vivono più su un solo disco).
+- [x] Progetto **Supabase cloud** (EU) con le migrazioni `0001`–`0010` applicate e le 26 policy verificate.
+- [x] Deploy su **Netlify**. ⚠️ **Cloudflare Workers è un vicolo cieco** (rifiuta il middleware Node di Next 16) e **Vercel è escluso** (il piano gratuito vieta l'uso commerciale, e qui c'è un cliente).
+- [x] **Turnstile** reale su login e registrazione, verificato dal vivo.
+- [x] `noindex` sullo staging + bottone Google nascosto finché il provider non è configurato.
+- [x] **Contenuti demo** caricati dalla UI: 3 eventi (uno concluso con album e video), profili con avatar, 3 auto, 2 iscrizioni.
+- [x] **Prossimi raduni in home** — prima la home annunciava una sezione che non esisteva.
+- [x] **Feedback di caricamento**: scheletro/spinner a ogni cambio pagina, stato "sto lavorando" sui bottoni, velo di attesa sulle operazioni lente.
+- [ ] **Email di autenticazione in italiano** — i template sono scritti, resta da incollarli nel dashboard Supabase e provarli da telefono.
+- [ ] Collaudo finale mirato e chiusura del branch.
+- **Esito atteso:** un URL che il cliente apre quando vuole lui, con dati veri dentro.
+
+⚠️ **Il progetto Supabase gratuito si mette in pausa dopo 7 giorni di inattività:** se il
+cliente riapre il link dopo dieci giorni trova il sito morto (si riattiva dal dashboard in un
+minuto). Come gestirlo è una decisione ancora aperta.
+
+### Cosa serve per il go-live pubblico (dopo l'approvazione del cliente)
+
+Dominio del club + DNS, **contenuti legali reali** (i `[DA COMPILARE]` con i dati del Titolare,
+da chiedere al cliente, e una validazione legale dei testi), SMTP custom, Google OAuth col
+redirect URI definitivo, rimozione del `noindex`.
+
 ## Fase 2 — Contenuti & scoperta
 
 Obiettivo: raccontare il club e facilitare la scoperta.
@@ -48,8 +75,8 @@ Obiettivo: raccontare il club e facilitare la scoperta.
 - [ ] Pagina **Gallery** aggregata (raccoglie gli album degli eventi) — opzionale.
 - [ ] **Mappa interattiva** dei raduni (Leaflet + OpenStreetMap) con georeferenziazione eventi.
 - [ ] Gestione utenti nel pannello admin (ruoli, sospensioni).
-- [ ] Lista partecipanti/auto per evento (admin).
-- [ ] Cancellazione account/dati (GDPR).
+- [x] ~~Lista partecipanti/auto per evento (admin)~~ → **già fatta nella 1C-2** (`AdminIscritti`): l'admin vede gli iscritti, può iscrivere a mano e rimuovere.
+- [ ] Cancellazione account/dati (GDPR) — **promessa nella privacy policy della 1D**, quindi non è opzionale.
 - [x] ~~Upload video diretto vs embed (decisione D-1)~~ → **deciso in anticipo (D-171, 2026-07-15): solo embed esterno**, link YouTube. Niente upload video, né ora né in Fase 2.
 - **Esito:** piattaforma ricca di contenuti, con mappa e gestione utenti.
 
