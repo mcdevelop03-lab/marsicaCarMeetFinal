@@ -1,5 +1,21 @@
 [build]
   command = "npm run build"
 
+  # Salta la build quando il commit non tocca nulla che finisca nel sito.
+  #
+  # ⚠️ PERCHE' ESISTE, e non e' un'ottimizzazione: sul piano Free ogni build
+  # consuma "credits", e i credits sono finiti davvero il 2026-08-04. Quando
+  # finiscono, Netlify NON spegne il sito (l'ultima build resta online) ma
+  # SOSPENDE i deploy: si continua a pushare e non cambia piu' niente, senza
+  # alcun errore in git. Erano stati bruciati da una decina di push di sola
+  # documentazione fatti in giornata, ognuno dei quali ricompilava l'intero
+  # sito per cambiare dei .md che sul sito non compaiono.
+  #
+  # `ignore` gira PRIMA della build: uscita 0 = salta, uscita 1 = costruisci.
+  # git diff --quiet esce 0 se NON ci sono differenze, quindi la logica e':
+  # "se le uniche modifiche stanno in docs/ o sono .md di primo livello,
+  # allora non c'e' niente da ricostruire".
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)docs/' ':(exclude)*.md' ':(exclude).superpowers/'"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"

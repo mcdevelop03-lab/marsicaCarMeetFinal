@@ -100,13 +100,47 @@ template email. È annotato in `SETUP.md`.
 pesano sul suo egress (A.3), non sulla banda Netlify. Da Netlify passano solo pagine e
 JavaScript, che sono leggeri. I minuti di build si consumano solo quando si pubblica codice nuovo.
 
-🚨 **Una cosa da sapere, però, ed è severa:** se un sito supera i limiti del piano Free,
-**viene sospeso per il resto del mese solare**. Non rallentato: sospeso. Netlify manda avvisi al
-50%, 75%, 90% e 100% — **vanno letti**, non archiviati.
+### 🚨 I credits sono finiti davvero — 2026-08-04, e la lezione vale più del listino
 
-⚠️ **Da controllare sul nostro account:** questo sito è nato a luglio 2026, quindi dovrebbe essere
-già sul modello a credits. Vale la pena aprire una volta la sezione consumi del dashboard per
-vedere a che ritmo si consumano davvero.
+**Non è teoria: è successo, lo stesso giorno in cui questo file è stato scritto.** Il messaggio di
+Netlify:
+
+> *"Your published sites are still live, but **production deploys are paused**. The remaining
+> balance is from operational credits that help keep your sites online and can't be spent on
+> production deploys."*
+
+**Cosa succede davvero quando i credits finiscono** — ed è **meno grave** di quanto avevo scritto
+qui in un primo momento (avevo detto "il sito viene sospeso": **è falso**, e la correzione è una
+buona notizia):
+
+| | Esito |
+|---|---|
+| **Il sito pubblicato** | 🟢 **resta online**, continua a servire l'ultima build riuscita |
+| **I visitatori e il cliente** | 🟢 non si accorgono di niente |
+| **I nuovi deploy** | 🔴 **sospesi**: si continua a pushare e **non cambia più niente** |
+| **Segnalazione in git** | ❌ **nessuna** — il push riesce, il sito resta indietro in silenzio |
+
+**Quindi il danno non è il sito giù, è che non si può più pubblicare** fino al ciclo di
+fatturazione successivo (o pagando).
+
+### 💡 Perché sono finiti, e come non rifarlo — costo zero
+
+**Li abbiamo bruciati noi**, e per un motivo evitabile: **ogni push sul branch di produzione fa
+partire una build completa**, e il 2026-08-04 sono stati fatti **una decina di push di sola
+documentazione**. Ogni volta Netlify ha ricompilato l'intero sito per cambiare dei file `.md` che
+**sul sito non compaiono nemmeno**.
+
+✅ **Risolto in `netlify.toml`** con una regola `ignore` che salta la build quando il commit tocca
+soltanto `docs/`, file `.md` o il ledger. **Provata sui commit veri di quel giorno**: cinque delle
+build sarebbero state evitate, e quelle che toccavano `src/` sarebbero comunque partite.
+
+**Regola pratica da tenere:** i commit di documentazione e quelli di codice **vanno tenuti
+separati**. Un commit misto (`docs/` + `src/`) fa partire la build lo stesso — giustamente, ma
+paga per intero.
+
+⚠️ **Conseguenza da ricordare:** finché i credits non si ricaricano, **qualunque modifica al sito
+resta invisibile online**. Se durante quella finestra qualcosa "non si aggiorna", la causa è
+questa e non un guasto.
 
 **Cosa accetti restando gratis:** nessun supporto, e la **protezione con password** degli ambienti
 di prova resta a pagamento — l'abbiamo già incontrata durante lo staging, quando avremmo voluto
@@ -574,10 +608,14 @@ Titolare**, e un indirizzo personale lì dentro fa una figura diversa.
 **Cosa risolve:** più credits (banda, build, function) e la protezione con password degli
 ambienti di prova.
 
-**Quando ha senso:** **non presto.** Le foto non passano da Netlify, quindi la banda qui resta
-bassa. L'unico motivo plausibile è volere link privati protetti da password per far rivedere
-qualcosa al cliente — comodità, non necessità. 🚨 Tenere però d'occhio gli avvisi di consumo: sul
-piano Free il superamento **sospende il sito** fino a fine mese.
+**Quando ha senso:** **è l'unico piano a pagamento che si è già fatto sentire.** I credits del Free
+sono finiti il 2026-08-04 (vedi §A.2) e i deploy si sono fermati. Il sito è rimasto online, quindi
+il cliente non se n'è accorto — ma **non si è più potuto pubblicare nulla**.
+
+**Prima di pagare, però:** la regola `ignore` in `netlify.toml` elimina le build inutili, ed è
+**quella** che va provata per un ciclo. Se anche così i credits finissero mentre si sta lavorando
+a una fase, allora 9 $/mese diventano una spesa sensata — ma **solo durante lo sviluppo attivo**,
+non per sempre.
 
 ## B.6 — Resend Pro — **20 $/mese** (50.000 email)
 
@@ -658,7 +696,7 @@ se il registrar del dominio include la privacy WHOIS o la fa pagare a parte.
 |---|---|---|
 | **Traffico Supabase** | dashboard Supabase, sezione consumi | **oltre 3,7 GB/mese** (75% di 5 GB) → prima le miniature |
 | Spazio foto Supabase | idem | oltre 750 MB (75% di 1 GB) |
-| **Consumi Netlify** | dashboard Netlify | leggere gli avvisi al 50/75/90%: al 100% **il sito viene sospeso** |
+| **Credits Netlify** | dashboard Netlify | al 100% **i deploy si fermano** (il sito resta online). ⚠️ **Già successo il 2026-08-04** |
 | Email inviate | dashboard del provider | oltre 75 al giorno (su 100) |
 
 **Una volta al mese basta.** Il rischio non è la bolletta — sui piani gratuiti non c'è addebito a
