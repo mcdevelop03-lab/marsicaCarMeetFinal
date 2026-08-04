@@ -320,7 +320,64 @@ dei raduni possono ritrarre persone riconoscibili** che non hanno un account sul
 base giuridica, tipicamente un avviso all'evento), e **Netlify e Cloudflare sono società
 statunitensi** — da cui il `[DA VERIFICARE]` sui trasferimenti extra-UE.
 
-### 💶 Le tre strade, con i costi
+### ❓ "Ma a parte le foto, dati personali non ne salviamo — giusto?"
+
+**No: ne salviamo parecchi.** È l'equivoco più comune su questa materia, e vale la pena chiarirlo
+una volta per tutte, perché ci si costruiscono sopra le decisioni sbagliate.
+
+🚨 **"Dato personale" non vuol dire "dato delicato".** Vuol dire **qualunque informazione che
+permetta di risalire a una persona**. L'**email da sola** è un dato personale. Lo sono il nome, la
+città, la biografia, il tag, i profili social, l'indirizzo IP — e sì, anche le foto. Il nostro
+inventario qui sopra è **tutto** materia di privacy, non solo l'ultima riga.
+
+**Però — e qui c'è la buona notizia — la domanda giusta è un'altra.** Quello che fa salire davvero
+gli obblighi e i costi non è *quanti* dati personali tratti, ma **di che tipo sono**.
+
+| | Cosa sono | Ne trattiamo? |
+|---|---|---|
+| **Dati personali comuni** | nome, email, città, foto, interessi | ✅ **sì, questi** |
+| **Categorie particolari** (art. 9) | salute, religione, opinioni politiche, orientamento sessuale, origine etnica, dati biometrici per identificare | ❌ **nessuno** |
+| **Dati giudiziari** | condanne, reati | ❌ no |
+| **Dati di pagamento** | carte, IBAN | ❌ **no** — non c'è e-commerce, escluso per sempre (D-161) |
+| **Profilazione automatica** | decisioni automatizzate sulle persone | ❌ no |
+| **Monitoraggio sistematico** | tracciamento su larga scala | ❌ no |
+
+**Siamo nella fascia più semplice ed economica che esista.** Un sito di club che raccoglie nome,
+email e foto di auto è il caso da manuale del trattamento ordinario.
+
+**Conseguenze pratiche, tutte a favore:**
+- **Niente DPO** (il Responsabile della protezione dei dati). È obbligatorio per enti pubblici o
+  per chi tratta categorie particolari o fa monitoraggio su larga scala. **Non è il nostro caso**,
+  ed è la voce che avrebbe pesato di più.
+- **Probabilmente niente valutazione d'impatto** (DPIA), che serve per trattamenti ad alto
+  rischio.
+- **Nessuna tassa sui dati.** ⚠️ Questo lo scrivo perché è un dubbio ricorrente: **in Italia non
+  esiste alcun canone o registrazione a pagamento** per il fatto di trattare dati personali. La
+  vecchia notifica al Garante è stata **abolita** proprio col GDPR. (In altri paesi esiste — nel
+  Regno Unito si paga una quota annuale — e da lì nasce la confusione.) **Non paghi per avere i
+  dati: paghi, eventualmente, solo chi ti scrive i documenti.**
+
+### 📸 Sulle foto: la vostra prassi è quella giusta, con due precisazioni
+
+Hai detto che le foto sono controllate e **si chiede alle persone che potrebbero comparire**.
+**È esattamente la prassi corretta**, ed è più di quanto faccia la maggior parte dei club.
+
+**Due cose da sapere, entrambe tranquillizzanti:**
+
+**① Una foto NON è un dato biometrico.** Lo diventa solo se viene *elaborata per identificare
+univocamente* qualcuno — riconoscimento facciale, insomma. **Noi le mostriamo e basta**, quindi
+restano dati personali **comuni**. Questo è importante perché i dati biometrici sono categoria
+particolare (art. 9) e avrebbero fatto scattare obblighi ben più pesanti.
+
+**② Il consenso conviene poterlo dimostrare.** Chiedere a voce va benissimo come prassi, ma se un
+domani qualcuno contestasse, serve poter mostrare *qualcosa*. Le soluzioni pratiche costano zero:
+un **avviso all'ingresso del raduno** ("durante l'evento vengono scattate foto che potranno essere
+pubblicate sul sito del club; per non comparire rivolgiti a…"), oppure una riga nel modulo
+d'iscrizione al raduno. **Più una via di uscita facile**: chi chiede la rimozione di una foto deve
+poterla ottenere, e l'admin oggi **può già eliminare le singole foto dall'album** — quella
+funzione c'è ed è collaudata.
+
+### 💶 Le strade possibili, con i costi
 
 *iubenda verificato il 2026-08-04. I compensi dei professionisti restano stime.*
 
@@ -348,36 +405,53 @@ verifica dei punti delicati. La forchetta è larga perché dipende molto da chi 
 zona. **Questo numero non l'ho verificato**: è un ordine di grandezza da confermare con due o tre
 preventivi veri.
 
-**③ Il consulente che il club ha già** — la via spesso migliore
+**③ ~~Il consulente che il club ha già~~ — ❌ ESCLUSA**
 
-Molte associazioni hanno **già un commercialista o un consulente** che segue adempimenti simili.
-Se è così, il costo può essere **vicino a zero** o rientrare in una parcella esistente.
-**È la prima cosa da chiedere al cliente**, prima di cercare fuori.
+*Verificato col cliente il 2026-08-04: **non hanno nessuno** che segua questi adempimenti.*
+Restano quindi solo le strade ① e ②.
 
-### 🧭 Il consiglio pratico
+### 🧭 Il consiglio pratico, aggiornato a quello che sappiamo
 
-**Chiedi al cliente, in quest'ordine:** ⑴ il club è costituito? con che denominazione, sede e
-codice fiscale? ⑵ avete già un consulente che segue queste cose? ⑶ ci sono foto di persone nei
-raduni che pubblicherete?
+**Cosa sappiamo già (2026-08-04):** il club **non ha un consulente**; le foto sono **controllate**,
+si chiede il permesso a chi potrebbe comparire; non si trattano **categorie particolari**, né
+pagamenti, né profilazione.
 
-**Se ha un consulente**, gli si consegna l'inventario qui sopra e si aspetta. **Se non ce l'ha**,
-il generatore gratuito è un punto di partenza onesto per andare online, **da far rivedere quando
-il club cresce**. Quello che **non** va fatto è pubblicare le pagine così come sono adesso, coi
-`[DA COMPILARE]` in bella vista: quello non è un rischio legale, è una brutta figura.
+**Resta una sola domanda aperta, ed è quella che blocca tutto: il club è costituito come
+associazione?** Serve denominazione, sede e codice fiscale. Da lì dipende chi è il Titolare — se
+l'associazione o una persona fisica col proprio nome pubblicato sul sito.
+
+**Il percorso che consiglierei, visto il quadro:**
+
+1. **Ottieni i dati del Titolare dal cliente.** Senza, non si va avanti — è l'unico vero blocco.
+2. **Genera i testi col piano gratuito di iubenda** e compilaci i `[DA COMPILARE]`. Il caso è
+   quello standard (dati comuni, niente categorie particolari), quindi un modello ben compilato
+   copre onestamente la situazione. **Costo: 0.**
+3. **Metti l'avviso foto ai raduni** — una riga, costo zero, e mette al riparo la prassi che già
+   seguite.
+4. **Rimanda il professionista** a quando il club cresce o inizia a trattare qualcosa di diverso
+   (quote associative, pagamenti, dati di minori). Oggi sarebbe una spesa sproporzionata al
+   rischio.
+
+⚠️ **L'unica cosa che non va fatta è pubblicare le pagine così come stanno adesso**, coi
+`[DA COMPILARE]` in bella vista. Non è tanto un rischio legale: è che si vede.
 
 ## 📊 Totale Parte A — andare online adesso
 
 | Scenario | Primo anno | Dal secondo anno |
 |---|---|---|
-| **Minimo** — dominio + policy dal generatore gratuito | **~10-20 €** | **~10-20 €/anno** |
-| **Se il club ha già un consulente** | **~10-20 €** | **~10-20 €/anno** |
-| **Con un professionista esterno** | **~310-820 €** ⚠️ | **~10-20 €/anno** |
+| 🟢 **Consigliato** — dominio + policy dal generatore gratuito | **~10-20 €** | **~10-20 €/anno** |
+| Con un professionista esterno | **~310-820 €** ⚠️ | **~10-20 €/anno** |
 
-**In pratica: con qualche decina di euro il sito è online e funzionante.** L'unica voce che può
-far salire il conto è quella legale — ed **è una tantum**, e in due dei tre scenari resta a zero.
+**In pratica: con qualche decina di euro il sito è online e funzionante.**
 
-⚠️ **La cifra della terza riga è una stima non verificata.** Prima di riportarla al cliente come
-un numero, prendi due o tre preventivi veri.
+**Perché consiglio la prima riga in questo caso specifico:** il club **non tratta categorie
+particolari** (niente salute, niente dati giudiziari), **non incassa pagamenti**, non fa
+profilazione, e le **foto sono già gestite chiedendo il permesso**. È il caso ordinario da
+manuale, e un modello ben compilato lo copre onestamente. Il professionista diventa proporzionato
+quando il club cresce o inizia a trattare cose diverse — quote associative, pagamenti, minori.
+
+⚠️ **La cifra della seconda riga è una stima non verificata.** Se un giorno servisse, prendi due o
+tre preventivi veri prima di riportarla al cliente come un numero.
 
 ---
 
@@ -484,12 +558,16 @@ Le metto perché in un preventivo vero compaiono, e vengono sempre dimenticate:
 Tutto il resto del funzionamento — hosting, database, login, anti-bot, email — **parte
 legittimamente da zero**, senza trucchi e senza violare i termini di nessuno.
 
-**Sulla privacy: può costare zero oppure qualche centinaio di euro, e dipende da una domanda che
-va fatta al cliente prima di ogni preventivo** — se il club ha già un consulente che segue questi
-adempimenti. Il **banner cookie ce l'abbiamo già** (Fase 1D, collaudato); mancano solo i **testi**
-e i **dati del Titolare**, che solo lui può dare. ⚠️ E prima ancora: **il club è costituito come
-associazione?** Senza denominazione, sede e codice fiscale l'informativa non si può scrivere, e il
-Titolare finirebbe per essere una persona fisica col proprio nome pubblicato sul sito.
+**Sulla privacy la risposta, con quello che sappiamo oggi, è: può costare zero.** Il club non
+tratta categorie particolari (salute, opinioni, dati giudiziari), non incassa pagamenti, non fa
+profilazione — è il **caso ordinario più semplice che esista**, quindi **niente DPO e niente
+canoni**: in Italia non si paga nulla per il fatto di trattare dati personali. Il **banner cookie
+ce l'abbiamo già** (Fase 1D, collaudato) e i **testi** si generano col piano gratuito di iubenda.
+
+⚠️ **Manca una cosa sola, e blocca tutto: i dati del Titolare.** Il club è costituito come
+associazione? Servono denominazione, sede e codice fiscale. Senza, l'informativa non si può
+scrivere — e il Titolare finirebbe per essere una **persona fisica**, col proprio nome e indirizzo
+pubblicati sul sito.
 
 **Nessuna spesa ricorrente è necessaria**, e questo vale anche dopo il go-live.
 
