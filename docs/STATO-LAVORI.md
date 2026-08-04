@@ -63,6 +63,18 @@ branch di produzione non è stato spostato davvero.
    - ⚠️ **Una previsione di questo file era sbagliata:** il velo sul salvataggio profilo **compare** (l'operazione dura ~950 ms sul piano gratuito). Non è un difetto.
 3. ✅ **Merge fatto (2026-08-04, `e0a20c1`)** e `main` pushato. Verifiche verdi sul risultato del merge. **Branch non eliminato di proposito**: è ancora quello di produzione su Netlify (vedi il riquadro rosso sopra).
 
+### 💶 Costi: c'è un file dedicato
+
+[`COSTI.md`](./COSTI.md) (2026-08-04) risponde a due domande separate: **quanto serve per andare
+online adesso** e **quanto costano i miglioramenti**. In sintesi: l'unica spesa tecnica
+obbligatoria è **il dominio (~10-20 €/anno)**, tutto il resto parte legittimamente da zero; la
+spesa vera da mettere in conto è la **validazione legale** delle pagine privacy/cookie, e la
+prima ricorrente da valutare — quando ci saranno contenuti veri — è **Supabase Pro**, l'unica che
+protegge da una perdita di dati irreversibile.
+
+⚠️ **Le cifre in quel file non sono verificate sui listini**: sono ordini di grandezza per
+ragionare, da ricontrollare prima di attivare qualunque cosa.
+
 ### Le tre strade davanti, ora che la 1E è chiusa
 
 1. **Mostrare il sito al cliente** e raccogliere il suo giudizio. ⚠️ Da dirgli prima: le pagine legali sono **dichiaratamente bozze** coi `[DA COMPILARE]`, e l'email di conferma è quella **inglese di serie**. ⚠️ E il progetto Supabase gratuito **si mette in pausa dopo 7 giorni di inattività**: se lo apre dopo dieci giorni trova il sito morto (si riattiva dal dashboard in un minuto). **Decisione ancora da prendere.**
