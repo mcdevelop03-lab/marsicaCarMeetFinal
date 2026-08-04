@@ -1194,17 +1194,45 @@ cartella è la copia di riferimento: chi modifica una delle due parti deve allin
 mano, altrimenti un ripristino del progetto Supabase riporta i template inglesi senza che
 nessuno se ne accorga.
 
-- [ ] **Step 1 — l'unica cosa che resta, ed è manuale.** Dashboard Supabase →
-  *Authentication → Emails*: incollare `conferma-registrazione.html` in **Confirm signup** e
-  `reset-password.html` in **Reset password**, e mettere gli oggetti in italiano:
+### 🚨 BLOCCATO — il presupposto del task era falso (2026-08-04)
+
+**I template non si possono incollare.** Aperto il dashboard per applicarli, la pagina
+*Authentication → Emails* risponde:
+
+> *"Set up custom SMTP to edit templates. Emails will be sent using the default templates.
+> Set up custom SMTP to edit their subject and body."*
+
+Col mailer condiviso gratuito Supabase **impone i template di serie**: oggetto **e** corpo sono
+bloccati.
+
+⚠️ **Il vincolo era scritto nella spec (D-4) fin dal 2026-07-30** e non è stato letto: il task è
+nato, il codice è stato scritto e committato (`633dff2`) dando per buono che il dashboard
+lasciasse incollare, **senza che nessuno aprisse quella pagina**. Il 2026-08-04 la D-4 è stata
+perfino *"corretta"* dichiarando falso ciò che era vero. **Stessa lezione del Task 10:** un
+presupposto che nessuno ha osservato non è un fatto.
+
+**Tre limitazioni, una sola causa.** Template bloccati + footer *"powered by Supabase"* + limite
+di **2 email/ora** vengono tutti dal servizio di posta condiviso e **cadono insieme** con un
+SMTP nostro. Non sono tre problemi da affrontare separatamente: è uno.
+
+**I file non sono lavoro sprecato:** `supabase/email-templates/` è scritto, verificato (il logo
+risponde 200 dal sito) e pronto. Si incolla nel momento in cui l'SMTP c'è.
+
+**Decisione da prendere con l'utente:**
+- **(a) SMTP adesso** — sblocca il task e con esso il footer e il limite orario. Costo: un
+  servizio in più da configurare, con un mittente verificato. ⚠️ Attenzione al vincolo già
+  registrato nella spec §2: **Resend in modalità test invia solo al titolare dell'account**
+  senza un dominio verificato, quindi non servirebbe a far provare il sito al cliente.
+- **(b) Rimandare al go-live**, dove l'SMTP è già in lista. Accettando che il cliente riceva
+  l'email inglese di serie — che è esattamente ciò che il task voleva evitare.
+
+- [ ] **Step 1 (quando sbloccato).** Dashboard Supabase → *Authentication → Emails*: incollare
+  `conferma-registrazione.html` in **Confirm signup** e `reset-password.html` in
+  **Reset password**, e mettere gli oggetti in italiano:
   - Confirm signup → `Conferma il tuo indirizzo — Marsica Car Meet`
   - Reset password → `Reimposta la password — Marsica Car Meet`
 - [ ] **Step 2 — prova vera, aperta DA TELEFONO.** È lì che si vedono i disastri di
   impaginazione, non nell'anteprima del dashboard.
-
-**Non rimovibili adesso, e non sono difetti nostri:** il footer *"powered by Supabase"* e il
-limite di **2 email/ora** vengono dal servizio di posta condiviso. Cadono entrambi con l'SMTP
-nostro, che è nella lista del go-live.
 
 ⚠️ **HTML da email, non da sito:** tabelle e stili in linea, niente flexbox, niente grid,
 niente CSS esterno. Sembra codice del 2005 ed è voluto: è ciò che Outlook e Gmail rendono in

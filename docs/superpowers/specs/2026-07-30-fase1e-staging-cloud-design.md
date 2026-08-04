@@ -159,11 +159,23 @@ branch che nessuno aggiorna più.
 I destinatari **non** sono ristretti. Su uno staging privato è sufficiente; l'SMTP vero è un
 task della fase pubblica.
 
-⚠️ **Un pezzo di questa decisione era sbagliato** (corretto il 2026-08-03): la spec dava per
-buono che *"i nuovi progetti free non possono personalizzare i template"*. **Falso** — si
-personalizzano dal dashboard, e infatti è ciò che fa il **Task 9**. Restano davvero non
-rimovibili, perché vengono dal servizio di posta condiviso: il footer *"powered by Supabase"*
-e il limite di 2 email/ora. Cadono entrambi solo con l'SMTP nostro.
+🚨 **Questa decisione ha un costo che era scritto qui fin dall'inizio e che è stato ignorato:
+col mailer condiviso i template NON sono personalizzabili.** Misurato sul dashboard il
+2026-08-04, pagina *Authentication → Emails*: *"Set up custom SMTP to edit templates. Emails
+will be sent using the default templates. Set up custom SMTP to edit their subject and body."*
+Oggetto e corpo sono **bloccati**, non solo scomodi.
+
+**Storia di un errore, da non ripetere.** Il 2026-08-03 il **Task 9** è nato per rendere
+presentabile l'email di conferma, e i due template sono stati scritti dando per buono che si
+potessero incollare nel dashboard — **senza che nessuno aprisse quella pagina prima di scrivere
+il codice**. Il 2026-08-04, riallineando la documentazione, questa D-4 è stata perfino
+*"corretta"* dichiarando **falso ciò che era vero**. L'errore è emerso solo quando l'utente ha
+aperto il dashboard per incollare. **È la stessa lezione del Task 10:** un presupposto che
+nessuno ha osservato non è un fatto, per quanto sia plausibile e per quanto codice ci sia già
+costruito sopra.
+
+Restano non rimovibili, dalla stessa causa: il footer *"powered by Supabase"* e il limite di
+2 email/ora. **Tutte e tre le limitazioni cadono insieme, e solo con un SMTP nostro.**
 
 **D-5 — Conferma email resta attiva.** Disattivarla accorcerebbe il collaudo ma
 significherebbe non collaudare il flusso vero, e dimenticarsi di riattivarla sarebbe un
@@ -291,7 +303,7 @@ e per risparmiare un deploy.)*
 | 5 | `noindex` + bottone Google dietro un flag | `robots` nega tutto; le pagine auth non mostrano il bottone morto | ✅ `e4fa307` |
 | 6 | Deploy su Netlify + redirect URL Supabase aggiornati | la home risponde in HTTPS sull'URL di staging | ✅ |
 | 7 | Contenuti demo caricati **dalla UI** dall'admin | 3 eventi (futuro con RSVP, futuro senza capienza, concluso con album), profili con avatar, auto in garage | ✅ |
-| 9 | **Email di autenticazione presentabili** *(aggiunto)* | i due template italiani sono nel dashboard e una prova vera arriva leggibile **da telefono** | 🟡 file scritti `633dff2`, **incollaggio a mano da fare** |
+| 9 | **Email di autenticazione presentabili** *(aggiunto)* | i due template italiani sono nel dashboard e una prova vera arriva leggibile **da telefono** | 🚨 **BLOCCATO**: file pronti `633dff2`, ma col mailer condiviso i template **non sono modificabili** — serve un SMTP nostro (D-4) |
 | 10 | **Feedback di caricamento** *(aggiunto)* | scheletro/spinner a ogni cambio pagina, stato "sto lavorando" sui bottoni | ✅ in 4 riprese, l'ultima `acc4633` |
 | 11 | **Prossimi raduni in home** *(aggiunto)* | la home mostra fino a 3 eventi futuri | ✅ `68dad51` |
 | 8 | Collaudo mirato + allineamento docs | §7 superata; spec, piano, `SETUP.md`, `STATO-LAVORI.md`, `ROADMAP.md` allineati | 🟡 in corso |

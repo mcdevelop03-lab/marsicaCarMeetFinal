@@ -52,7 +52,7 @@ del go-live. Nessuna funzionalità nuova: è infrastruttura, più le rifiniture 
 - [x] **Contenuti demo** caricati dalla UI: 3 eventi (uno concluso con album e video), profili con avatar, 3 auto, 2 iscrizioni.
 - [x] **Prossimi raduni in home** — prima la home annunciava una sezione che non esisteva.
 - [x] **Feedback di caricamento**: scheletro/spinner a ogni cambio pagina, stato "sto lavorando" sui bottoni, velo di attesa sulle operazioni lente.
-- [ ] **Email di autenticazione in italiano** — i template sono scritti, resta da incollarli nel dashboard Supabase e provarli da telefono.
+- [ ] **Email di autenticazione in italiano** — i template sono scritti e pronti, ma **bloccati**: col servizio di posta gratuito Supabase impone quelli di serie, e per cambiarli serve un **SMTP nostro**. Stessa causa del footer "powered by Supabase" e del limite di 2 email/ora: cadono tutti insieme.
 - [ ] Collaudo finale mirato e chiusura del branch.
 - **Esito atteso:** un URL che il cliente apre quando vuole lui, con dati veri dentro.
 

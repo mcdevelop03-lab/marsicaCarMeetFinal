@@ -15,7 +15,26 @@ Supabase riporterebbe i template inglesi di serie senza che nessuno se ne accorg
 se modifichi il file, ricordati di reincollarlo nel dashboard, altrimenti non cambia nulla
 per davvero.
 
-## Come applicarli
+## 🚨 BLOCCATI: servono un SMTP nostro (misurato il 2026-08-04)
+
+**Questi template non si possono applicare finché il progetto usa il servizio di posta gratuito
+di Supabase.** Il dashboard, in *Authentication → Emails*, dice:
+
+> *"Set up custom SMTP to edit templates. Emails will be sent using the default templates.
+> Set up custom SMTP to edit their subject and body."*
+
+Oggetto **e** corpo sono bloccati: il campo si vede, ma è governato da quel vincolo.
+
+I file qui dentro **non sono sprecati** — sono scritti, verificati e pronti: si incollano nel
+momento in cui l'SMTP c'è. Ma finché non c'è, chi si registra riceve il template inglese di
+serie, e non c'è modo di cambiarlo dal dashboard.
+
+⚠️ **Perché è successo:** i template sono stati scritti dando per buono che si potessero
+incollare, senza che nessuno aprisse prima quella pagina. Il vincolo era perfino scritto nella
+spec della fase (D-4) e non è stato letto. **Prima di scrivere codice che dipende da una
+schermata, aprire la schermata.**
+
+## Come applicarli (quando l'SMTP ci sarà)
 
 Dashboard Supabase → **Authentication → Emails** → scheda del template:
 
@@ -47,6 +66,9 @@ URL e il link porta altrove. È già successo (bug #2 del collaudo 1A).
   configurando un **SMTP nostro**, che è nella lista del go-live.
 - **Limite di 2 email di autenticazione all'ora**, stessa origine. Anche questo cade con
   l'SMTP nostro.
+- **E, come detto in cima, l'impossibilità di usare questi template.** Le tre limitazioni
+  hanno **la stessa causa** e cadono **tutte insieme** nel momento in cui c'è un SMTP nostro:
+  non sono tre problemi, è uno.
 - **Il logo è un URL assoluto** (`/email-logo.png` servito dal sito): nelle email non
   esistono percorsi relativi. Quando si passerà al dominio vero **va cambiato in tutti e
   due i file e nel dashboard**, altrimenti resterà appeso all'indirizzo di staging.
