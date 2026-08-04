@@ -253,43 +253,131 @@ spedire solo a sé stessi, il che qui sarebbe inutile. La pagina del listino non
 | Login con Google | **0** | Configurare il provider OAuth non costa nulla |
 | GitHub | **0** | Repo privato incluso nel piano gratuito |
 
-## A.6 — 🔴 La spesa che si dimentica sempre: **i contenuti legali**
+## A.6 — 🔴 La voce meno tecnica e più fraintesa: **la privacy**
 
-**Questa non è una voce tecnica, ed è probabilmente la più cara della Parte A.**
+> ⚠️ **Non sono un avvocato.** Qui spiego **come funziona il meccanismo** e cosa costa
+> tipicamente, perché tu possa fare le domande giuste. La decisione finale su cosa serve
+> davvero spetta a un professionista o al consulente del club.
 
-Le pagine `/privacy` e `/cookie` esistono e sono complete nella struttura, ma **dichiarano
-onestamente di essere una bozza** e contengono `[DA COMPILARE]` al posto dei dati reali del
-Titolare del trattamento (denominazione, sede, email), più un `[DA VERIFICARE]` sulle garanzie di
-trasferimento dei dati fuori dall'Unione Europea.
+### Come funziona, in due minuti
 
-| Voce | Stima | Note |
+**Dal momento in cui il sito raccoglie dati di persone reali, qualcuno ne diventa
+responsabile.** Quel qualcuno si chiama **Titolare del trattamento**, e nel nostro caso **è il
+club, non noi**. Chi costruisce il sito è tecnicamente un *Responsabile* — esegue, non decide.
+
+Questo ha una conseguenza pratica che va detta al cliente senza giri di parole: **gli obblighi e
+i costi della privacy sono suoi.** Non è uno scarico di responsabilità, è come è fatta la legge:
+il Titolare è chi decide *perché* e *come* i dati vengono trattati, e quello è il club.
+
+🚨 **Prima domanda da fargli, e viene prima di ogni preventivo: il club esiste come soggetto
+giuridico?** Un'associazione costituita ha una denominazione, una sede e un codice fiscale — e
+sono esattamente i dati che oggi mancano nelle nostre pagine (`[DA COMPILARE]`). **Se il club non
+è costituito, il Titolare è una persona fisica**, con il suo nome e il suo indirizzo pubblicati
+sul sito. È una differenza enorme, e non è una questione tecnica: **senza questa risposta
+l'informativa non si può nemmeno scrivere.**
+
+### Cosa serve davvero (e cosa abbiamo già)
+
+| Cosa | Stato | Chi lo fa |
 |---|---|---|
-| Dati del Titolare | **0** | Li fornisce il cliente: denominazione, sede, email di contatto |
-| **Validazione legale dei testi** | **~100-500 €** ⚠️ una tantum | Un professionista che li riveda. La forchetta è larga perché dipende molto da chi si sceglie |
+| **Banner cookie con consenso** | ✅ **fatto e collaudato** (Fase 1D) — blocca gli embed YouTube finché non c'è consenso | già nostro |
+| **Pagine privacy e cookie** | 🟡 **struttura completa, testi in bozza** coi `[DA COMPILARE]` | testo: cliente/professionista |
+| **Dati del Titolare** | ❌ mancano | **solo il cliente** |
+| **Registro dei trattamenti** | ❌ non esiste | cliente/professionista |
+| **Contratti coi fornitori** (Supabase, Netlify, Cloudflare) | ⚠️ da accettare | cliente, sono moduli standard dei fornitori |
+| **Trasferimenti fuori UE** | ⚠️ `[DA VERIFICARE]` nel testo | professionista |
+| **Cancellazione account** | ❌ **promessa nella policy, non implementata** | **noi**, Fase 2 |
 
-**Perché non è rimandabile.** Il sito raccoglie dati personali di persone reali — nome, email,
-paese, foto, profili social. Da quel momento il club è **Titolare del trattamento** e ha obblighi
-veri. Una privacy policy con dei `[DA COMPILARE]` dentro, su un sito pubblico che raccoglie
-iscrizioni, non è una svista grafica: è il documento che dice alle persone cosa succede ai loro
-dati, e va scritto da chi sa cosa sta scrivendo.
+🚨 **Quell'ultima riga è la più delicata di tutte.** La nostra privacy policy **promette già** che
+l'utente può chiedere la cancellazione dei suoi dati, ma la funzione **non esiste** (è in Fase 2).
+Non è un costo — è sviluppo — ma è una promessa scritta in un documento legale. Finché non c'è,
+una richiesta di cancellazione va gestita **a mano**, e qualcuno deve saperlo.
 
-⚠️ **Va deciso col cliente**, perché è lui il Titolare e la responsabilità è sua, non nostra.
-Alcune associazioni hanno già un commercialista o un consulente che se ne occupa: in quel caso il
-costo può essere vicino a zero.
+### 📋 L'inventario dei dati — questo ve lo do io, e fa risparmiare soldi
 
-⚠️ **C'è anche una promessa già scritta nella policy da mantenere:** la **cancellazione
-dell'account e dei dati**, che oggi **non è implementata** (è in Fase 2). Non costa soldi, costa
-sviluppo — ma è promessa in un documento legale, quindi non è opzionale a tempo indefinito.
+Chiunque scriva l'informativa comincia chiedendo *"quali dati raccogliete, dove stanno e chi altro
+li vede?"*. Se glielo consegni già pronto, **paghi meno ore**. Ecco l'elenco, letto dallo schema
+del database e non a memoria:
+
+| Dato raccolto | Dove | Quando |
+|---|---|---|
+| **Email e password** (cifrata) | Supabase Auth | registrazione |
+| **Nome, tag, città, biografia** | tabella `profiles` | profilo |
+| **Foto profilo** | bucket `avatars` | facoltativa |
+| **Profili social** (Instagram, Facebook, TikTok, YouTube) | `profiles.socials` | facoltativi |
+| **Auto**: marca, modello, anno, categoria, descrizione, scheda tecnica | tabella `vehicles` | garage |
+| **Foto delle auto** | bucket `vehicles` | garage |
+| **Iscrizioni ai raduni** + auto portata | `event_registrations`, `event_vehicles` | RSVP |
+| **Foto dei raduni** (possono ritrarre persone e targhe) | bucket `event-media` | caricate dall'admin |
+
+**Dove stanno fisicamente:** database, autenticazione e foto su **Supabase, regione europea**.
+**Fornitori terzi coinvolti:** **Netlify** (hosting), **Cloudflare** (Turnstile anti-bot),
+**YouTube** (solo per i video incorporati, **e solo dopo il consenso** — verificato dal vivo:
+senza consenso non parte nessuna richiesta a Google).
+
+⚠️ **Due punti che un professionista noterà subito**, ed è meglio arrivarci preparati: le **foto
+dei raduni possono ritrarre persone riconoscibili** che non hanno un account sul sito (serve una
+base giuridica, tipicamente un avviso all'evento), e **Netlify e Cloudflare sono società
+statunitensi** — da cui il `[DA VERIFICARE]` sui trasferimenti extra-UE.
+
+### 💶 Le tre strade, con i costi
+
+*iubenda verificato il 2026-08-04. I compensi dei professionisti restano stime.*
+
+**① Generatore automatico** — la via economica
+
+| Piano iubenda | Costo | Cosa dà |
+|---|---|---|
+| **Gratuito** | **0** | Privacy e cookie policy generate, fino a 20 servizi, una lingua |
+| Essentials | **4,99 €/mese** (annuale) | Generatore standard, banner cookie incluso |
+| Advanced | 19,99 €/mese | Documenti completi, fino a 30 clausole di terze parti |
+| Ultimate | 79,99 €/mese | Include il **registro dei trattamenti** |
+
+💡 **Nota che ti fa risparmiare: gran parte di quei piani serve a pagare il loro cookie banner, e
+noi il banner ce l'abbiamo già** — costruito su misura in Fase 1D e collaudato. A noi servirebbero
+**solo i testi**, che il piano **gratuito** genera.
+
+⚠️ **Il limite vero di questa strada:** un generatore produce un **modello**. Non sa che le foto
+dei raduni ritraggono persone, né com'è costituito il club. Copre bene i casi standard, ma **la
+responsabilità di quello che c'è scritto resta del Titolare.**
+
+**② Un professionista** (avvocato o consulente privacy) — la via solida
+
+**Stima: 300-800 € una tantum** ⚠️ per informativa su misura, registro dei trattamenti e una
+verifica dei punti delicati. La forchetta è larga perché dipende molto da chi si sceglie e dalla
+zona. **Questo numero non l'ho verificato**: è un ordine di grandezza da confermare con due o tre
+preventivi veri.
+
+**③ Il consulente che il club ha già** — la via spesso migliore
+
+Molte associazioni hanno **già un commercialista o un consulente** che segue adempimenti simili.
+Se è così, il costo può essere **vicino a zero** o rientrare in una parcella esistente.
+**È la prima cosa da chiedere al cliente**, prima di cercare fuori.
+
+### 🧭 Il consiglio pratico
+
+**Chiedi al cliente, in quest'ordine:** ⑴ il club è costituito? con che denominazione, sede e
+codice fiscale? ⑵ avete già un consulente che segue queste cose? ⑶ ci sono foto di persone nei
+raduni che pubblicherete?
+
+**Se ha un consulente**, gli si consegna l'inventario qui sopra e si aspetta. **Se non ce l'ha**,
+il generatore gratuito è un punto di partenza onesto per andare online, **da far rivedere quando
+il club cresce**. Quello che **non** va fatto è pubblicare le pagine così come sono adesso, coi
+`[DA COMPILARE]` in bella vista: quello non è un rischio legale, è una brutta figura.
 
 ## 📊 Totale Parte A — andare online adesso
 
-| | Primo anno | Dal secondo anno |
+| Scenario | Primo anno | Dal secondo anno |
 |---|---|---|
-| **Minimo tecnico** (solo dominio) | **~10-20 €** | **~10-20 €/anno** |
-| **Con la validazione legale** | **~110-520 €** ⚠️ | **~10-20 €/anno** |
+| **Minimo** — dominio + policy dal generatore gratuito | **~10-20 €** | **~10-20 €/anno** |
+| **Se il club ha già un consulente** | **~10-20 €** | **~10-20 €/anno** |
+| **Con un professionista esterno** | **~310-820 €** ⚠️ | **~10-20 €/anno** |
 
-**In pratica: con qualche decina di euro il sito è online e funzionante.** La voce che fa la
-differenza è quella legale, che è una tantum e dipende da chi la fa.
+**In pratica: con qualche decina di euro il sito è online e funzionante.** L'unica voce che può
+far salire il conto è quella legale — ed **è una tantum**, e in due dei tre scenari resta a zero.
+
+⚠️ **La cifra della terza riga è una stima non verificata.** Prima di riportarla al cliente come
+un numero, prendi due o tre preventivi veri.
 
 ---
 
@@ -396,9 +484,12 @@ Le metto perché in un preventivo vero compaiono, e vengono sempre dimenticate:
 Tutto il resto del funzionamento — hosting, database, login, anti-bot, email — **parte
 legittimamente da zero**, senza trucchi e senza violare i termini di nessuno.
 
-La spesa che invece va messa in conto sul serio è **la validazione legale delle pagine privacy e
-cookie**, perché il sito raccoglie dati di persone vere e quel documento oggi è dichiaratamente
-una bozza. È una tantum, e va decisa col cliente perché il Titolare è lui.
+**Sulla privacy: può costare zero oppure qualche centinaio di euro, e dipende da una domanda che
+va fatta al cliente prima di ogni preventivo** — se il club ha già un consulente che segue questi
+adempimenti. Il **banner cookie ce l'abbiamo già** (Fase 1D, collaudato); mancano solo i **testi**
+e i **dati del Titolare**, che solo lui può dare. ⚠️ E prima ancora: **il club è costituito come
+associazione?** Senza denominazione, sede e codice fiscale l'informativa non si può scrivere, e il
+Titolare finirebbe per essere una persona fisica col proprio nome pubblicato sul sito.
 
 **Nessuna spesa ricorrente è necessaria**, e questo vale anche dopo il go-live.
 
@@ -430,8 +521,9 @@ mantenere da soli.
 | Listino Supabase | https://supabase.com/pricing | ✅ 2026-08-04 |
 | Listino Netlify | https://www.netlify.com/pricing/ | ✅ 2026-08-04 |
 | Listino Resend | https://resend.com/pricing | ✅ 2026-08-04 |
+| Listino iubenda | https://www.iubenda.com/it/prezzi | ✅ 2026-08-04 |
 | Prezzi dominio `.it` | confrontare più registrar | ⚠️ stimato |
-| Validazione legale | professionista o consulente del club | ⚠️ stimato |
+| Compenso di un professionista privacy | 2-3 preventivi veri | ⚠️ **stimato, da confermare** |
 | Termini d'uso commerciale | **rileggere sempre**: è la clausola che ha già escluso Vercel | — |
 
 **Controllare in particolare:** che l'uso commerciale resti permesso sul piano gratuito scelto, e
